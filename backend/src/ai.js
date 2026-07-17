@@ -1,4 +1,4 @@
-import pricingEngine from '../../frontend/pricing-engine.js';
+import pricingEngine from '../../pricing-engine.js';
 
 const { calculateEstimate, generateSummary } = pricingEngine;
 
