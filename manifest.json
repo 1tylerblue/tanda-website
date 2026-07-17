@@ -1,0 +1,22 @@
+{
+  "name": "T & A Pro Cleaning",
+  "short_name": "T&APC",
+  "description": "Premium property cleaning and maintenance services across Gold Coast, Brisbane, Logan and Ipswich.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f5f5",
+  "theme_color": "#1e6bff",
+  "icons": [
+    {
+      "src": "assets/images/logo.jpeg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "assets/images/logo.jpeg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}

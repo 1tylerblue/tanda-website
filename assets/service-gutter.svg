@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760" fill="none">
+  <defs>
+    <linearGradient id="sky" x1="128" y1="72" x2="1040" y2="652" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F6FBFF"/>
+      <stop offset="1" stop-color="#98D7FF"/>
+    </linearGradient>
+    <linearGradient id="roof" x1="262" y1="170" x2="930" y2="474" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#A6D7FF"/>
+      <stop offset="1" stop-color="#0087E0"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="760" rx="34" fill="url(#sky)"/>
+  <circle cx="990" cy="128" r="136" fill="#C8E7FF" fill-opacity=".65"/>
+  <path d="M164 560h872v82H164z" fill="#A3DFFF"/>
+  <path d="M214 254 610 126l376 154-38 94H252l-38-120Z" fill="url(#roof)"/>
+  <path d="M236 362h710l-40 80H276l-40-80Z" fill="#E5F5FF"/>
+  <rect x="188" y="346" width="780" height="28" rx="14" fill="#F9FCFF"/>
+  <path d="M302 344c12 34 22 56 30 66" stroke="#8EBE59" stroke-width="10" stroke-linecap="round"/>
+  <path d="M346 344c16 30 28 46 40 58" stroke="#97C86B" stroke-width="10" stroke-linecap="round"/>
+  <path d="M390 346c12 28 22 44 30 54" stroke="#8EBE59" stroke-width="10" stroke-linecap="round"/>
+  <path d="M134 614 314 364" stroke="#0079D9" stroke-width="20" stroke-linecap="round"/>
+  <path d="M326 348 352 274" stroke="#F8FBFF" stroke-width="16" stroke-linecap="round"/>
+  <circle cx="314" cy="364" r="18" fill="#F9FCFF"/>
+</svg>

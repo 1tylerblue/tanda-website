@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Build Your Property Care Subscription | T &amp; A Pro Cleaning</title>
+    <meta
+      name="description"
+      content="Build a recurring property care subscription with exact first-clean and recurring monthly pricing for houses, apartments, high-rise and strata properties."
+    />
+    <meta name="robots" content="index,follow" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Build Your Property Care Subscription | T &amp; A Pro Cleaning" />
+    <meta
+      property="og:description"
+      content="Create a recurring cleaning subscription with fixed service frequencies and exact pricing."
+    />
+    <meta property="og:url" content="https://www.tandaprocleaning.com.au/subscription-builder.html" />
+    <meta property="og:image" content="https://www.tandaprocleaning.com.au/assets/images/logo.jpeg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Build Your Property Care Subscription | T &amp; A Pro Cleaning" />
+    <meta
+      name="twitter:description"
+      content="Build a custom recurring property care plan with exact first-clean and recurring monthly pricing."
+    />
+    <meta name="twitter:image" content="https://www.tandaprocleaning.com.au/assets/images/logo.jpeg" />
+    <link rel="canonical" href="https://www.tandaprocleaning.com.au/subscription-builder.html" />
+    <link rel="icon" href="assets/images/logo.jpeg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles-home.css" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": "Build Your Property Care Subscription | T & A Pro Cleaning",
+        "url": "https://www.tandaprocleaning.com.au/subscription-builder.html",
+        "description": "Build a recurring property care subscription with exact first-clean and monthly pricing for houses, apartments, high-rise apartments and strata properties.",
+        "publisher": {
+          "@type": "LocalBusiness",
+          "name": "T & A Pro Cleaning",
+          "telephone": "0466224927",
+          "email": "tandaprocleaning@gmail.com",
+          "taxID": "ABN 33 122 902 990",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Biggera Waters",
+            "addressRegion": "QLD",
+            "addressCountry": "AU"
+          }
+        },
+        "mainEntity": {
+          "@type": "OfferCatalog",
+          "name": "Property Care Subscriptions",
+          "itemListElement": [
+            { "@type": "Offer", "name": "Bronze", "price": "399", "priceCurrency": "AUD", "description": "Entry-level recurring property upkeep. First clean from 599 plus GST." },
+            { "@type": "Offer", "name": "Silver", "price": "549", "priceCurrency": "AUD", "description": "Balanced recurring property care. First clean from 799 plus GST." },
+            { "@type": "Offer", "name": "Gold", "price": "749", "priceCurrency": "AUD", "description": "Managed recurring property maintenance. First clean from 1099 plus GST." },
+            { "@type": "Offer", "name": "Platinum", "price": "1199", "priceCurrency": "AUD", "description": "Premium hands-off property care. First clean from 1599 plus GST." }
+          ]
+        }
+      }
+    </script>
+    <style>
+      .builder-page {
+        background: #f2f6fb;
+        padding: 40px 0 80px;
+      }
+
+      .builder-top {
+        max-width: 980px;
+        margin: 0 auto 26px;
+        text-align: center;
+      }
+
+      .builder-top h1 {
+        margin: 0 0 12px;
+        font-size: clamp(30px, 4vw, 44px);
+        color: var(--color-dark);
+      }
+
+      .builder-top p {
+        margin: 0 auto;
+        color: #40536f;
+        max-width: 900px;
+      }
+
+      .builder-pill-row {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 18px;
+      }
+
+      .builder-pill {
+        border: 1px solid #cde3f8;
+        border-radius: 999px;
+        background: #ffffff;
+        color: #173454;
+        font-size: 13px;
+        font-weight: 700;
+        padding: 8px 12px;
+        box-shadow: 0 6px 16px rgba(11, 43, 74, 0.06);
+      }
+
+      .builder-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1.55fr) minmax(280px, 0.95fr);
+        gap: 24px;
+        align-items: start;
+        max-width: 1180px;
+        margin: 0 auto;
+      }
+
+      .builder-main {
+        background: #ffffff;
+        border-radius: 14px;
+        box-shadow: 0 8px 24px rgba(16, 35, 63, 0.08);
+        border: 1px solid #d7e4f1;
+        padding: 24px;
+        max-width: 840px;
+        width: 100%;
+        margin: 0 auto;
+      }
+
+      .builder-step + .builder-step {
+        margin-top: 18px;
+        padding-top: 18px;
+        border-top: 1px solid #dbe6f2;
+      }
+
+      .builder-step h2 {
+        margin: 0 0 10px;
+        font-size: 20px;
+        color: var(--color-dark);
+        text-align: center;
+      }
+
+      .builder-step-note {
+        margin: 0 0 12px;
+        color: #4e5f77;
+        font-size: 14px;
+        text-align: center;
+      }
+
+      .radio-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 10px;
+      }
+
+      .radio-chip {
+        border: 1px solid #cddced;
+        border-radius: 10px;
+        padding: 10px 12px;
+        background: #f8fbff;
+        display: flex;
+        gap: 8px;
+        align-items: flex-start;
+      }
+
+      .radio-chip input {
+        margin-top: 2px;
+      }
+
+      .field-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .field-grid.two {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .field-grid.one {
+        grid-template-columns: 1fr;
+      }
+
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .field label {
+        font-weight: 600;
+        color: #1a2a40;
+        font-size: 14px;
+      }
+
+      .field input,
+      .field select,
+      .field textarea {
+        border: 1px solid #cddced;
+        border-radius: 8px;
+        min-height: 44px;
+        padding: 10px 12px;
+        font: inherit;
+        color: #132238;
+        background: #fff;
+      }
+
+      .field textarea {
+        min-height: 110px;
+        resize: vertical;
+      }
+
+      .subpanel {
+        border: 1px solid #d8e4f0;
+        border-radius: 10px;
+        padding: 14px;
+        background: #fbfdff;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      .service-selection-grid {
+        display: grid;
+        gap: 10px;
+      }
+
+      .service-row {
+        border: 1px solid #d4e1ef;
+        border-radius: 10px;
+        padding: 12px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(170px, 0.42fr);
+        gap: 12px;
+        align-items: center;
+        background: #fff;
+      }
+
+      .service-row.is-selected {
+        border-color: #8dd3ff;
+        box-shadow: 0 8px 20px rgba(0, 166, 239, 0.1);
+      }
+
+      .service-row label {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        color: #1a2a40;
+        font-weight: 600;
+      }
+
+      .service-row select:disabled {
+        opacity: 0.6;
+      }
+
+      .service-note {
+        grid-column: 1 / -1;
+        display: none;
+      }
+
+      .service-row.is-selected .service-note {
+        display: block;
+      }
+
+      .service-note label {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+        font-size: 13px;
+        color: #4e5f77;
+      }
+
+      .service-note input {
+        border: 1px solid #cddced;
+        border-radius: 8px;
+        min-height: 40px;
+        padding: 9px 10px;
+        font: inherit;
+      }
+
+      .check-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .check-tile {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        border: 1px solid #d4e1ef;
+        border-radius: 10px;
+        background: #fff;
+        padding: 12px;
+        color: #1a2a40;
+        font-size: 14px;
+      }
+
+      .check-tile input {
+        margin-top: 3px;
+      }
+
+      .summary-card {
+        position: sticky;
+        top: 18px;
+        background: #0f2238;
+        color: #f0f7ff;
+        border-radius: 14px;
+        box-shadow: 0 10px 24px rgba(8, 19, 34, 0.3);
+        padding: 20px;
+        border: 1px solid #1f3a56;
+        max-width: 420px;
+        margin: 0 auto;
+      }
+
+      .summary-card h2 {
+        margin: 0 0 14px;
+        font-size: 24px;
+      }
+
+      .price-block {
+        border: 1px solid rgba(139, 196, 255, 0.35);
+        border-radius: 10px;
+        padding: 10px 12px;
+        background: rgba(14, 47, 78, 0.8);
+        margin-bottom: 10px;
+      }
+
+      .price-label {
+        margin: 0;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        color: #9fd0ff;
+      }
+
+      .price-value {
+        margin: 3px 0 0;
+        font-size: 30px;
+        font-weight: 700;
+      }
+
+      .price-sub {
+        margin: 4px 0 0;
+        color: #a9d6ff;
+        font-size: 12px;
+      }
+
+      .summary-chip {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 999px;
+        background: rgba(48, 120, 192, 0.45);
+        color: #dcefff;
+        font-size: 12px;
+        margin-bottom: 10px;
+      }
+
+      .summary-list {
+        margin: 0;
+        padding-left: 18px;
+        display: grid;
+        gap: 7px;
+        color: #d6e7f8;
+        font-size: 14px;
+      }
+
+      .summary-note {
+        margin: 12px 0 0;
+        color: #b5d6f5;
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .builder-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      .builder-submit {
+        background: var(--color-primary);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        padding: 12px 20px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      .builder-submit:hover {
+        background: var(--color-primary-hover);
+      }
+
+      .builder-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #8ca2bf;
+        color: #1f3149;
+        border-radius: 8px;
+        padding: 12px 20px;
+        text-decoration: none;
+        font-weight: 600;
+        background: #f8fbff;
+      }
+
+      .builder-link:hover {
+        background: #edf3fa;
+      }
+
+      .builder-result {
+        margin-top: 16px;
+        border: 1px solid #cde0f2;
+        border-radius: 10px;
+        padding: 16px;
+        background: #f8fcff;
+      }
+
+      .builder-result h3 {
+        margin: 0 0 10px;
+      }
+
+      .builder-message-error {
+        color: #9d1c1c;
+        font-weight: 700;
+      }
+
+      .builder-message-success {
+        color: #0f6b3c;
+        font-weight: 700;
+      }
+
+      .result-pricing {
+        display: grid;
+        gap: 10px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        margin-bottom: 12px;
+      }
+
+      .result-pill {
+        background: #fff;
+        border: 1px solid #d2e2f2;
+        border-radius: 8px;
+        padding: 10px;
+      }
+
+      .result-pill strong {
+        display: block;
+        color: #0f2136;
+        margin-bottom: 4px;
+      }
+
+      .result-services {
+        margin: 0;
+        padding-left: 18px;
+      }
+
+      @media (max-width: 1080px) {
+        .builder-layout {
+          grid-template-columns: 1fr;
+        }
+
+        .summary-card {
+          position: static;
+        }
+      }
+
+      @media (max-width: 760px) {
+        .field-grid,
+        .field-grid.two,
+        .check-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .service-row {
+          grid-template-columns: 1fr;
+        }
+
+        .result-pricing {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body class="subscription-builder-page">
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <header class="site-header">
+      <div class="container nav-wrap">
+        <a class="brand" href="index.html" aria-label="T and A Pro Cleaning home">
+          <img class="brand-logo" src="assets/images/logo.jpeg" alt="T and A Pro Cleaning logo" loading="eager" decoding="async" />
+          <span class="brand-text">
+            <strong>T &amp; A Pro Cleaning</strong>
+            <small>Subscription builder</small>
+          </span>
+        </a>
+        <button class="nav-toggle" aria-expanded="false" aria-controls="siteNav" aria-label="Toggle main navigation" data-nav-toggle>
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        <nav class="site-nav" id="siteNav" data-nav>
+          <a href="index.html">Home</a>
+          <a href="index.html#services">Services</a>
+          <a href="gallery.html">Gallery</a>
+          <a href="reviews/">Reviews</a>
+          <a class="nav-giveaway" href="giveaway.html">Giveaway</a>
+          <a class="nav-referrals" href="referrals.html">Get Paid</a>
+          <a href="index.html#areas">Areas</a>
+          <a href="index.html#about">About</a>
+          <a href="index.html#contact">Contact</a>
+          <a href="index.html#quote">Quote</a>
+          <a class="btn btn-outline nav-call" href="tel:0466224927">Call Now</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main-content" class="builder-page">
+      <div class="container">
+        <div class="builder-top">
+          <h1>Build Your Property Care Subscription</h1>
+          <p>
+            Choose your plan, property type, services, access details, and recurring schedule to generate an exact first-clean
+            and monthly subscription price. This dedicated builder stays separate from the standard free quote form.
+          </p>
+          <div class="builder-pill-row" aria-label="Subscription builder highlights">
+            <span class="builder-pill">Exact subscription pricing</span>
+            <span class="builder-pill">Houses, apartments, high-rise &amp; strata</span>
+            <span class="builder-pill">Fixed service frequencies</span>
+            <span class="builder-pill">Built around access and parking</span>
+            <span class="builder-pill">Gold Coast, Brisbane, Logan &amp; Ipswich</span>
+          </div>
+        </div>
+
+        <div class="builder-layout subscription-builder-layout">
+          <div class="builder-main builder-form-card">
+            <form id="subscriptionBuilderForm" novalidate>
+              <input type="hidden" name="calculatedFirstClean" id="calculatedFirstClean" />
+              <input type="hidden" name="calculatedRecurring" id="calculatedRecurring" />
+              <input type="hidden" name="calculatedWorkerStructure" id="calculatedWorkerStructure" />
+              <input type="hidden" name="calculatedMonthlyLabour" id="calculatedMonthlyLabour" />
+
+              <section class="builder-step">
+                <h2>Step 1 - Choose Plan</h2>
+                <div class="radio-row">
+                  <label class="radio-chip"><input type="radio" name="plan" value="bronze" checked /> Bronze</label>
+                  <label class="radio-chip"><input type="radio" name="plan" value="silver" /> Silver</label>
+                  <label class="radio-chip"><input type="radio" name="plan" value="gold" /> Gold</label>
+                  <label class="radio-chip"><input type="radio" name="plan" value="platinum" /> Platinum</label>
+                  <label class="radio-chip"><input type="radio" name="plan" value="custom" /> Custom / Build Your Subscription</label>
+                </div>
+              </section>
+
+              <section class="builder-step">
+                <h2>Step 2 - Property Type</h2>
+                <div class="radio-row">
+                  <label class="radio-chip"><input type="radio" name="propertyType" value="house" checked /> House</label>
+                  <label class="radio-chip"><input type="radio" name="propertyType" value="townhouse" /> Townhouse / Duplex</label>
+                  <label class="radio-chip"><input type="radio" name="propertyType" value="apartment" /> Apartment / Unit</label>
+                  <label class="radio-chip"><input type="radio" name="propertyType" value="highrise" /> High-rise Apartment</label>
+                  <label class="radio-chip"><input type="radio" name="propertyType" value="strata" /> Strata / Body Corporate</label>
+                  <label class="radio-chip"><input type="radio" name="propertyType" value="commercial" /> Commercial / Other</label>
+                </div>
+              </section>
+
+              <section class="builder-step">
+                <h2>Step 3 - Contact Details</h2>
+                <div class="field-grid two">
+                  <div class="field">
+                    <label for="fullName">Full Name</label>
+                    <input type="text" id="fullName" name="fullName" required />
+                  </div>
+                  <div class="field">
+                    <label for="phone">Phone Number</label>
+                    <input type="tel" id="phone" name="phone" required />
+                  </div>
+                  <div class="field">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required />
+                  </div>
+                  <div class="field">
+                    <label for="preferredContact">Preferred Contact Method</label>
+                    <select id="preferredContact" name="preferredContact">
+                      <option value="Phone">Phone</option>
+                      <option value="Email">Email</option>
+                      <option value="SMS">SMS</option>
+                    </select>
+                  </div>
+                </div>
+              </section>
+
+              <section class="builder-step">
+                <h2>Step 4 - Property Address</h2>
+                <div class="field-grid">
+                  <div class="field">
+                    <label for="streetAddress">Full Street Address</label>
+                    <input type="text" id="streetAddress" name="streetAddress" required />
+                  </div>
+                  <div class="field">
+                    <label for="suburb">Suburb</label>
+                    <input type="text" id="suburb" name="suburb" required />
+                  </div>
+                  <div class="field">
+                    <label for="postcode">Postcode</label>
+                    <input type="text" id="postcode" name="postcode" required />
+                  </div>
+                </div>
+              </section>
+
+              <section class="builder-step">
+                <h2>Step 5 - Property Details</h2>
+                <div id="houseFields" class="subpanel">
+                  <p class="builder-step-note">House / Townhouse details</p>
+                  <div class="field-grid">
+                    <div class="field">
+                      <label for="houseBedrooms">Bedrooms</label>
+                      <input type="number" id="houseBedrooms" name="houseBedrooms" min="1" value="3" />
+                    </div>
+                    <div class="field">
+                      <label for="houseBathrooms">Bathrooms</label>
+                      <input type="number" id="houseBathrooms" name="houseBathrooms" min="1" value="2" />
+                    </div>
+                    <div class="field">
+                      <label for="houseStoreys">Storeys</label>
+                      <input type="number" id="houseStoreys" name="houseStoreys" min="1" value="1" />
+                    </div>
+                    <div class="field">
+                      <label for="housePool">Pool</label>
+                      <select id="housePool" name="housePool">
+                        <option value="no">No</option>
+                        <option value="yes">Yes</option>
+                      </select>
+                    </div>
+                    <div class="field">
+                      <label for="houseBalcony">Balcony</label>
+                      <select id="houseBalcony" name="houseBalcony">
+                        <option value="no">No</option>
+                        <option value="yes">Yes</option>
+                      </select>
+                    </div>
+                    <div class="field">
+                      <label for="houseDriveway">Driveway</label>
+                      <select id="houseDriveway" name="houseDriveway">
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                      </select>
+                    </div>
+                    <div class="field">
+                      <label for="houseOutdoor">Outdoor Area</label>
+                      <select id="houseOutdoor" name="houseOutdoor">
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                      </select>
+                    </div>
+                    <div class="field">
+                      <label for="houseGarage">Garage / Carport</label>
+                      <select id="houseGarage" name="houseGarage">
+                        <option value="no">No</option>
+                        <option value="yes">Yes</option>
+                      </select>
+                    </div>
+                    <div class="field">
+                      <label for="housePets">Pets</label>
+                      <select id="housePets" name="housePets">
+                        <option value="no">No</option>
+                        <option value="yes">Yes</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div id="apartmentFields" class="subpanel hidden">
+                  <p class="builder-step-note">Apartment / High-rise details</p>
+                  <div class="field-grid">
+                    <div class="field">
+                      <label for="apartmentBedrooms">Bedrooms</label>
+                      <input type="number" id="apartmentBedrooms" name="apartmentBedrooms" min="1" value="2" />
+                    </div>
+                    <div class="field">
+                      <label for="apartmentBathrooms">Bathrooms</label>
+                      <input type="number" id="apartmentBathrooms" name="apartmentBathrooms" min="1" value="1" />
+                    </div>
+                    <div class="field">
+                      <label for="floorLevel">Floor Level</label>
+                      <input type="number" id="floorLevel" name="floorLevel" min="1" value="3" />
+                    </div>
+                    <div class="field">
+                      <label for="apartmentLiftAccess">Lift Access</label>
+                      <select id="apartmentLiftAccess" name="apartmentLiftAccess">
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                      </select>
+                    </div>
+                    <div class="field">
+                      <label for="apartmentStairsOnly">Stair-only Access</label>
+                      <select id="apartmentStairsOnly" name="apartmentStairsOnly">
+                        <option value="no">No</option>
+                        <option value="yes">Yes</option>
+                      </select>
+                    </div>
+                    <div class="field">
+                      <label for="apartmentBalcony">Balcony</label>
+                      <select id="apartmentBalcony" name="apartmentBalcony">
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                      </select>
+                    </div>
+                    <div class="field">
+                      <label for="balconyPanels">Balcony Glass Panels</label>
+                      <input type="number" id="balconyPanels" name="balconyPanels" min="0" value="10" />
+                    </div>
+                    <div class="field">
+                      <label for="glassDoors">Glass Doors</label>
+                      <input type="number" id="glassDoors" name="glassDoors" min="0" value="1" />
+                    </div>
+                    <div class="field">
+                      <label for="interiorOnlyWindows">Interior Windows Only</label>
+                      <select id="interiorOnlyWindows" name="interiorOnlyWindows">
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                      </select>
+                    </div>
+                    <div class="field">
+                      <label for="accessibleBalconyGlass">Accessible Balcony Glass Included</label>
+                      <select id="accessibleBalconyGlass" name="accessibleBalconyGlass">
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                      </select>
+                    </div>
+                  </div>
+                  <p class="builder-step-note">
+                    High-rise rule: interior service is standard. Accessible balcony glass can be included as a limited safe-access
+                    service only. No rope access or unsafe external access is included.
+                  </p>
+                </div>
+
+                <div id="strataFields" class="subpanel hidden">
+                  <p class="builder-step-note">Strata / Body Corporate details</p>
+                  <div class="field-grid">
+                    <div class="field">
+                      <label for="strataUnits">Number of Units</label>
+                      <input type="number" id="strataUnits" name="strataUnits" min="1" value="8" />
+                    </div>
+                    <div class="field">
+                      <label for="strataFloors">Number of Floors</label>
+                      <input type="number" id="strataFloors" name="strataFloors" min="1" value="3" />
+                    </div>
+                    <div class="field">
+                      <label for="strataAreaSize">Approximate Common Area Size</label>
+                      <select id="strataAreaSize" name="strataAreaSize">
+                        <option value="small">Small</option>
+                        <option value="medium">Medium</option>
+                        <option value="large">Large</option>
+                      </select>
+                    </div>
+                    <div class="field">
+                      <label for="strataInternalCommon">Internal Common Areas</label>
+                      <select id="strataInternalCommon" name="strataInternalCommon">
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                      </select>
+                    </div>
+                    <div class="field">
+                      <label for="strataExternalCommon">External Common Areas</label>
+                      <select id="strataExternalCommon" name="strataExternalCommon">
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                      </select>
+                    </div>
+                    <div class="field">
+                      <label for="strataBinArea">Bin Area</label>
+                      <select id="strataBinArea" name="strataBinArea">
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                      </select>
+                    </div>
+                    <div class="field">
+                      <label for="strataStairwells">Stairwells</label>
+                      <select id="strataStairwells" name="strataStairwells">
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                      </select>
+                    </div>
+                    <div class="field">
+                      <label for="strataLobbies">Lobbies</label>
+                      <select id="strataLobbies" name="strataLobbies">
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                      </select>
+                    </div>
+                    <div class="field">
+                      <label for="strataCarparkArea">Carpark Area</label>
+                      <select id="strataCarparkArea" name="strataCarparkArea">
+                        <option value="no">No</option>
+                        <option value="yes">Yes</option>
+                      </select>
+                    </div>
+                    <div class="field">
+                      <label for="strataSharedGlass">Shared Glass / Windows</label>
+                      <select id="strataSharedGlass" name="strataSharedGlass">
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                      </select>
+                    </div>
+                    <div class="field">
+                      <label for="strataSharedWindows">Accessible Shared Windows</label>
+                      <select id="strataSharedWindows" name="strataSharedWindows">
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                      </select>
+                    </div>
+                    <div class="field">
+                      <label for="strataAccessComplexity">Access Complexity</label>
+                      <select id="strataAccessComplexity" name="strataAccessComplexity">
+                        <option value="easy">Easy</option>
+                        <option value="controlled">Controlled access</option>
+                        <option value="difficult">Difficult</option>
+                      </select>
+                    </div>
+                    <div class="field">
+                      <label for="strataBookingRequired">Body Corporate Rules / Booking Required</label>
+                      <select id="strataBookingRequired" name="strataBookingRequired">
+                        <option value="no">No</option>
+                        <option value="yes">Yes</option>
+                      </select>
+                    </div>
+                  </div>
+                  <p class="builder-step-note">Strata service is for accessible shared and common areas only unless otherwise approved.</p>
+                </div>
+              </section>
+
+              <section class="builder-step">
+                <h2>Step 6 - Access / Parking / Practical Logistics</h2>
+                <div class="field-grid">
+                  <div class="field">
+                    <label for="parkingType">Parking Type</label>
+                    <select id="parkingType" name="parkingType">
+                      <option value="driveway">Driveway</option>
+                      <option value="street">Street parking</option>
+                      <option value="visitor">Visitor parking</option>
+                      <option value="underground">Underground parking</option>
+                      <option value="none">No reliable parking</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="accessDifficulty">Access Difficulty</label>
+                    <select id="accessDifficulty" name="accessDifficulty">
+                      <option value="easy">Easy access</option>
+                      <option value="limited">Limited access</option>
+                      <option value="difficult">Difficult access</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="heightClearance">Height Clearance</label>
+                    <select id="heightClearance" name="heightClearance">
+                      <option value="none">No restriction</option>
+                      <option value="under2_2">Under 2.2m</option>
+                      <option value="over2_2">2.2m or more</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="gateAccess">Gate Access Required</label>
+                    <select id="gateAccess" name="gateAccess">
+                      <option value="no">No</option>
+                      <option value="yes">Yes</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="keyPickup">Key Pickup Required</label>
+                    <select id="keyPickup" name="keyPickup">
+                      <option value="no">No</option>
+                      <option value="yes">Yes</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="accessCode">Access Code Required</label>
+                    <select id="accessCode" name="accessCode">
+                      <option value="no">No</option>
+                      <option value="yes">Yes</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="restrictedHours">Restricted Access Hours</label>
+                    <select id="restrictedHours" name="restrictedHours">
+                      <option value="no">No</option>
+                      <option value="yes">Yes</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="logisticsLiftAccess">Lift Access</label>
+                    <select id="logisticsLiftAccess" name="logisticsLiftAccess">
+                      <option value="yes">Yes</option>
+                      <option value="no">No</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="logisticsStairsOnly">Stair-only Access</label>
+                    <select id="logisticsStairsOnly" name="logisticsStairsOnly">
+                      <option value="no">No</option>
+                      <option value="yes">Yes</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="bodyCorporateBooking">Body Corporate Booking Requirements</label>
+                    <select id="bodyCorporateBooking" name="bodyCorporateBooking">
+                      <option value="no">No</option>
+                      <option value="yes">Yes</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="petsOnProperty">Pets on Property</label>
+                    <select id="petsOnProperty" name="petsOnProperty">
+                      <option value="no">No</option>
+                      <option value="yes">Yes</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="waterSource">Water Source / Hose Access</label>
+                    <select id="waterSource" name="waterSource">
+                      <option value="available">Available</option>
+                      <option value="limited">Limited</option>
+                      <option value="none">Not available</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="powerAccess">Power Access</label>
+                    <select id="powerAccess" name="powerAccess">
+                      <option value="available">Available</option>
+                      <option value="limited">Limited</option>
+                      <option value="none">Not available</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="safeEquipmentAccess">Safe Equipment Access</label>
+                    <select id="safeEquipmentAccess" name="safeEquipmentAccess">
+                      <option value="yes">Yes</option>
+                      <option value="review">Needs review</option>
+                      <option value="no">No</option>
+                    </select>
+                  </div>
+                </div>
+              </section>
+
+              <section class="builder-step">
+                <h2>Step 7 - Service Selection</h2>
+                <p class="builder-step-note">Select services and assign a fixed service frequency for each selected service.</p>
+                <div id="serviceSelectionGrid" class="service-selection-grid"></div>
+              </section>
+
+              <section class="builder-step">
+                <h2>Step 8 - Add / Swap / Remove Services</h2>
+                <p class="builder-step-note">Use this section for flexible service allocation. If a property has no pool, pool service is not charged unless selected.</p>
+                <div class="check-grid">
+                  <label class="check-tile"><input type="checkbox" id="extraGeneralClean" name="extraGeneralClean" /> I want to add an extra general clean</label>
+                  <label class="check-tile"><input type="checkbox" id="removePoolService" name="removePoolService" /> I want to remove pool service</label>
+                  <label class="check-tile"><input type="checkbox" id="swapPoolGeneral" name="swapPoolGeneral" /> I want to swap pool service for extra general cleaning</label>
+                  <label class="check-tile"><input type="checkbox" id="swapPoolWindows" name="swapPoolWindows" /> I want to swap pool service for extra windows/balcony glass</label>
+                  <label class="check-tile"><input type="checkbox" id="eventReadyClean" name="eventReadyClean" /> I want to add event-ready cleaning</label>
+                  <label class="check-tile"><input type="checkbox" id="priorityResponse" name="priorityResponse" /> I want priority response access</label>
+                  <label class="check-tile"><input type="checkbox" id="deepRotation" name="deepRotation" /> I want seasonal deep-clean rotation</label>
+                  <label class="check-tile"><input type="checkbox" id="customSwap" name="customSwap" /> I want to discuss a custom swap</label>
+                </div>
+              </section>
+
+              <section class="builder-step">
+                <h2>Step 9 - Fixed Service Frequency Rules</h2>
+                <p class="builder-step-note">
+                  Frequency is selected per service and then treated as the operational schedule for pricing and labour planning.
+                  Pricing changes with property complexity and access logistics, not broad estimate ranges.
+                </p>
+              </section>
+
+              <section class="builder-step">
+                <h2>Step 10 - Apartment / High-rise Balcony Logic</h2>
+                <p class="builder-step-note">
+                  Interior service is the standard high-rise offering. Accessible balcony glass can be added where safely reachable.
+                  Up to 10 glass panels are included where balcony scope applies. Extra panels add $5 each and glass doors add
+                  $10 each. No rope access or unsafe external access.
+                </p>
+              </section>
+
+              <section class="builder-step">
+                <h2>Step 11 - Labour / Team Structure</h2>
+                <div class="field-grid two">
+                  <div class="field">
+                    <label for="teamPreference">Team Structure</label>
+                    <select id="teamPreference" name="teamPreference">
+                      <option value="auto">Auto-calculate from scope</option>
+                      <option value="1">1 worker</option>
+                      <option value="2">2 workers</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="visitDurationHint">Expected Visit Duration (hours)</label>
+                    <input type="text" id="visitDurationHint" name="visitDurationHint" value="Auto-calculated" readonly />
+                  </div>
+                </div>
+              </section>
+
+              <section class="builder-step">
+                <h2>Step 12 - First Clean Condition</h2>
+                <div class="field-grid two">
+                  <div class="field">
+                    <label for="conditionLevel">Condition Level</label>
+                    <select id="conditionLevel" name="conditionLevel">
+                      <option value="light">Light</option>
+                      <option value="standard">Standard</option>
+                      <option value="heavy">Heavy</option>
+                      <option value="firstProfessional">First professional clean</option>
+                      <option value="unknown">Unknown / needs review</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="lastProfessionalClean">When was it last professionally cleaned?</label>
+                    <select id="lastProfessionalClean" name="lastProfessionalClean">
+                      <option value="lt3">Less than 3 months ago</option>
+                      <option value="3to6">3-6 months ago</option>
+                      <option value="6to12">6-12 months ago</option>
+                      <option value="gt12">1+ years ago</option>
+                      <option value="unknown">Unknown</option>
+                    </select>
+                  </div>
+                </div>
+              </section>
+
+              <section class="builder-step">
+                <h2>Step 13 - Scheduling</h2>
+                <div class="field-grid">
+                  <div class="field">
+                    <label for="preferredDay">Preferred Day</label>
+                    <select id="preferredDay" name="preferredDay">
+                      <option value="Monday">Monday</option>
+                      <option value="Tuesday">Tuesday</option>
+                      <option value="Wednesday">Wednesday</option>
+                      <option value="Thursday">Thursday</option>
+                      <option value="Friday">Friday</option>
+                      <option value="Saturday">Saturday</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="preferredTimeWindow">Preferred Time Window</label>
+                    <select id="preferredTimeWindow" name="preferredTimeWindow">
+                      <option value="Early (7-9)">Early (7-9)</option>
+                      <option value="Morning (8-11)">Morning (8-11)</option>
+                      <option value="Late Morning (10-1)">Late Morning (10-1)</option>
+                      <option value="Afternoon (1-4)">Afternoon (1-4)</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="fixedRecurringDay">Fixed Recurring Day Preference</label>
+                    <select id="fixedRecurringDay" name="fixedRecurringDay">
+                      <option value="yes">Yes</option>
+                      <option value="no">No</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="serviceWhileAway">Service while client is away</label>
+                    <select id="serviceWhileAway" name="serviceWhileAway">
+                      <option value="yes">Yes</option>
+                      <option value="no">No</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="preferredStartDate">Preferred Start Date</label>
+                    <input type="date" id="preferredStartDate" name="preferredStartDate" />
+                  </div>
+                  <div class="field">
+                    <label for="urgency">Urgency</label>
+                    <select id="urgency" name="urgency">
+                      <option value="Flexible">Flexible</option>
+                      <option value="This week">This week</option>
+                      <option value="Next week">Next week</option>
+                      <option value="Urgent">Urgent</option>
+                      <option value="Event / birthday / guests">Event / birthday / guests</option>
+                    </select>
+                  </div>
+                </div>
+              </section>
+
+              <section class="builder-step">
+                <h2>Step 14 - Billing / Payment</h2>
+                <div class="field-grid">
+                  <div class="field">
+                    <label for="paymentMethod">Preferred Payment Method</label>
+                    <select id="paymentMethod" name="paymentMethod">
+                      <option value="Card">Card</option>
+                      <option value="Bank transfer">Bank transfer</option>
+                      <option value="Afterpay if available">Afterpay if available</option>
+                      <option value="Discuss with me">Discuss with me</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="billingPreference">Monthly Billing Preference</label>
+                    <select id="billingPreference" name="billingPreference">
+                      <option value="Invoice at start of month">Invoice at start of month</option>
+                      <option value="Invoice after first visit each month">Invoice after first visit each month</option>
+                      <option value="Split invoicing for larger scopes">Split invoicing for larger scopes</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="preferredBillingDate">Preferred Billing Date</label>
+                    <input type="text" id="preferredBillingDate" name="preferredBillingDate" placeholder="e.g. 1st of each month" />
+                  </div>
+                  <div class="field">
+                    <label for="autoDebitConsent">Auto-debit Consent</label>
+                    <select id="autoDebitConsent" name="autoDebitConsent">
+                      <option value="no">No</option>
+                      <option value="yes">Yes</option>
+                    </select>
+                  </div>
+                </div>
+              </section>
+
+              <section class="builder-step">
+                <h2>Step 15 - Notes / Photos</h2>
+                <div class="field-grid one">
+                  <div class="field">
+                    <label for="specialNotes">Anything we should know?</label>
+                    <textarea
+                      id="specialNotes"
+                      name="specialNotes"
+                      placeholder="Access issues, parking details, body corporate rules, stains, event needs, baby/pet/family situations, property condition, special instructions, or anything that helps us prepare."
+                    ></textarea>
+                  </div>
+                  <div class="field">
+                    <label for="subscriptionPhotos">Optional Photos</label>
+                    <input type="file" id="subscriptionPhotos" name="subscriptionPhotos" accept="image/*" multiple />
+                    <p class="builder-step-note">Optional: upload up to 5 photos of access, balconies, strata areas, stains, exterior surfaces, gutters, roof, pool, or property condition.</p>
+                  </div>
+                </div>
+              </section>
+
+              <section class="builder-step">
+                <h2>Final Output</h2>
+                <p class="builder-step-note">
+                  The summary includes selected plan, property type, services with fixed frequencies, worker structure,
+                  access logistics, exact first clean price, and exact recurring monthly price.
+                </p>
+                <label class="check-tile" for="giveawayConsideration">
+                  <input type="checkbox" id="giveawayConsideration" name="giveawayConsideration" />
+                  <span>I would like this subscription request to be considered for the current giveaway if eligible.</span>
+                </label>
+                <p class="builder-step-note">
+                  If your subscription request meets the current campaign requirements, it may be counted toward the monthly giveaway after review.
+                </p>
+                <div class="builder-actions">
+                  <button type="submit" class="builder-submit">Submit Subscription Request</button>
+                  <a href="index.html#quote" class="builder-link">Use Standard Free Quote Form</a>
+                </div>
+                <p id="builderMessage" class="builder-step-note" aria-live="polite"></p>
+              </section>
+            </form>
+
+            <article id="builderResult" class="builder-result hidden" aria-live="polite">
+              <h3>Subscription Summary</h3>
+              <div class="result-pricing">
+                <div class="result-pill">
+                  <strong>Exact First Clean Price</strong>
+                  <span id="resultFirstClean">$0 + GST</span>
+                </div>
+                <div class="result-pill">
+                  <strong>Exact Recurring Monthly Price</strong>
+                  <span id="resultRecurring">$0/month + GST</span>
+                </div>
+                <div class="result-pill">
+                  <strong>Annual Recurring Total</strong>
+                  <span id="resultAnnual">$0/year + GST</span>
+                </div>
+              </div>
+              <p><strong>Selected plan:</strong> <span id="resultPlan"></span></p>
+              <p><strong>Property type:</strong> <span id="resultPropertyType"></span></p>
+              <p><strong>Worker structure:</strong> <span id="resultWorkerStructure"></span></p>
+              <p><strong>Access / parking summary:</strong> <span id="resultAccessSummary"></span></p>
+              <p><strong>Service frequencies:</strong></p>
+              <ul id="resultServices" class="result-services"></ul>
+              <p class="builder-step-note">
+                Pricing is based on submitted information and is confirmed on first service if property details, access,
+                or service scope differ materially from what was submitted.
+              </p>
+            </article>
+          </div>
+
+          <aside class="summary-card builder-summary-card">
+            <span class="summary-chip">Subscription Builder</span>
+            <h2>Live Pricing</h2>
+            <div class="price-block">
+              <p class="price-label">Exact First Clean</p>
+              <p id="liveFirstClean" class="price-value">$0</p>
+              <p class="price-sub">Ex GST calculated price</p>
+            </div>
+            <div class="price-block">
+              <p class="price-label">Exact Recurring / Month</p>
+              <p id="liveRecurring" class="price-value">$0</p>
+              <p id="liveAnnual" class="price-sub">$0/year + GST</p>
+            </div>
+            <ul id="liveSummaryList" class="summary-list">
+              <li>Plan: Bronze</li>
+              <li>Property: House</li>
+              <li>Workers: 1 worker</li>
+              <li>Monthly labour: 0.0 hours</li>
+            </ul>
+            <p class="summary-note">
+              GST is added to the exact ex-GST values shown in this builder. Final confirmation occurs on first service
+              if submitted details materially differ from site conditions.
+            </p>
+          </aside>
+        </div>
+      </div>
+    </main>
+
+    <footer id="contact">
+      <div class="container">
+        <div class="footer-top">
+          <div class="footer-brand">
+            <img src="assets/images/logo.jpeg" alt="T and A Pro Cleaning logo" loading="eager" decoding="async" />
+            <p>T &amp; A Pro Cleaning is a premium property cleaning and presentation business servicing homes, apartments, strata and commercial properties across South East Queensland.</p>
+            <div class="footer-meta">
+              <div><strong>Phone:</strong> <a href="tel:0466224927">0466224927</a></div>
+              <div><strong>Email:</strong> <a href="mailto:tandaprocleaning@gmail.com">tandaprocleaning@gmail.com</a></div>
+              <div><strong>Service Areas:</strong> Gold Coast, Brisbane, Logan, Ipswich</div>
+              <div><strong>Business Address:</strong> Biggera Waters, QLD</div>
+              <div><strong>ABN:</strong> 33 122 902 990</div>
+              <div>Fully insured | Family-run local team</div>
+            </div>
+          </div>
+          <div class="footer-links">
+            <ul>
+              <li><a href="index.html#services">Services</a></li>
+              <li><a href="gallery.html">Gallery</a></li>
+              <li><a href="reviews/">Reviews</a></li>
+              <li><a href="index.html#packages">Plans</a></li>
+              <li><a href="subscription-builder.html">Build Subscription</a></li>
+              <li><a href="giveaway.html">Giveaway</a></li>
+              <li><a href="index.html#quote">Free Quote</a></li>
+              <li><a href="referrals.html">Get Paid</a></li>
+              <li><a href="cleaning-tips.html">Cleaning Tips</a></li>
+            </ul>
+            <ul>
+              <li><a href="privacy.html">Privacy Policy</a></li>
+              <li><a href="terms.html">Terms &amp; Conditions</a></li>
+              <li><a href="referrals.html">Referral Program / Get Paid</a></li>
+              <li><a href="giveaway.html">Monthly Client Giveaway</a></li>
+              <li><a href="index.html#contact">Contact</a></li>
+              <li><a href="https://www.google.com/maps/search/?api=1&query=T%20%26%20A%20Pro%20Cleaning%20Gold%20Coast" target="_blank" rel="noopener noreferrer">Google Reviews</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          &copy; <span id="builderYear">2026</span> T &amp; A Pro Cleaning. All rights reserved.
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      if (!['localhost', '127.0.0.1'].includes(window.location.hostname)) {
+        window.__API_BASE__ = 'https://api.tandaprocleaning.com.au';
+      }
+    </script>
+    <script src="subscription-builder.js" defer></script>
+  </body>
+</html>
+
