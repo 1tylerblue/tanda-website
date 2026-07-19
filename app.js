@@ -2714,7 +2714,7 @@
 
     statusNodes.forEach((node) => {
       if (campaignPhase === 'upcoming') {
-        node.textContent = `Eligible entries will be accepted from ${formatGiveawayDate(GIVEAWAY_CONFIG.startsAt)}.`;
+        node.textContent = 'Only confirmed eligible entries are included in this live total.';
         return;
       }
       if (campaignPhase === 'closed') {
