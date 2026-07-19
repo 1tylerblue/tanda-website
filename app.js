@@ -1981,6 +1981,76 @@
     return lines;
   }
 
+  function setupMobileQuoteSteps(form) {
+    const propertyCard = form.querySelector('.property-details-card');
+    const serviceCard = form.querySelector('.service-scope-card');
+    const propertySummary = form.querySelector('[data-mobile-property-summary]');
+    const serviceSummary = form.querySelector('[data-mobile-service-summary]');
+    const progressSteps = Array.from(form.querySelectorAll('[data-mobile-progress-step]'));
+
+    if (!(propertyCard instanceof HTMLElement) || !(serviceCard instanceof HTMLElement)) return;
+
+    const validateSection = (section) => {
+      const requiredFields = Array.from(section.querySelectorAll('[required]'))
+        .filter((field) => field instanceof HTMLInputElement || field instanceof HTMLSelectElement || field instanceof HTMLTextAreaElement)
+        .filter((field) => !field.disabled && !field.hidden && field.getClientRects().length > 0);
+      const invalidField = requiredFields.find((field) => !field.checkValidity());
+      if (!invalidField) return true;
+      invalidField.reportValidity();
+      invalidField.focus();
+      return false;
+    };
+
+    const updateReview = () => {
+      const firstName = toText(form.querySelector('#firstName')?.value);
+      const suburb = toText(form.querySelector('#address')?.value);
+      const propertyType = toText(form.querySelector('#propertyType')?.selectedOptions?.[0]?.textContent);
+      if (propertySummary instanceof HTMLElement) {
+        propertySummary.textContent = [firstName, propertyType, suburb].filter(Boolean).join(' - ') || 'Property details ready';
+      }
+
+      const pickerSummaries = Array.from(serviceCard.querySelectorAll('.scope-picker-summary'))
+        .map((item) => toText(item.textContent))
+        .filter(Boolean);
+      if (serviceSummary instanceof HTMLElement) {
+        serviceSummary.textContent = pickerSummaries.join(' - ') || 'Service details ready';
+      }
+    };
+
+    const showStep = (step) => {
+      const safeStep = Math.min(3, Math.max(1, Number(step) || 1));
+      form.dataset.mobileStep = String(safeStep);
+      progressSteps.forEach((item) => {
+        const active = item.dataset.mobileProgressStep === String(safeStep);
+        item.classList.toggle('is-active', active);
+        if (active) item.setAttribute('aria-current', 'step');
+        else item.removeAttribute('aria-current');
+      });
+      if (safeStep === 3) updateReview();
+      if (window.matchMedia('(max-width: 760px)').matches) {
+        form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    };
+
+    form.querySelectorAll('[data-mobile-quote-next]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const nextStep = Number(button.dataset.mobileQuoteNext);
+        const currentStep = Number(form.dataset.mobileStep || 1);
+        const currentSection = currentStep === 1 ? propertyCard : serviceCard;
+        if (!validateSection(currentSection)) return;
+        showStep(nextStep);
+      });
+    });
+
+    form.querySelectorAll('[data-mobile-quote-back], [data-mobile-quote-edit]').forEach((button) => {
+      button.addEventListener('click', () => {
+        showStep(button.dataset.mobileQuoteBack || button.dataset.mobileQuoteEdit);
+      });
+    });
+
+    showStep(1);
+  }
+
   function setupQuoteForm() {
     const form = document.getElementById('quoteForm');
     if (!(form instanceof HTMLFormElement)) {
@@ -1991,6 +2061,7 @@
     setupImproveDescriptionButton(form);
     setupSmartEstimatePreview(form);
     setupScopeQuantityFields(form);
+    setupMobileQuoteSteps(form);
 
     const notesCard = form.querySelector('.quote-notes-card');
     const notesToggle = form.querySelector('[data-mobile-notes-toggle]');

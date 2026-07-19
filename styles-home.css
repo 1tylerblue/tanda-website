@@ -6944,7 +6944,11 @@ body.premium-home {
 }
 
 .mobile-notes-toggle,
-.additional-service-summary {
+.additional-service-summary,
+.quote-mobile-progress,
+.quote-mobile-next,
+.quote-mobile-actions,
+.quote-mobile-review {
   display: none;
 }
 
@@ -6964,7 +6968,7 @@ body.premium-home {
 
   .quote-intro h2 {
     margin-bottom: 8px;
-    font-size: 2rem;
+    font-size: 1.75rem;
     letter-spacing: 0;
   }
 
@@ -6994,6 +6998,71 @@ body.premium-home {
     padding: 10px;
   }
 
+  .quote-mobile-progress {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    padding: 3px;
+    border: 1px solid #d4e5f1;
+    border-radius: 12px;
+    background: #edf6fc;
+  }
+
+  .quote-mobile-progress span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-width: 0;
+    min-height: 38px;
+    border-radius: 9px;
+    color: #5a7187;
+    font-size: 0.72rem;
+    font-weight: 800;
+  }
+
+  .quote-mobile-progress b {
+    display: inline-grid;
+    width: 19px;
+    height: 19px;
+    place-items: center;
+    border-radius: 50%;
+    background: #d9e9f5;
+    font-size: 0.66rem;
+  }
+
+  .quote-mobile-progress .is-active {
+    background: #fff;
+    color: #075f9f;
+    box-shadow: 0 4px 12px rgba(25, 81, 123, 0.1);
+  }
+
+  .quote-mobile-progress .is-active b {
+    background: #0b8fe8;
+    color: #fff;
+  }
+
+  .quote-form[data-mobile-step='1'] > .service-scope-card,
+  .quote-form[data-mobile-step='1'] > .quote-mobile-review,
+  .quote-form[data-mobile-step='1'] > .quote-advanced,
+  .quote-form[data-mobile-step='1'] > .quote-notes-card,
+  .quote-form[data-mobile-step='1'] > .estimate-preview,
+  .quote-form[data-mobile-step='1'] > .form-message,
+  .quote-form[data-mobile-step='1'] > .agreement-check,
+  .quote-form[data-mobile-step='1'] > .quote-submit,
+  .quote-form[data-mobile-step='2'] > .property-details-card,
+  .quote-form[data-mobile-step='2'] > .quote-mobile-review,
+  .quote-form[data-mobile-step='2'] > .quote-advanced,
+  .quote-form[data-mobile-step='2'] > .quote-notes-card,
+  .quote-form[data-mobile-step='2'] > .estimate-preview,
+  .quote-form[data-mobile-step='2'] > .form-message,
+  .quote-form[data-mobile-step='2'] > .agreement-check,
+  .quote-form[data-mobile-step='2'] > .quote-submit,
+  .quote-form[data-mobile-step='3'] > .property-details-card,
+  .quote-form[data-mobile-step='3'] > .service-scope-card {
+    display: none;
+  }
+
   .form-card {
     gap: 13px;
     padding: 14px;
@@ -7010,6 +7079,122 @@ body.premium-home {
     height: 8px;
     margin-right: 8px;
     box-shadow: 0 0 0 4px rgba(30, 107, 255, 0.08);
+  }
+
+  .quote-mobile-next,
+  .quote-mobile-back {
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    border-radius: 11px;
+    font: inherit;
+    font-size: 0.88rem;
+    font-weight: 800;
+  }
+
+  .quote-mobile-next {
+    display: inline-flex;
+    width: 100%;
+    border: 0;
+    background: linear-gradient(110deg, #1e6bff, #078bc9);
+    color: #fff;
+    box-shadow: 0 10px 22px rgba(21, 111, 202, 0.18);
+  }
+
+  .quote-mobile-back {
+    border: 1px solid #c9deed;
+    background: #fff;
+    color: #31516c;
+  }
+
+  .quote-mobile-actions {
+    display: grid;
+    grid-template-columns: 88px minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .quote-mobile-review {
+    gap: 10px;
+    padding: 14px;
+    border: 1px solid #cfe1ed;
+    border-radius: 14px;
+    background: #fff;
+  }
+
+  .quote-form[data-mobile-step='3'] > .quote-mobile-review {
+    display: grid;
+  }
+
+  .quote-mobile-review h3 {
+    margin: 3px 0 0;
+    font-size: 1.15rem;
+  }
+
+  .quote-mobile-review-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+    align-items: center;
+    padding: 11px;
+    border-radius: 10px;
+    background: #f3f8fc;
+  }
+
+  .quote-mobile-review-row > div {
+    display: grid;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  .quote-mobile-review-row span {
+    color: #597087;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .quote-mobile-review-row strong {
+    overflow-wrap: anywhere;
+    color: #102c45;
+    font-size: 0.84rem;
+  }
+
+  .quote-mobile-review-row button {
+    min-height: 36px;
+    padding: 6px 10px;
+    border: 1px solid #bad8eb;
+    border-radius: 8px;
+    background: #fff;
+    color: #0866a6;
+    font: inherit;
+    font-size: 0.76rem;
+    font-weight: 800;
+  }
+
+  .estimate-preview {
+    gap: 8px;
+    padding: 14px;
+    border-radius: 14px;
+  }
+
+  .estimate-preview h3 {
+    font-size: 1rem;
+  }
+
+  .estimate-preview .estimate-range {
+    margin-block: 0;
+    font-size: 1.45rem;
+  }
+
+  .estimate-preview .estimate-calculation,
+  .estimate-preview > ul {
+    display: none;
+  }
+
+  .estimate-preview .group-copy {
+    margin: 0;
+    font-size: 0.78rem;
+    line-height: 1.45;
   }
 
   .property-details-card .field-grid {

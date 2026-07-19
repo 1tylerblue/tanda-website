@@ -34,7 +34,7 @@
     <link rel="canonical" href="https://www.tandaprocleaning.com.au/" />
     <link rel="icon" href="assets/images/logo.jpeg" />
     <link rel="manifest" href="manifest.json" />
-  <link rel="stylesheet" href="styles-home.css?v=20260720-mobile-quote-focus" />
+  <link rel="stylesheet" href="styles-home.css?v=20260720-mobile-quote-wizard" />
     <!-- Google Analytics 4 (consent-gated by cookie banner) -->
     <script>
       window.__GA_MEASUREMENT_ID__ = 'G-XXXXXXXXXX';
@@ -808,6 +808,12 @@
                   <input type="text" id="website" name="website" autocomplete="off" tabindex="-1" />
                 </div>
 
+                <div class="quote-mobile-progress" aria-label="Quote progress">
+                  <span class="is-active" data-mobile-progress-step="1"><b>1</b> Details</span>
+                  <span data-mobile-progress-step="2"><b>2</b> Cleaning</span>
+                  <span data-mobile-progress-step="3"><b>3</b> Send</span>
+                </div>
+
                 <section class="form-card property-details-card">
                   <div class="form-card-heading">
                     <div>
@@ -860,6 +866,7 @@
                       </select>
                     </div>
                   </div>
+                  <button type="button" class="quote-mobile-next" data-mobile-quote-next="2">Continue to Cleaning</button>
                 </section>
 
                 <section class="form-card service-scope-card">
@@ -922,6 +929,25 @@
                     <summary>What this estimate covers</summary>
                     <p>T&amp;A Pro Cleaning provides cleaning only. Repairs, sealing, recoating, restoration and other trade work are not included.</p>
                   </details>
+                  <div class="quote-mobile-actions">
+                    <button type="button" class="quote-mobile-back" data-mobile-quote-back="1">Back</button>
+                    <button type="button" class="quote-mobile-next" data-mobile-quote-next="3">Review Quote</button>
+                  </div>
+                </section>
+
+                <section class="quote-mobile-review" aria-labelledby="quote-mobile-review-title">
+                  <div>
+                    <span class="form-step-label">Step 3</span>
+                    <h3 id="quote-mobile-review-title">Review &amp; Send</h3>
+                  </div>
+                  <div class="quote-mobile-review-row">
+                    <div><span>Your details</span><strong data-mobile-property-summary>Property details ready</strong></div>
+                    <button type="button" data-mobile-quote-edit="1">Edit</button>
+                  </div>
+                  <div class="quote-mobile-review-row">
+                    <div><span>Cleaning requested</span><strong data-mobile-service-summary>Service details ready</strong></div>
+                    <button type="button" data-mobile-quote-edit="2">Edit</button>
+                  </div>
                 </section>
 
                 <details class="quote-advanced">
@@ -1218,7 +1244,7 @@
   }
 </script>
 <script defer src="pricing-engine.js?v=20260711-master-price-list"></script>
-  <script defer src="app.js?v=20260720-mobile-quote-focus"></script>
+  <script defer src="app.js?v=20260720-mobile-quote-wizard"></script>
 <script defer src="gallery.js"></script>
 <script defer src="reviews.js?v=20260710-carousel-2"></script>
   </body>
