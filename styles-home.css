@@ -4867,6 +4867,30 @@ footer,
   box-shadow: 0 12px 24px rgba(17, 120, 255, 0.18);
 }
 
+.reviews-hero-panel .review-avatar-stack {
+  width: 100%;
+  max-width: 100%;
+  justify-content: center;
+  margin: 20px 0 10px;
+  overflow: hidden;
+}
+
+.reviews-hero-panel .review-avatar-stack-item {
+  flex: 0 0 auto;
+  margin-left: -10px;
+}
+
+.reviews-hero-panel .review-avatar-stack-item:first-child {
+  margin-left: 0;
+}
+
+.reviews-hero-panel .review-avatar-stack-photo {
+  width: 38px;
+  height: 38px;
+  border-width: 2px;
+  box-shadow: 0 8px 18px rgba(17, 120, 255, 0.16);
+}
+
 .review-floating-wall {
   display: grid;
   gap: 13px;
