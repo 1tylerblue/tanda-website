@@ -8743,6 +8743,21 @@ body.giveaway-page {
   outline-offset: 3px;
 }
 
+.giveaway-page .site-nav .nav-call {
+  padding: 8px 14px 8px 10px;
+  overflow: visible;
+  font-size: 0.84rem;
+  font-weight: 800;
+  line-height: normal;
+}
+
+.giveaway-page .site-nav .nav-call::before {
+  position: static;
+  inset: auto;
+  transform: none;
+  transition: none;
+}
+
 @media (min-width: 1081px) and (max-width: 1320px) {
   .site-nav {
     gap: 8px;
@@ -8752,6 +8767,10 @@ body.giveaway-page {
   .site-nav .nav-call {
     gap: 6px;
     padding-inline: 9px 11px;
+  }
+
+  .giveaway-page .site-nav .nav-call {
+    padding: 8px 11px 8px 9px;
   }
 
   .site-nav a[href^="tel:"]::before,
