@@ -34,7 +34,7 @@
     <link rel="canonical" href="https://www.tandaprocleaning.com.au/" />
     <link rel="icon" href="assets/images/logo.jpeg" />
     <link rel="manifest" href="manifest.json" />
-    <link rel="stylesheet" href="styles-home.css?v=20260719-gold-trustline" />
+  <link rel="stylesheet" href="styles-home.css?v=20260719-multi-service-picker" />
     <!-- Google Analytics 4 (consent-gated by cookie banner) -->
     <script>
       window.__GA_MEASUREMENT_ID__ = 'G-XXXXXXXXXX';
@@ -863,26 +863,26 @@
                       <span class="form-step-label">Step 2</span>
                       <h3>What needs cleaning?</h3>
                     </div>
-                    <p>Choose the closest option. We will confirm the final scope with you before booking.</p>
+                    <p>Tick every service and job type that applies. Press Done after each list.</p>
                   </div>
                   <div class="field-grid service-scope-flow">
                     <div class="field service-choice-field">
-                      <label for="service"><span class="field-step-number">1</span> Choose a service</label>
+                      <label for="service"><span class="field-step-number">1</span> Choose one or more services</label>
                       <select id="service" name="service" required aria-required="true">
                         <option value="">What would you like cleaned?</option>
                       </select>
                     </div>
                     <div class="field service-choice-field">
-                      <label for="pricingItemCode"><span class="field-step-number">2</span> Choose the closest job</label>
+                      <label for="pricingItemCode"><span class="field-step-number">2</span> Choose one or more job types</label>
                       <select id="pricingItemCode" name="pricingItemCode" required aria-required="true">
                         <option value="">Choose a service first</option>
                       </select>
-                      <p class="field-help">Pick the closest match. You can explain anything unusual below.</p>
+                      <p class="field-help">Tick every close match. You can explain anything unusual below.</p>
                     </div>
                     <div class="scope-measurement span-2" data-scope-measurement>
                       <div class="field scope-quantity-field" data-quantity-field>
-                        <label for="scopeQuantity"><span class="field-step-number">3</span> Tell us roughly how much</label>
-                        <input type="number" id="scopeQuantity" name="scopeQuantity" min="0.01" step="0.01" inputmode="decimal" placeholder="Choose a job first" required aria-required="true" />
+                        <label for="scopeQuantity"><span class="field-step-number">3</span> Enter a whole-number quantity</label>
+                        <input type="number" id="scopeQuantity" name="scopeQuantity" min="1" step="1" inputmode="numeric" placeholder="Choose a job first" required aria-required="true" />
                         <p class="field-help" data-quantity-help>Choose a job above and we will tell you what to count.</p>
                       </div>
                       <div class="field service-area-field">
@@ -900,7 +900,7 @@
                       </p>
                     </div>
                     <details class="additional-services-disclosure span-2">
-                      <summary>Need more than one service?</summary>
+                      <summary>Selected services and optional extras</summary>
                       <div class="additional-services-field">
                         <div class="additional-services-head">
                           <div>
@@ -1205,7 +1205,7 @@
   }
 </script>
 <script defer src="pricing-engine.js?v=20260711-master-price-list"></script>
-<script defer src="app.js?v=20260719-guided-quote"></script>
+  <script defer src="app.js?v=20260719-multi-service-picker"></script>
 <script defer src="gallery.js"></script>
 <script defer src="reviews.js?v=20260710-carousel-2"></script>
   </body>

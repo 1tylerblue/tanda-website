@@ -1408,7 +1408,7 @@
       storeys: toText(formData.get('storeys')),
       rooms: toText(formData.get('rooms')),
       serviceArea: toText(formData.get('serviceArea')),
-      scopeQuantity: Number(formData.get('scopeQuantity') || 0),
+      scopeQuantity: Math.max(0, Math.round(Number(formData.get('scopeQuantity') || 0))),
       scopeUnit: toText(formData.get('scopeUnit')),
       scopeDetail: toText(formData.get('scopeDetail')),
       accessDifficulty: toText(formData.get('accessDifficulty')),
@@ -1607,7 +1607,9 @@
       }
       const isFixed = entry.mode === 'fixed' || entry.manual;
       if (isFixed) quantityInput.value = '1';
-      quantityInput.step = ['square-metres', 'linear-metres', 'labour-hours'].includes(entry.unit) ? '0.01' : '1';
+      quantityInput.min = '1';
+      quantityInput.step = '1';
+      quantityInput.inputMode = 'numeric';
       quantityInput.placeholder = `Enter ${engine.unitLabel(entry.unit, 2)}`;
       if (unitNode instanceof HTMLInputElement) unitNode.value = entry.unit;
       else if (unitNode) unitNode.textContent = engine.unitLabel(entry.unit, 2);
@@ -1620,7 +1622,7 @@
       }
     };
 
-    const createAdditionalRow = () => {
+    const createAdditionalRow = ({ groupId = '', itemCode = '', generatedByPicker = false } = {}) => {
       if (additionalContainer.children.length >= 8) return;
       const row = document.createElement('div');
       row.className = 'additional-service-row';
@@ -1638,9 +1640,9 @@
       const quantityInput = document.createElement('input');
       quantityInput.className = 'additional-service-quantity';
       quantityInput.type = 'number';
-      quantityInput.min = '0.01';
+      quantityInput.min = '1';
       quantityInput.step = '1';
-      quantityInput.inputMode = 'decimal';
+      quantityInput.inputMode = 'numeric';
       quantityInput.placeholder = 'Quantity';
       quantityInput.setAttribute('aria-label', 'Additional service quantity');
 
@@ -1667,8 +1669,266 @@
 
       row.append(groupSelect, itemSelect, quantityInput, unitText, removeButton);
       additionalContainer.appendChild(row);
-      groupSelect.focus();
+      if (groupId) {
+        groupSelect.value = groupId;
+        populateItems(groupSelect, itemSelect, true);
+      }
+      if (itemCode) {
+        itemSelect.value = itemCode;
+        syncUnit(itemSelect, quantityInput, unitText, true);
+      }
+      if (generatedByPicker) row.dataset.pickerGenerated = 'true';
+      if (!generatedByPicker) groupSelect.focus();
+      return row;
     };
+
+    const normalizeWholeNumber = (input) => {
+      if (!(input instanceof HTMLInputElement) || !input.value) return;
+      const value = Number(input.value);
+      if (Number.isFinite(value)) input.value = String(Math.max(1, Math.round(value)));
+    };
+
+    quantity.addEventListener('change', () => normalizeWholeNumber(quantity));
+    additionalContainer.addEventListener('change', (event) => {
+      if (event.target instanceof HTMLInputElement && event.target.classList.contains('additional-service-quantity')) {
+        normalizeWholeNumber(event.target);
+      }
+    });
+
+    const createPickerShell = (select, placeholder, instruction) => {
+      select.classList.add('scope-native-select');
+      select.tabIndex = -1;
+
+      const picker = document.createElement('div');
+      picker.className = 'scope-check-picker';
+
+      const toggle = document.createElement('button');
+      toggle.type = 'button';
+      toggle.className = 'scope-picker-toggle';
+      toggle.setAttribute('aria-expanded', 'false');
+
+      const summary = document.createElement('span');
+      summary.className = 'scope-picker-summary';
+      summary.textContent = placeholder;
+      toggle.appendChild(summary);
+
+      const panel = document.createElement('div');
+      panel.className = 'scope-picker-panel';
+      panel.hidden = true;
+
+      const guidance = document.createElement('p');
+      guidance.className = 'scope-picker-instruction';
+      guidance.textContent = instruction;
+
+      const options = document.createElement('div');
+      options.className = 'scope-picker-options';
+
+      const footer = document.createElement('div');
+      footer.className = 'scope-picker-footer';
+
+      const count = document.createElement('span');
+      count.className = 'scope-picker-count';
+      count.textContent = 'Nothing selected';
+
+      const done = document.createElement('button');
+      done.type = 'button';
+      done.className = 'scope-picker-done';
+      done.textContent = 'Done';
+
+      footer.append(count, done);
+      panel.append(guidance, options, footer);
+      picker.append(toggle, panel);
+      select.insertAdjacentElement('beforebegin', picker);
+
+      const close = () => {
+        panel.hidden = true;
+        toggle.setAttribute('aria-expanded', 'false');
+      };
+      const open = () => {
+        panel.hidden = false;
+        toggle.setAttribute('aria-expanded', 'true');
+      };
+
+      toggle.addEventListener('click', () => panel.hidden ? open() : close());
+      document.addEventListener('click', (event) => {
+        if (!picker.contains(event.target)) close();
+      });
+      picker.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+          close();
+          toggle.focus();
+        }
+      });
+
+      return { picker, toggle, panel, options, done, count, summary, close, open };
+    };
+
+    const groups = engine.getGroups();
+    const itemGroupByCode = new Map();
+    groups.forEach((group) => {
+      engine.getItemsForGroup(group.id).forEach((entry) => itemGroupByCode.set(entry.code, group.id));
+    });
+
+    const selectedGroups = new Set();
+    const selectedItems = new Set();
+    const servicePicker = createPickerShell(service, 'Choose one or more services', 'Tick every service you would like included, then press Done.');
+    const jobPicker = createPickerShell(pricingItem, 'Choose one or more job types', 'Tick the closest job variations for your property, then press Done.');
+    jobPicker.toggle.disabled = true;
+    const serviceLabel = form.querySelector('label[for="service"]');
+    const jobLabel = form.querySelector('label[for="pricingItemCode"]');
+    if (serviceLabel instanceof HTMLLabelElement) {
+      serviceLabel.addEventListener('click', (event) => {
+        event.preventDefault();
+        servicePicker.open();
+      });
+    }
+    if (jobLabel instanceof HTMLLabelElement) {
+      jobLabel.addEventListener('click', (event) => {
+        event.preventDefault();
+        if (!jobPicker.toggle.disabled) jobPicker.open();
+      });
+    }
+
+    const updatePickerSummary = (picker, labels, emptyText) => {
+      if (!labels.length) {
+        picker.summary.textContent = emptyText;
+        picker.count.textContent = 'Nothing selected';
+        picker.picker.classList.remove('has-selection');
+        return;
+      }
+      picker.summary.textContent = labels.length === 1 ? labels[0] : `${labels[0]} + ${labels.length - 1} more`;
+      picker.count.textContent = `${labels.length} selected`;
+      picker.picker.classList.add('has-selection');
+    };
+
+    const makeCheckOption = (value, label, selectedSet, onChange) => {
+      const option = document.createElement('label');
+      option.className = 'scope-check-option';
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.value = value;
+      checkbox.checked = selectedSet.has(value);
+      const text = document.createElement('span');
+      text.textContent = label;
+      option.append(checkbox, text);
+      checkbox.addEventListener('change', () => {
+        if (checkbox.checked) selectedSet.add(value);
+        else selectedSet.delete(value);
+        onChange();
+      });
+      return option;
+    };
+
+    const selectedGroupLabels = () => groups.filter((group) => selectedGroups.has(group.id)).map((group) => group.label);
+    const selectedItemEntries = () => {
+      const entries = [];
+      groups.forEach((group) => {
+        engine.getItemsForGroup(group.id).forEach((entry) => {
+          if (selectedItems.has(entry.code)) entries.push(entry);
+        });
+      });
+      return entries;
+    };
+
+    const refreshServicePicker = () => {
+      servicePicker.options.replaceChildren();
+      groups.forEach((group) => {
+        servicePicker.options.appendChild(makeCheckOption(group.id, group.label, selectedGroups, () => {
+          updatePickerSummary(servicePicker, selectedGroupLabels(), 'Choose one or more services');
+        }));
+      });
+      updatePickerSummary(servicePicker, selectedGroupLabels(), 'Choose one or more services');
+    };
+
+    const refreshJobPicker = () => {
+      jobPicker.options.replaceChildren();
+      const activeGroups = groups.filter((group) => selectedGroups.has(group.id));
+      activeGroups.forEach((group) => {
+        const section = document.createElement('section');
+        section.className = 'scope-picker-option-group';
+        const heading = document.createElement('h4');
+        heading.textContent = group.label;
+        section.appendChild(heading);
+        engine.getItemsForGroup(group.id).filter((entry) => !entry.addonOnly).forEach((entry) => {
+          section.appendChild(makeCheckOption(entry.code, entry.label, selectedItems, () => {
+            updatePickerSummary(jobPicker, selectedItemEntries().map((item) => item.label), 'Choose one or more job types');
+          }));
+        });
+        jobPicker.options.appendChild(section);
+      });
+      updatePickerSummary(jobPicker, selectedItemEntries().map((item) => item.label), 'Choose one or more job types');
+    };
+
+    const applySelectedItems = () => {
+      const entries = selectedItemEntries();
+      additionalContainer.querySelectorAll('[data-picker-generated="true"]').forEach((row) => row.remove());
+
+      if (!entries.length) {
+        pricingItem.value = '';
+        quantity.value = '';
+        syncUnit(pricingItem, quantity, unit);
+        form.dispatchEvent(new Event('change', { bubbles: true }));
+        return;
+      }
+
+      const primary = entries[0];
+      const primaryGroup = itemGroupByCode.get(primary.code) || '';
+      service.value = primaryGroup;
+      populateItems(service, pricingItem);
+      pricingItem.value = primary.code;
+      syncUnit(pricingItem, quantity, unit, true);
+
+      entries.slice(1).forEach((entry) => {
+        createAdditionalRow({
+          groupId: itemGroupByCode.get(entry.code) || '',
+          itemCode: entry.code,
+          generatedByPicker: true,
+        });
+      });
+
+      const disclosure = additionalContainer.closest('details');
+      if (disclosure instanceof HTMLDetailsElement && entries.length > 1) disclosure.open = true;
+      form.dispatchEvent(new Event('change', { bubbles: true }));
+    };
+
+    refreshServicePicker();
+    refreshJobPicker();
+
+    servicePicker.done.addEventListener('click', () => {
+      const activeGroups = groups.filter((group) => selectedGroups.has(group.id));
+      if (!activeGroups.length) {
+        servicePicker.count.textContent = 'Select at least one service';
+        return;
+      }
+
+      const allowedGroups = new Set(activeGroups.map((group) => group.id));
+      [...selectedItems].forEach((code) => {
+        if (!allowedGroups.has(itemGroupByCode.get(code))) selectedItems.delete(code);
+      });
+      service.value = activeGroups[0].id;
+      populateItems(service, pricingItem);
+      pricingItem.value = '';
+      quantity.value = '';
+      syncUnit(pricingItem, quantity, unit);
+      jobPicker.toggle.disabled = false;
+      refreshJobPicker();
+      applySelectedItems();
+      servicePicker.close();
+      jobPicker.toggle.focus();
+    });
+
+    jobPicker.done.addEventListener('click', () => {
+      if (!selectedItems.size) {
+        jobPicker.count.textContent = 'Select at least one job type';
+        return;
+      }
+      applySelectedItems();
+      jobPicker.close();
+      const nextField = quantityField instanceof HTMLElement && quantityField.hidden
+        ? form.querySelector('#serviceArea')
+        : quantity;
+      if (nextField instanceof HTMLElement) nextField.focus();
+    });
 
     populateGroups(service);
     populateItems(service, pricingItem);
@@ -1678,7 +1938,7 @@
       syncUnit(pricingItem, quantity, unit);
     });
     pricingItem.addEventListener('change', () => syncUnit(pricingItem, quantity, unit, true));
-    if (addButton instanceof HTMLButtonElement) addButton.addEventListener('click', createAdditionalRow);
+    if (addButton instanceof HTMLButtonElement) addButton.addEventListener('click', () => createAdditionalRow());
     syncUnit(pricingItem, quantity, unit);
   }
 
@@ -1686,11 +1946,11 @@
     const lines = [];
     const primaryCode = toText(form.querySelector('#pricingItemCode')?.value);
     if (primaryCode) {
-      lines.push({ code: primaryCode, quantity: Math.max(0, Number(form.querySelector('#scopeQuantity')?.value) || 0) });
+      lines.push({ code: primaryCode, quantity: Math.max(0, Math.round(Number(form.querySelector('#scopeQuantity')?.value) || 0)) });
     }
     form.querySelectorAll('.additional-service-row').forEach((row) => {
       const code = toText(row.querySelector('.additional-service-item')?.value);
-      const quantity = Math.max(0, Number(row.querySelector('.additional-service-quantity')?.value) || 0);
+      const quantity = Math.max(0, Math.round(Number(row.querySelector('.additional-service-quantity')?.value) || 0));
       if (code) lines.push({ code, quantity });
     });
     return lines;

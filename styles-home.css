@@ -6570,6 +6570,202 @@ body.premium-home {
   grid-column: 1 / -1;
 }
 
+.scope-native-select {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.scope-check-picker {
+  position: relative;
+  width: 100%;
+}
+
+.scope-picker-toggle {
+  position: relative;
+  width: 100%;
+  min-height: 54px;
+  padding: 13px 48px 13px 16px;
+  border: 1px solid #c9ddec;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #183654;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.scope-picker-toggle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 19px;
+  width: 9px;
+  height: 9px;
+  border-right: 2px solid #31516f;
+  border-bottom: 2px solid #31516f;
+  transform: translateY(-65%) rotate(45deg);
+  transition: transform 160ms ease;
+}
+
+.scope-picker-toggle[aria-expanded='true']::after {
+  transform: translateY(-30%) rotate(225deg);
+}
+
+.scope-picker-toggle:hover,
+.scope-picker-toggle:focus-visible,
+.scope-check-picker.has-selection .scope-picker-toggle {
+  border-color: #45a8f4;
+  background: #f7fbff;
+  box-shadow: 0 0 0 3px rgba(10, 127, 255, 0.1);
+  outline: none;
+}
+
+.scope-picker-toggle:disabled {
+  border-color: #dce7ef;
+  background: #f3f7fa;
+  color: #71849a;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.scope-picker-summary {
+  display: block;
+  overflow: hidden;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.scope-picker-panel {
+  margin-top: 8px;
+  padding: 14px;
+  border: 1px solid #bcd8eb;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 18px 42px rgba(19, 68, 108, 0.14);
+}
+
+.scope-picker-panel[hidden] {
+  display: none;
+}
+
+.scope-picker-instruction {
+  margin: 0 0 12px;
+  color: #49637d;
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.scope-picker-options {
+  display: grid;
+  gap: 7px;
+  max-height: 310px;
+  overflow-y: auto;
+  padding: 2px 4px 2px 2px;
+  scrollbar-color: #8cc9f5 #eef6fb;
+}
+
+.scope-picker-option-group {
+  display: grid;
+  gap: 7px;
+  padding: 0;
+}
+
+.scope-picker-option-group + .scope-picker-option-group {
+  margin-top: 10px;
+  padding-top: 12px;
+  border-top: 1px solid #dceaf3;
+}
+
+.scope-picker-option-group h4 {
+  margin: 0 0 2px;
+  color: #0b609d;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+}
+
+.scope-check-option {
+  display: grid !important;
+  grid-template-columns: 22px minmax(0, 1fr);
+  align-items: center !important;
+  gap: 10px !important;
+  min-height: 46px;
+  margin: 0 !important;
+  padding: 9px 11px;
+  border: 1px solid #d7e6f0;
+  border-radius: 10px;
+  background: #f9fcfe;
+  color: #173551 !important;
+  cursor: pointer;
+}
+
+.scope-check-option:hover {
+  border-color: #7bc2f4;
+  background: #f1f9ff;
+}
+
+.scope-check-option:has(input:checked) {
+  border-color: #1689df;
+  background: #eaf6ff;
+}
+
+.scope-check-option input {
+  width: 19px;
+  height: 19px;
+  margin: 0;
+  accent-color: #0878dc;
+}
+
+.scope-check-option span {
+  min-width: 0;
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.scope-picker-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 13px;
+  padding-top: 12px;
+  border-top: 1px solid #dceaf3;
+}
+
+.scope-picker-count {
+  color: #526b84;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.scope-picker-done {
+  min-width: 104px;
+  min-height: 42px;
+  padding: 9px 20px;
+  border: 0;
+  border-radius: 10px;
+  background: #0878dc;
+  box-shadow: 0 10px 24px rgba(8, 120, 220, 0.2);
+  color: #ffffff;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.scope-picker-done:hover,
+.scope-picker-done:focus-visible {
+  background: #0665ba;
+  outline: 3px solid rgba(8, 120, 220, 0.16);
+}
+
 .service-scope-card .field label {
   display: flex;
   align-items: center;
@@ -6707,5 +6903,18 @@ body.premium-home {
 
   .scope-measurement {
     padding: 14px;
+  }
+
+  .scope-picker-options {
+    max-height: 270px;
+  }
+
+  .scope-picker-footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .scope-picker-done {
+    width: 100%;
   }
 }
