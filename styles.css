@@ -8746,6 +8746,7 @@ body.giveaway-page {
 .giveaway-page .site-nav .nav-call {
   padding: 8px 14px 8px 10px !important;
   overflow: visible;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 0.84rem;
   font-weight: 800;
   line-height: normal;
