@@ -2179,6 +2179,11 @@ summary:focus-visible {
   margin-bottom: 0 !important;
   font-size: 0.98rem !important;
   font-weight: 800;
+  color: #ffe66d !important;
+  letter-spacing: 0;
+  text-shadow:
+    0 0 6px rgba(255, 222, 64, 0.58),
+    0 2px 12px rgba(0, 16, 32, 0.78);
 }
 
 .trust-pills,
