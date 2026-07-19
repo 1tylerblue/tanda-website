@@ -12,6 +12,10 @@ const app = express();
 
 const GIVEAWAY_THRESHOLD = 50;
 const GIVEAWAY_MIN_ESTIMATE = 495;
+const GIVEAWAY_STARTS_AT = '2026-07-20T07:30:00+10:00';
+const GIVEAWAY_ENDS_AT = '2026-08-21T20:30:00+10:00';
+const GIVEAWAY_START_MS = Date.parse(GIVEAWAY_STARTS_AT);
+const GIVEAWAY_END_MS = Date.parse(GIVEAWAY_ENDS_AT);
 const BUSINESS_EMAIL = 'tandaprocleaning@gmail.com';
 const COMMAND_CENTRE_NAME = 'T & A Command Centre';
 const LEAD_RATE_LIMIT_WINDOW_MS = Number(process.env.LEAD_RATE_LIMIT_WINDOW_MS || 15 * 60 * 1000);
@@ -365,22 +369,34 @@ function validateSubscriptionSubmission(subscription) {
   return '';
 }
 
-function getGiveawayStartDate(referenceDate = new Date()) {
-  return new Date(referenceDate.getFullYear(), 4, 1, 10, 0, 0, 0);
+function isWithinGiveawayCampaign(referenceDate = new Date()) {
+  const timestamp = referenceDate instanceof Date ? referenceDate.getTime() : Date.parse(referenceDate);
+  return Number.isFinite(timestamp) && timestamp >= GIVEAWAY_START_MS && timestamp <= GIVEAWAY_END_MS;
+}
+
+function isGiveawayLeadInCampaign(lead) {
+  const submittedAt = lead?.receivedAt || lead?.createdAt;
+  return Boolean(lead?.eligibleForGiveaway) && isWithinGiveawayCampaign(submittedAt);
 }
 
 function getGiveawayState(leads, now = new Date()) {
-  const giveawayEntries = leads.filter((lead) => Boolean(lead.eligibleForGiveaway)).length;
-  const giveawayStarted = now >= getGiveawayStartDate(now);
+  const nowTimestamp = now instanceof Date ? now.getTime() : Date.parse(now);
+  const giveawayEntries = leads.filter(isGiveawayLeadInCampaign).length;
+  const giveawayStarted = Number.isFinite(nowTimestamp) && nowTimestamp >= GIVEAWAY_START_MS;
+  const giveawayEnded = Number.isFinite(nowTimestamp) && nowTimestamp > GIVEAWAY_END_MS;
+  const giveawayOpen = giveawayStarted && !giveawayEnded;
   const giveawayUnlocked = giveawayEntries >= GIVEAWAY_THRESHOLD;
 
   return {
     giveawayEntries,
     giveawayStarted,
+    giveawayEnded,
+    giveawayOpen,
     giveawayUnlocked,
-    giveawayActive: giveawayStarted && giveawayUnlocked,
+    giveawayActive: giveawayOpen && giveawayUnlocked,
     giveawayThreshold: GIVEAWAY_THRESHOLD,
-    giveawayStartsAt: getGiveawayStartDate(now).toISOString(),
+    giveawayStartsAt: new Date(GIVEAWAY_START_MS).toISOString(),
+    giveawayEndsAt: new Date(GIVEAWAY_END_MS).toISOString(),
   };
 }
 
@@ -402,6 +418,9 @@ app.get('/api/giveaway/status', (_req, res) => {
     entryCount: giveaway.giveawayEntries,
     entryTarget: giveaway.giveawayThreshold,
     unlocked: giveaway.giveawayUnlocked,
+    campaignOpen: giveaway.giveawayOpen,
+    startsAt: giveaway.giveawayStartsAt,
+    endsAt: giveaway.giveawayEndsAt,
     pendingReview: 0,
     lastUpdated: new Date().toISOString(),
   });
@@ -469,7 +488,7 @@ app.post('/api/leads', leadRateLimit, async (req, res) => {
   const estimate = estimateLead(cleanLead);
   const aiSummary = generateAISummary(cleanLead, estimate);
   const leadQuality = scoreLeadQuality(cleanLead);
-  const eligibleForGiveaway = estimate.recommendedEstimate >= GIVEAWAY_MIN_ESTIMATE;
+  const eligibleForGiveaway = isWithinGiveawayCampaign() && estimate.recommendedEstimate >= GIVEAWAY_MIN_ESTIMATE;
   const leadId = `${Date.now()}-${Math.floor(Math.random() * 1000)}`;
   const savedPhotos = savePhotoUploads(leadId, photoUploads);
 

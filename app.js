@@ -17,10 +17,38 @@
     unlockEntryTarget: 50,
     minimumEligibleJobValueExGst: 495,
     campaignName: 'Monthly Client Giveaway',
-    startsAt: '',
-    endsAt: '',
+    startsAt: '2026-07-20T07:30:00+10:00',
+    endsAt: '2026-08-21T20:30:00+10:00',
     entryStatusFallback: 'Verified entry totals will appear when live status is connected.',
   };
+
+  function getGiveawayCampaignPhase(referenceDate = new Date()) {
+    const now = referenceDate instanceof Date ? referenceDate.getTime() : Date.parse(referenceDate);
+    const start = Date.parse(GIVEAWAY_CONFIG.startsAt);
+    const end = Date.parse(GIVEAWAY_CONFIG.endsAt);
+
+    if (![now, start, end].every(Number.isFinite) || start >= end) return 'unconfigured';
+    if (now < start) return 'upcoming';
+    if (now <= end) return 'active';
+    return 'closed';
+  }
+
+  function isGiveawayCampaignOpen(referenceDate = new Date()) {
+    return getGiveawayCampaignPhase(referenceDate) === 'active';
+  }
+
+  function formatGiveawayDate(timestamp) {
+    const formatted = new Intl.DateTimeFormat('en-AU', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+      timeZone: 'Australia/Brisbane',
+    }).format(new Date(timestamp));
+    return `${formatted.replace(' at ', ', ')} AEST`;
+  }
 
   function loadAnalyticsScript() {
     if (gaScriptRequested) {
@@ -817,7 +845,7 @@
         ? 'This appears to be a larger or more complex project. We recommend a tailored quote. Final pricing confirmed after site inspection.'
         : 'Final pricing confirmed after site inspection.',
       accuracyLevel: rangeProfile.accuracy,
-      eligibleForGiveaway: estimateMinExGst >= SMART_ESTIMATE_CONFIG.giveawayThresholdMinExGst,
+      eligibleForGiveaway: isGiveawayCampaignOpen() && estimateMinExGst >= SMART_ESTIMATE_CONFIG.giveawayThresholdMinExGst,
     };
   }
 
@@ -1232,7 +1260,12 @@
     qualityNode.classList.add(`quality-${qualityRaw}`);
     qualityNode.textContent = `Detail Level: ${toTitleCase(qualityRaw)}`;
 
-    if (result.eligibleForGiveaway) {
+    const giveawayPhase = getGiveawayCampaignPhase();
+    if (giveawayPhase === 'upcoming') {
+      giveawayNode.textContent = `Giveaway entries open ${formatGiveawayDate(GIVEAWAY_CONFIG.startsAt)}. Requests submitted before then are not counted.`;
+    } else if (giveawayPhase === 'closed') {
+      giveawayNode.textContent = `This giveaway closed ${formatGiveawayDate(GIVEAWAY_CONFIG.endsAt)}.`;
+    } else if (result.eligibleForGiveaway) {
       giveawayNode.textContent = 'Eligible quote requests may be reviewed for the current monthly giveaway after the team confirms scope and campaign requirements.';
     } else {
       giveawayNode.textContent = 'Eligible quote requests may be reviewed for the current monthly giveaway; giveaway participation is separate from quote approval and booking.';
@@ -2460,7 +2493,7 @@
         ? 'Recommended estimate based on the details provided. Photos, access and final scope are reviewed before the price is confirmed.'
         : 'Recommended estimate based on the details provided. Your final price is confirmed before work starts.',
       accuracyLevel,
-      eligibleForGiveaway: recommendedPricing.recommendedEstimate >= REALISTIC_ESTIMATE_CONFIG.giveawayThresholdMinExGst,
+      eligibleForGiveaway: isGiveawayCampaignOpen() && recommendedPricing.recommendedEstimate >= REALISTIC_ESTIMATE_CONFIG.giveawayThresholdMinExGst,
     };
   }
 
@@ -2592,25 +2625,21 @@
     const live = countdown.querySelector('[data-countdown-live]');
     const pending = countdown.querySelector('[data-countdown-pending]');
     const dateLabel = countdown.querySelector('[data-countdown-date]');
+    const title = countdown.querySelector('#giveaway-countdown-title');
+    const startTimestamp = Date.parse(GIVEAWAY_CONFIG.startsAt);
     const endTimestamp = Date.parse(GIVEAWAY_CONFIG.endsAt);
 
-    if (!Number.isFinite(endTimestamp)) {
+    if (!Number.isFinite(startTimestamp) || !Number.isFinite(endTimestamp) || startTimestamp >= endTimestamp) {
       countdown.dataset.state = 'unconfigured';
       if (live instanceof HTMLElement) live.hidden = true;
       if (pending instanceof HTMLElement) pending.hidden = false;
       return;
     }
 
-    countdown.dataset.state = 'active';
     if (live instanceof HTMLElement) live.hidden = false;
     if (pending instanceof HTMLElement) pending.hidden = true;
     if (dateLabel instanceof HTMLElement) {
-      dateLabel.textContent = new Intl.DateTimeFormat('en-AU', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-        timeZone: 'Australia/Brisbane',
-      }).format(new Date(endTimestamp));
+      dateLabel.textContent = `${formatGiveawayDate(startTimestamp)} - ${formatGiveawayDate(endTimestamp)}`;
     }
 
     const updateUnit = (selector, value) => {
@@ -2621,7 +2650,10 @@
     };
 
     const updateCountdown = () => {
-      const remaining = Math.max(0, endTimestamp - Date.now());
+      const now = Date.now();
+      const phase = getGiveawayCampaignPhase(new Date(now));
+      const targetTimestamp = phase === 'upcoming' ? startTimestamp : endTimestamp;
+      const remaining = Math.max(0, targetTimestamp - now);
       const totalSeconds = Math.floor(remaining / 1000);
       const days = Math.floor(totalSeconds / 86400);
       const hours = Math.floor((totalSeconds % 86400) / 3600);
@@ -2633,9 +2665,22 @@
       updateUnit('[data-countdown-minutes]', minutes);
       updateUnit('[data-countdown-seconds]', seconds);
 
-      if (remaining === 0) {
+      if (phase === 'upcoming') {
+        countdown.dataset.state = 'upcoming';
+        if (title instanceof HTMLElement) title.textContent = 'Campaign Opens In';
+        if (live instanceof HTMLElement) live.setAttribute('aria-label', 'Time remaining until giveaway entries open');
+      } else if (phase === 'active') {
+        countdown.dataset.state = 'active';
+        if (title instanceof HTMLElement) title.textContent = 'Campaign Closes In';
+        if (live instanceof HTMLElement) live.setAttribute('aria-label', 'Time remaining until giveaway entries close');
+      } else if (phase === 'closed') {
         countdown.dataset.state = 'complete';
-        if (dateLabel instanceof HTMLElement) dateLabel.textContent = 'Campaign timing is being updated';
+        if (title instanceof HTMLElement) title.textContent = 'Campaign Closed';
+        if (live instanceof HTMLElement) live.hidden = true;
+        if (pending instanceof HTMLElement) {
+          pending.hidden = false;
+          pending.textContent = `Entries closed ${formatGiveawayDate(endTimestamp)}.`;
+        }
       }
     };
 
@@ -2658,9 +2703,16 @@
     const progress = calculateGiveawayProgress(entries, target);
     const isUnavailable = Boolean(status.unavailable);
     const remaining = Math.max(0, target - entries);
+    const campaignPhase = getGiveawayCampaignPhase();
 
     countNodes.forEach((node) => {
-      node.textContent = isUnavailable ? 'Giveaway entries open' : formatGiveawayCount(entries, target);
+      if (campaignPhase === 'upcoming') {
+        node.textContent = 'Entries open 20 July 2026';
+      } else if (campaignPhase === 'closed') {
+        node.textContent = 'Campaign closed';
+      } else {
+        node.textContent = isUnavailable ? 'Giveaway entries open' : formatGiveawayCount(entries, target);
+      }
       node.classList.toggle('is-unavailable', isUnavailable);
     });
 
@@ -2673,6 +2725,14 @@
     });
 
     statusNodes.forEach((node) => {
+      if (campaignPhase === 'upcoming') {
+        node.textContent = `Eligible entries will be accepted from ${formatGiveawayDate(GIVEAWAY_CONFIG.startsAt)}.`;
+        return;
+      }
+      if (campaignPhase === 'closed') {
+        node.textContent = `Entries closed ${formatGiveawayDate(GIVEAWAY_CONFIG.endsAt)}.`;
+        return;
+      }
       if (isUnavailable) {
         node.textContent = GIVEAWAY_CONFIG.entryStatusFallback;
         return;
