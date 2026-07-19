@@ -1532,10 +1532,15 @@
     const pricingItem = form.querySelector('#pricingItemCode');
     const quantity = form.querySelector('#scopeQuantity');
     const unit = form.querySelector('#scopeUnit');
+    const unitLabel = form.querySelector('[data-scope-unit-label]');
+    const unitSummary = form.querySelector('[data-scope-unit-summary]');
+    const quantityHelp = form.querySelector('[data-quantity-help]');
+    const quantityField = form.querySelector('[data-quantity-field]');
+    const scopeMeasurement = form.querySelector('[data-scope-measurement]');
     const addButton = form.querySelector('[data-add-service]');
     const additionalContainer = form.querySelector('[data-additional-service-items]');
     const engine = window.TAPricing;
-    if (!engine || !(service instanceof HTMLSelectElement) || !(pricingItem instanceof HTMLSelectElement) || !(quantity instanceof HTMLInputElement) || !(unit instanceof HTMLSelectElement) || !(additionalContainer instanceof HTMLElement)) {
+    if (!engine || !(service instanceof HTMLSelectElement) || !(pricingItem instanceof HTMLSelectElement) || !(quantity instanceof HTMLInputElement) || !(unit instanceof HTMLInputElement) || !(additionalContainer instanceof HTMLElement)) {
       return;
     }
 
@@ -1548,14 +1553,15 @@
 
     const populateGroups = (select) => {
       select.replaceChildren();
-      addOption(select, '', 'Select service type');
+      addOption(select, '', 'What would you like cleaned?');
       engine.getGroups().forEach((group) => addOption(select, group.id, group.label));
     };
 
-    const populateItems = (groupSelect, itemSelect) => {
+    const populateItems = (groupSelect, itemSelect, includeAddons = false) => {
       itemSelect.replaceChildren();
-      const items = engine.getItemsForGroup(groupSelect.value);
-      addOption(itemSelect, '', items.length ? 'Select exact service item' : 'Select a service type first');
+      const groupItems = engine.getItemsForGroup(groupSelect.value);
+      const items = includeAddons ? groupItems : groupItems.filter((entry) => !entry.addonOnly);
+      addOption(itemSelect, '', items.length ? 'Choose the closest job' : 'Choose a service first');
       items.forEach((entry) => {
         const option = document.createElement('option');
         option.value = entry.code;
@@ -1567,24 +1573,32 @@
 
     const syncUnit = (itemSelect, quantityInput, unitNode, clearQuantity = false) => {
       const entry = engine.getItem(itemSelect.value);
+      const isPrimaryItem = unitNode === unit;
       if (clearQuantity) quantityInput.value = '';
       if (!entry) {
-        if (unitNode instanceof HTMLSelectElement) {
-          unitNode.replaceChildren();
-          addOption(unitNode, '', 'Set by exact service item');
-        } else if (unitNode) {
-          unitNode.textContent = 'Select an item';
+        if (unitNode instanceof HTMLInputElement) unitNode.value = '';
+        else if (unitNode) unitNode.textContent = 'Choose a job';
+        quantityInput.placeholder = 'Choose a job first';
+        if (isPrimaryItem) {
+          if (quantityHelp) quantityHelp.textContent = 'Choose a job above and we will tell you what to count.';
+          if (quantityField instanceof HTMLElement) quantityField.hidden = false;
+          if (unitSummary instanceof HTMLElement) unitSummary.hidden = true;
+          if (scopeMeasurement instanceof HTMLElement) scopeMeasurement.classList.remove('is-fixed');
         }
         return;
       }
-      if (entry.mode === 'fixed' || entry.manual) quantityInput.value = quantityInput.value || '1';
+      const isFixed = entry.mode === 'fixed' || entry.manual;
+      if (isFixed) quantityInput.value = '1';
       quantityInput.step = ['square-metres', 'linear-metres', 'labour-hours'].includes(entry.unit) ? '0.01' : '1';
       quantityInput.placeholder = `Enter ${engine.unitLabel(entry.unit, 2)}`;
-      if (unitNode instanceof HTMLSelectElement) {
-        unitNode.replaceChildren();
-        addOption(unitNode, entry.unit, engine.unitLabel(entry.unit, 2));
-      } else if (unitNode) {
-        unitNode.textContent = engine.unitLabel(entry.unit, 2);
+      if (unitNode instanceof HTMLInputElement) unitNode.value = entry.unit;
+      else if (unitNode) unitNode.textContent = engine.unitLabel(entry.unit, 2);
+      if (isPrimaryItem) {
+        if (quantityField instanceof HTMLElement) quantityField.hidden = isFixed;
+        if (unitSummary instanceof HTMLElement) unitSummary.hidden = isFixed;
+        if (scopeMeasurement instanceof HTMLElement) scopeMeasurement.classList.toggle('is-fixed', isFixed);
+        if (unitLabel) unitLabel.textContent = engine.unitLabel(entry.unit, 2);
+        if (quantityHelp) quantityHelp.textContent = `Enter the approximate number of ${engine.unitLabel(entry.unit, 2)}.`;
       }
     };
 
@@ -1601,7 +1615,7 @@
       const itemSelect = document.createElement('select');
       itemSelect.className = 'additional-service-item';
       itemSelect.setAttribute('aria-label', 'Additional exact service item');
-      populateItems(groupSelect, itemSelect);
+      populateItems(groupSelect, itemSelect, true);
 
       const quantityInput = document.createElement('input');
       quantityInput.className = 'additional-service-quantity';
@@ -1623,7 +1637,7 @@
       removeButton.setAttribute('aria-label', 'Remove additional service');
 
       groupSelect.addEventListener('change', () => {
-        populateItems(groupSelect, itemSelect);
+        populateItems(groupSelect, itemSelect, true);
         quantityInput.value = '';
         syncUnit(itemSelect, quantityInput, unitText);
       });

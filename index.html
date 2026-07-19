@@ -304,7 +304,7 @@
         </div>
         <div class="commercial-trust-panel" aria-label="Client types serviced">
           <article>
-            <img class="commercial-trust-photo" src="assets/images/website image.jpg" alt="T and A Pro Cleaning service van at a commercial property" loading="lazy" decoding="async" />
+            <img class="commercial-trust-photo" src="assets/images/builders-clean.JPG" alt="Commercial gym interior serviced by T and A Pro Cleaning" loading="lazy" decoding="async" />
             <div class="commercial-trust-card-copy">
               <span class="commercial-trust-mark">10+</span>
               <strong>Anytime Fitness Locations Serviced</strong>
@@ -858,56 +858,70 @@
                   </div>
                 </section>
 
-                <section class="form-card">
-                  <h3>Service Scope</h3>
-                  <div class="field-grid">
-                      <div class="field">
-                      <label for="service">Service Type</label>
-                      <select id="service" name="service" required aria-required="true">
-                        <option value="">Select service type</option>
-                      </select>
+                <section class="form-card service-scope-card">
+                  <div class="service-scope-heading">
+                    <div>
+                      <span class="form-step-label">Step 2</span>
+                      <h3>What needs cleaning?</h3>
                     </div>
-                    <div class="field">
-                      <label for="pricingItemCode">Exact Service Item</label>
-                      <select id="pricingItemCode" name="pricingItemCode" required aria-required="true">
-                        <option value="">Select a service type first</option>
-                      </select>
-                    </div>
-                    <div class="field">
-                      <label for="serviceArea">Service Area</label>
-                      <select id="serviceArea" name="serviceArea" required aria-required="true">
-                        <option value="">Select service area</option>
-                        <option value="Interior">Interior</option>
-                        <option value="Exterior">Exterior</option>
-                        <option value="Both">Both</option>
-                      </select>
-                    </div>
-                    <div class="field">
-                      <label for="scopeQuantity">Approximate Quantity <span class="field-optional">Recommended</span></label>
-                      <input type="number" id="scopeQuantity" name="scopeQuantity" min="0.01" step="0.01" inputmode="decimal" placeholder="Enter quantity" required aria-required="true" />
-                    </div>
-                    <div class="field">
-                      <label for="scopeUnit">Quantity Type</label>
-                      <select id="scopeUnit" name="scopeUnit">
-                        <option value="">Set by exact service item</option>
-                      </select>
-                    </div>
-                    <div class="field span-2 additional-services-field">
-                      <div class="additional-services-head">
-                        <div>
-                          <label>Additional Services or Add-ons</label>
-                          <p class="field-help">Add measured services to receive automatic bundle pricing and category minimums.</p>
-                        </div>
-                        <button type="button" class="btn-secondary add-service-button" data-add-service>Add Another Service</button>
-                      </div>
-                      <div class="additional-service-items" data-additional-service-items></div>
-                    </div>
+                    <p>Choose the closest option. We will confirm the final scope with you before booking.</p>
                   </div>
-                  <p class="scope-note">T&amp;A Pro Cleaning provides cleaning only. Repairs, sealing, recoating, restoration trades and services not listed in the estimator are excluded.</p>
+                  <div class="field-grid service-scope-flow">
+                    <div class="field service-choice-field">
+                      <label for="service"><span class="field-step-number">1</span> Choose a service</label>
+                      <select id="service" name="service" required aria-required="true">
+                        <option value="">What would you like cleaned?</option>
+                      </select>
+                    </div>
+                    <div class="field service-choice-field">
+                      <label for="pricingItemCode"><span class="field-step-number">2</span> Choose the closest job</label>
+                      <select id="pricingItemCode" name="pricingItemCode" required aria-required="true">
+                        <option value="">Choose a service first</option>
+                      </select>
+                      <p class="field-help">Pick the closest match. You can explain anything unusual below.</p>
+                    </div>
+                    <div class="scope-measurement span-2" data-scope-measurement>
+                      <div class="field scope-quantity-field" data-quantity-field>
+                        <label for="scopeQuantity"><span class="field-step-number">3</span> Tell us roughly how much</label>
+                        <input type="number" id="scopeQuantity" name="scopeQuantity" min="0.01" step="0.01" inputmode="decimal" placeholder="Choose a job first" required aria-required="true" />
+                        <p class="field-help" data-quantity-help>Choose a job above and we will tell you what to count.</p>
+                      </div>
+                      <div class="field service-area-field">
+                        <label for="serviceArea">Where is the cleaning?</label>
+                        <select id="serviceArea" name="serviceArea" required aria-required="true">
+                          <option value="">Choose inside, outside or both</option>
+                          <option value="Interior">Inside only</option>
+                          <option value="Exterior">Outside only</option>
+                          <option value="Both">Inside and outside</option>
+                        </select>
+                      </div>
+                      <input type="hidden" id="scopeUnit" name="scopeUnit" value="" />
+                      <p class="scope-unit-summary" data-scope-unit-summary hidden>
+                        Measure: <strong data-scope-unit-label></strong>
+                      </p>
+                    </div>
+                    <details class="additional-services-disclosure span-2">
+                      <summary>Need more than one service?</summary>
+                      <div class="additional-services-field">
+                        <div class="additional-services-head">
+                          <div>
+                            <strong>Add another service or add-on</strong>
+                            <p class="field-help">Add another cleaning task so the estimate includes the full job.</p>
+                          </div>
+                          <button type="button" class="btn-secondary add-service-button" data-add-service>Add Service</button>
+                        </div>
+                        <div class="additional-service-items" data-additional-service-items></div>
+                      </div>
+                    </details>
+                  </div>
+                  <details class="scope-disclaimer">
+                    <summary>What this estimate covers</summary>
+                    <p>T&amp;A Pro Cleaning provides cleaning only. Repairs, sealing, recoating, restoration and other trade work are not included.</p>
+                  </details>
                 </section>
 
                 <details class="quote-advanced">
-                  <summary>Show more details for access, timing and notes</summary>
+                  <summary>Optional details: access, condition and timing</summary>
                   <div class="quote-advanced-content">
                     <p class="advanced-title">Site Conditions</p>
                     <div class="field-grid">
