@@ -8750,6 +8750,7 @@ body.giveaway-page {
   font-size: 0.84rem;
   font-weight: 800;
   line-height: normal;
+  letter-spacing: 0;
 }
 
 .giveaway-page .site-nav .nav-call::before {
