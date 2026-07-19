@@ -21,7 +21,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@800&family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20260719-shared-call-button-v5" />
+  <link rel="stylesheet" href="styles.css?v=20260719-live-campaign-status" />
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -97,7 +97,7 @@
             <div class="giveaway-countdown-head">
               <div>
                 <p class="giveaway-countdown-kicker">Campaign countdown</p>
-                <h2 id="giveaway-countdown-title">Campaign Opens In</h2>
+                <h2 id="giveaway-countdown-title" data-countdown-title>Campaign Opens In</h2>
               </div>
               <p class="giveaway-countdown-date" data-countdown-date>20 July 2026, 7:30 am AEST - 21 August 2026, 8:30 pm AEST</p>
             </div>
@@ -204,14 +204,38 @@
     <section class="section" aria-labelledby="giveaway-progress-title">
       <div class="container inner-layout">
         <article class="inner-card giveaway-progress-card" data-reveal aria-live="polite">
-          <p class="eyebrow">Live Giveaway Progress</p>
-          <h2 id="giveaway-progress-title">Live Giveaway Progress</h2>
-          <p class="giveaway-count is-unavailable" data-entry-count>Giveaway entries open</p>
+          <p class="eyebrow">Live campaign data</p>
+          <h2 id="giveaway-progress-title">Live Campaign Status</h2>
+          <div class="giveaway-live-entry">
+            <span class="giveaway-live-label"><i aria-hidden="true"></i>Verified entries</span>
+            <strong class="giveaway-count is-unavailable" data-entry-count data-entry-target="50">Loading live total</strong>
+            <span class="giveaway-live-copy">confirmed for the current campaign</span>
+          </div>
+          <div class="giveaway-progress-meta" aria-label="Giveaway progress summary">
+            <span>Live verified total</span>
+            <span><strong data-entry-target-label>50</strong> entries unlock the draw</span>
+          </div>
           <div class="giveaway-progress-track" aria-hidden="true">
             <span class="giveaway-progress-bar" data-giveaway-progress role="progressbar" aria-label="Giveaway unlock progress"></span>
           </div>
-          <p class="giveaway-progress-label" data-giveaway-progress-label>Verified progress will appear here</p>
+          <p class="giveaway-progress-label" data-giveaway-progress-label>Live campaign progress is loading</p>
           <p class="giveaway-status" data-unlock-status>Entries are being reviewed. Verified totals will appear when live status is connected.</p>
+          <section class="giveaway-countdown giveaway-countdown-compact" data-giveaway-countdown aria-label="Campaign countdown">
+            <div class="giveaway-countdown-head">
+              <div>
+                <p class="giveaway-countdown-kicker">Campaign timer</p>
+                <h3 data-countdown-title>Campaign Opens In</h3>
+              </div>
+              <p class="giveaway-countdown-date" data-countdown-date>20 July 2026, 7:30 am AEST - 21 August 2026, 8:30 pm AEST</p>
+            </div>
+            <div class="giveaway-countdown-grid" data-countdown-live hidden aria-label="Time remaining until giveaway entries open">
+              <span><strong data-countdown-days>00</strong><small>Days</small></span>
+              <span><strong data-countdown-hours>00</strong><small>Hours</small></span>
+              <span><strong data-countdown-minutes>00</strong><small>Minutes</small></span>
+              <span><strong data-countdown-seconds>00</strong><small>Seconds</small></span>
+            </div>
+            <p class="giveaway-countdown-pending" data-countdown-pending>Campaign countdown loading.</p>
+          </section>
         </article>
 
         <aside class="inner-card" data-reveal>
@@ -425,6 +449,6 @@
   <script>
     window.__API_BASE__ = 'https://tanda-pro-cleaning-api.onrender.com';
   </script>
-  <script defer src="app.js?v=20260719-giveaway-dates"></script>
+  <script defer src="app.js?v=20260719-live-campaign-status"></script>
 </body>
 </html>

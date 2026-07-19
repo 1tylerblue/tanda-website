@@ -7971,7 +7971,113 @@ body.luxury-home .form-actions .btn {
 .giveaway-progress-card {
   display: grid;
   gap: 16px;
+  text-align: left;
+}
+
+.giveaway-progress-card > .eyebrow,
+.giveaway-progress-card > h2 {
+  margin-inline: auto;
   text-align: center;
+}
+
+.giveaway-live-entry {
+  position: relative;
+  display: grid;
+  justify-items: start;
+  gap: 3px;
+  overflow: hidden;
+  padding: 24px;
+  border: 1px solid rgba(8, 120, 220, 0.18);
+  border-radius: 18px;
+  background: linear-gradient(135deg, #f7fbff 0%, #eaf6ff 100%);
+}
+
+.giveaway-live-entry::after {
+  content: '';
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: 8px;
+  background: #0a7fff;
+}
+
+.giveaway-live-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #31516f;
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.giveaway-live-label i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #10a866;
+  box-shadow: 0 0 0 5px rgba(16, 168, 102, 0.12);
+}
+
+.giveaway-live-entry .giveaway-count {
+  font-size: clamp(3.25rem, 8vw, 5.5rem);
+  line-height: 0.95;
+  letter-spacing: 0;
+}
+
+.giveaway-live-entry .giveaway-count.is-unavailable {
+  font-size: 1.35rem;
+  line-height: 1.2;
+}
+
+.giveaway-live-copy {
+  color: #526b84;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.giveaway-progress-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #49637d;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.giveaway-progress-meta span {
+  padding: 8px 12px;
+  border: 1px solid rgba(8, 120, 220, 0.14);
+  border-radius: 999px;
+  background: #f7fbff;
+}
+
+.giveaway-progress-meta strong {
+  color: #0878dc;
+}
+
+.giveaway-countdown-compact {
+  width: 100%;
+  max-width: none;
+  margin-top: 4px;
+  padding: 16px;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: none;
+}
+
+.giveaway-countdown-compact .giveaway-countdown-head h3 {
+  margin: 4px 0 0;
+  color: #071c33;
+  font-size: 1.08rem;
+}
+
+.giveaway-countdown-compact .giveaway-countdown-grid {
+  margin-top: 12px;
+}
+
+.giveaway-countdown-compact .giveaway-countdown-grid span {
+  padding-block: 9px;
 }
 
 .giveaway-count {
@@ -8158,6 +8264,15 @@ body.luxury-home .form-actions .btn {
 @media (max-width: 520px) {
   .giveaway-countdown-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .giveaway-progress-meta {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .giveaway-progress-meta span {
+    width: 100%;
   }
 }
 

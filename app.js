@@ -1512,22 +1512,7 @@
       return;
     }
 
-    document.querySelectorAll('[data-entry-count]').forEach((node) => {
-      const text = toText(node.textContent);
-      const match = text.match(/(\d+)\s*\/\s*(\d+)/);
-      if (!match) {
-        return;
-      }
-
-      const current = Number(match[1]);
-      const threshold = Number(match[2]);
-      if (!Number.isFinite(current) || !Number.isFinite(threshold)) {
-        return;
-      }
-
-      const nextCount = Math.min(threshold, current + 1);
-      node.textContent = `${nextCount} / ${threshold} eligible entries`;
-    });
+    window.setTimeout(() => loadGiveawayStatus(), 500);
   }
 
   function setupSmartEstimatePreview(form) {
@@ -2606,8 +2591,8 @@
     return merged;
   }
 
-  function formatGiveawayCount(entryCount, entryTarget) {
-    return `${entryCount} / ${entryTarget} eligible entries`;
+  function formatGiveawayCount(entryCount) {
+    return String(Math.max(0, Number(entryCount || 0)));
   }
 
   function calculateGiveawayProgress(entryCount, entryTarget) {
@@ -2617,75 +2602,79 @@
   }
 
   function setupGiveawayCountdown() {
-    const countdown = document.querySelector('[data-giveaway-countdown]');
-    if (!(countdown instanceof HTMLElement)) {
+    const countdowns = document.querySelectorAll('[data-giveaway-countdown]');
+    if (!countdowns.length) {
       return;
     }
-
-    const live = countdown.querySelector('[data-countdown-live]');
-    const pending = countdown.querySelector('[data-countdown-pending]');
-    const dateLabel = countdown.querySelector('[data-countdown-date]');
-    const title = countdown.querySelector('#giveaway-countdown-title');
     const startTimestamp = Date.parse(GIVEAWAY_CONFIG.startsAt);
     const endTimestamp = Date.parse(GIVEAWAY_CONFIG.endsAt);
 
-    if (!Number.isFinite(startTimestamp) || !Number.isFinite(endTimestamp) || startTimestamp >= endTimestamp) {
-      countdown.dataset.state = 'unconfigured';
-      if (live instanceof HTMLElement) live.hidden = true;
-      if (pending instanceof HTMLElement) pending.hidden = false;
-      return;
-    }
+    countdowns.forEach((countdown) => {
+      if (!(countdown instanceof HTMLElement)) return;
 
-    if (live instanceof HTMLElement) live.hidden = false;
-    if (pending instanceof HTMLElement) pending.hidden = true;
-    if (dateLabel instanceof HTMLElement) {
-      dateLabel.textContent = `${formatGiveawayDate(startTimestamp)} - ${formatGiveawayDate(endTimestamp)}`;
-    }
+      const live = countdown.querySelector('[data-countdown-live]');
+      const pending = countdown.querySelector('[data-countdown-pending]');
+      const dateLabel = countdown.querySelector('[data-countdown-date]');
+      const title = countdown.querySelector('[data-countdown-title]');
 
-    const updateUnit = (selector, value) => {
-      const node = countdown.querySelector(selector);
-      if (node instanceof HTMLElement) {
-        node.textContent = String(Math.max(0, value)).padStart(2, '0');
-      }
-    };
-
-    const updateCountdown = () => {
-      const now = Date.now();
-      const phase = getGiveawayCampaignPhase(new Date(now));
-      const targetTimestamp = phase === 'upcoming' ? startTimestamp : endTimestamp;
-      const remaining = Math.max(0, targetTimestamp - now);
-      const totalSeconds = Math.floor(remaining / 1000);
-      const days = Math.floor(totalSeconds / 86400);
-      const hours = Math.floor((totalSeconds % 86400) / 3600);
-      const minutes = Math.floor((totalSeconds % 3600) / 60);
-      const seconds = totalSeconds % 60;
-
-      updateUnit('[data-countdown-days]', days);
-      updateUnit('[data-countdown-hours]', hours);
-      updateUnit('[data-countdown-minutes]', minutes);
-      updateUnit('[data-countdown-seconds]', seconds);
-
-      if (phase === 'upcoming') {
-        countdown.dataset.state = 'upcoming';
-        if (title instanceof HTMLElement) title.textContent = 'Campaign Opens In';
-        if (live instanceof HTMLElement) live.setAttribute('aria-label', 'Time remaining until giveaway entries open');
-      } else if (phase === 'active') {
-        countdown.dataset.state = 'active';
-        if (title instanceof HTMLElement) title.textContent = 'Campaign Closes In';
-        if (live instanceof HTMLElement) live.setAttribute('aria-label', 'Time remaining until giveaway entries close');
-      } else if (phase === 'closed') {
-        countdown.dataset.state = 'complete';
-        if (title instanceof HTMLElement) title.textContent = 'Campaign Closed';
+      if (!Number.isFinite(startTimestamp) || !Number.isFinite(endTimestamp) || startTimestamp >= endTimestamp) {
+        countdown.dataset.state = 'unconfigured';
         if (live instanceof HTMLElement) live.hidden = true;
-        if (pending instanceof HTMLElement) {
-          pending.hidden = false;
-          pending.textContent = `Entries closed ${formatGiveawayDate(endTimestamp)}.`;
-        }
+        if (pending instanceof HTMLElement) pending.hidden = false;
+        return;
       }
-    };
 
-    updateCountdown();
-    window.setInterval(updateCountdown, 1000);
+      if (live instanceof HTMLElement) live.hidden = false;
+      if (pending instanceof HTMLElement) pending.hidden = true;
+      if (dateLabel instanceof HTMLElement) {
+        dateLabel.textContent = `${formatGiveawayDate(startTimestamp)} - ${formatGiveawayDate(endTimestamp)}`;
+      }
+
+      const updateUnit = (selector, value) => {
+        const node = countdown.querySelector(selector);
+        if (node instanceof HTMLElement) {
+          node.textContent = String(Math.max(0, value)).padStart(2, '0');
+        }
+      };
+
+      const updateCountdown = () => {
+        const now = Date.now();
+        const phase = getGiveawayCampaignPhase(new Date(now));
+        const targetTimestamp = phase === 'upcoming' ? startTimestamp : endTimestamp;
+        const remaining = Math.max(0, targetTimestamp - now);
+        const totalSeconds = Math.floor(remaining / 1000);
+        const days = Math.floor(totalSeconds / 86400);
+        const hours = Math.floor((totalSeconds % 86400) / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+
+        updateUnit('[data-countdown-days]', days);
+        updateUnit('[data-countdown-hours]', hours);
+        updateUnit('[data-countdown-minutes]', minutes);
+        updateUnit('[data-countdown-seconds]', seconds);
+
+        if (phase === 'upcoming') {
+          countdown.dataset.state = 'upcoming';
+          if (title instanceof HTMLElement) title.textContent = 'Campaign Opens In';
+          if (live instanceof HTMLElement) live.setAttribute('aria-label', 'Time remaining until giveaway entries open');
+        } else if (phase === 'active') {
+          countdown.dataset.state = 'active';
+          if (title instanceof HTMLElement) title.textContent = 'Campaign Closes In';
+          if (live instanceof HTMLElement) live.setAttribute('aria-label', 'Time remaining until giveaway entries close');
+        } else if (phase === 'closed') {
+          countdown.dataset.state = 'complete';
+          if (title instanceof HTMLElement) title.textContent = 'Campaign Closed';
+          if (live instanceof HTMLElement) live.hidden = true;
+          if (pending instanceof HTMLElement) {
+            pending.hidden = false;
+            pending.textContent = `Entries closed ${formatGiveawayDate(endTimestamp)}.`;
+          }
+        }
+      };
+
+      updateCountdown();
+      window.setInterval(updateCountdown, 1000);
+    });
   }
 
   function renderGiveawayStatus(status) {
@@ -2693,6 +2682,7 @@
     const statusNodes = document.querySelectorAll('[data-unlock-status]');
     const progressNodes = document.querySelectorAll('[data-giveaway-progress]');
     const labelNodes = document.querySelectorAll('[data-giveaway-progress-label]');
+    const targetLabelNodes = document.querySelectorAll('[data-entry-target-label]');
     const reviewNodes = document.querySelectorAll('[data-pending-review-count]');
     const lastUpdatedNodes = document.querySelectorAll('[data-giveaway-last-updated]');
     const adminEntryNodes = document.querySelectorAll('[data-admin-giveaway-entries]');
@@ -2706,14 +2696,12 @@
     const campaignPhase = getGiveawayCampaignPhase();
 
     countNodes.forEach((node) => {
-      if (campaignPhase === 'upcoming') {
-        node.textContent = 'Entries open 20 July 2026';
-      } else if (campaignPhase === 'closed') {
-        node.textContent = 'Campaign closed';
-      } else {
-        node.textContent = isUnavailable ? 'Giveaway entries open' : formatGiveawayCount(entries, target);
-      }
+      node.textContent = isUnavailable ? 'Unavailable' : formatGiveawayCount(entries);
       node.classList.toggle('is-unavailable', isUnavailable);
+    });
+
+    targetLabelNodes.forEach((node) => {
+      node.textContent = String(target);
     });
 
     adminEntryNodes.forEach((node) => {
@@ -2755,7 +2743,15 @@
     });
 
     labelNodes.forEach((node) => {
-      node.textContent = isUnavailable ? 'Verified progress will appear here' : `${progress}% of unlock target`;
+      if (isUnavailable) {
+        node.textContent = 'Live verified progress is temporarily unavailable';
+      } else if (campaignPhase === 'upcoming') {
+        node.textContent = 'Entry counting begins 20 July 2026 at 7:30 am AEST';
+      } else if (campaignPhase === 'closed') {
+        node.textContent = `Final verified campaign total: ${entries}`;
+      } else {
+        node.textContent = `Progress toward the ${target}-entry draw: ${progress}%`;
+      }
     });
 
     reviewNodes.forEach((node) => {
