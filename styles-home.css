@@ -6918,3 +6918,336 @@ body.premium-home {
     width: 100%;
   }
 }
+
+/* Mobile quote focus: keep the form calm and reveal optional detail on demand. */
+.form-card-heading,
+.quote-notes-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.form-card-heading > div,
+.quote-notes-heading > div {
+  display: grid;
+  gap: 5px;
+}
+
+.form-card-heading .form-step-label {
+  margin-bottom: 5px;
+}
+
+.quote-notes-content {
+  display: grid;
+  gap: 16px;
+}
+
+.mobile-notes-toggle,
+.additional-service-summary {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  #quote {
+    scroll-margin-top: 76px;
+  }
+
+  .quote {
+    padding-block: 52px;
+  }
+
+  .quote-intro {
+    margin-bottom: 18px;
+    text-align: left;
+  }
+
+  .quote-intro h2 {
+    margin-bottom: 8px;
+    font-size: 2rem;
+    letter-spacing: 0;
+  }
+
+  .quote-intro > p:not(.group-copy) {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  .quote-intro .group-copy,
+  .quote-side-card,
+  .quote-giveaway-note {
+    display: none;
+  }
+
+  .quote-layout {
+    display: block;
+  }
+
+  .quote-form-shell {
+    border-radius: 16px;
+    box-shadow: 0 16px 38px rgba(22, 66, 102, 0.1);
+  }
+
+  .quote-form {
+    gap: 12px;
+    padding: 10px;
+  }
+
+  .form-card {
+    gap: 13px;
+    padding: 14px;
+    border-radius: 14px;
+    box-shadow: none;
+  }
+
+  .form-card h3 {
+    font-size: 1.08rem;
+  }
+
+  .form-card h3::before {
+    width: 8px;
+    height: 8px;
+    margin-right: 8px;
+    box-shadow: 0 0 0 4px rgba(30, 107, 255, 0.08);
+  }
+
+  .property-details-card .field-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .property-details-card .span-2,
+  .property-details-card .field:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .quote-form .field label {
+    margin-bottom: 5px;
+    font-size: 0.76rem;
+  }
+
+  .quote-form input[type='text'],
+  .quote-form input[type='tel'],
+  .quote-form input[type='date'],
+  .quote-form select,
+  .quote-form textarea,
+  .field input,
+  .field select,
+  .field textarea {
+    min-height: 46px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+  }
+
+  .service-scope-heading {
+    gap: 0;
+    padding-bottom: 10px;
+  }
+
+  .service-scope-heading > p,
+  .service-choice-field > .field-help {
+    display: none;
+  }
+
+  .service-scope-flow {
+    gap: 12px;
+  }
+
+  .service-scope-card .field label {
+    margin-bottom: 6px;
+    font-size: 0.82rem;
+  }
+
+  .field-step-number {
+    width: 23px;
+    height: 23px;
+    flex-basis: 23px;
+    font-size: 0.72rem;
+  }
+
+  .scope-picker-toggle {
+    min-height: 48px;
+    padding-block: 11px;
+    border-radius: 10px;
+  }
+
+  .scope-picker-panel {
+    padding: 10px;
+    border-radius: 12px;
+    box-shadow: 0 12px 28px rgba(19, 68, 108, 0.11);
+  }
+
+  .scope-picker-instruction {
+    margin-bottom: 9px;
+    font-size: 0.78rem;
+  }
+
+  .scope-picker-options {
+    max-height: 230px;
+  }
+
+  .scope-check-option {
+    min-height: 42px;
+    padding: 8px 10px;
+  }
+
+  .scope-measurement {
+    gap: 10px;
+    padding: 12px;
+    border-radius: 12px;
+  }
+
+  .scope-quantity-field .field-help,
+  .scope-unit-summary {
+    font-size: 0.76rem;
+  }
+
+  .additional-services-disclosure,
+  .scope-disclaimer,
+  .quote-advanced {
+    border-radius: 11px;
+  }
+
+  .additional-services-disclosure summary,
+  .scope-disclaimer summary,
+  .quote-advanced > summary {
+    padding: 12px;
+    font-size: 0.8rem;
+  }
+
+  .additional-services-field {
+    gap: 10px;
+    padding: 2px 10px 10px;
+  }
+
+  .additional-services-head {
+    gap: 8px;
+  }
+
+  .additional-services-head .field-help {
+    display: none;
+  }
+
+  .add-service-button {
+    min-height: 38px;
+    padding-block: 7px;
+  }
+
+  .additional-service-row[data-picker-generated='true'] {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .additional-service-row[data-picker-generated='true'] .additional-service-group,
+  .additional-service-row[data-picker-generated='true'] .additional-service-item {
+    display: none;
+  }
+
+  .additional-service-summary {
+    display: grid;
+    grid-column: 1 / -1;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .additional-service-summary span {
+    color: #0b609d;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .additional-service-summary strong {
+    overflow-wrap: anywhere;
+    color: #153653;
+    font-size: 0.9rem;
+  }
+
+  .additional-service-row[data-picker-generated='true'] .additional-service-quantity {
+    grid-column: 1;
+    min-width: 0;
+  }
+
+  .additional-service-row[data-picker-generated='true'] .additional-service-unit {
+    grid-column: 2;
+    white-space: nowrap;
+  }
+
+  .additional-service-row[data-picker-generated='true'] .additional-service-remove {
+    grid-column: 1 / -1;
+    justify-self: end;
+    width: auto;
+    min-height: 34px;
+    padding: 6px 12px;
+  }
+
+  .quote-notes-heading {
+    align-items: center;
+  }
+
+  .quote-notes-heading h3 {
+    margin: 2px 0 0;
+  }
+
+  .mobile-notes-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 38px;
+    padding: 7px 11px;
+    border: 1px solid #bcd8eb;
+    border-radius: 9px;
+    background: #f4faff;
+    color: #075f9f;
+    font: inherit;
+    font-size: 0.76rem;
+    font-weight: 800;
+  }
+
+  .quote-notes-content {
+    display: none;
+  }
+
+  .quote-notes-card.is-open .quote-notes-content {
+    display: grid;
+  }
+
+  .quote-notes-card .ai-helper {
+    display: none;
+  }
+
+  .quote-advanced-content {
+    padding: 10px;
+  }
+
+  .agreement-check {
+    font-size: 0.8rem;
+    line-height: 1.45;
+  }
+
+  .quote-submit {
+    min-height: 50px;
+  }
+
+  .cookie-consent {
+    gap: 8px;
+  }
+
+  .cookie-consent-text {
+    display: -webkit-box;
+    overflow: hidden;
+    font-size: 0.75rem;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .cookie-consent .btn-primary,
+  .cookie-consent .btn-secondary,
+  .cookie-consent-actions button {
+    min-height: 38px;
+    padding-inline: 10px;
+    font-size: 0.76rem;
+  }
+}

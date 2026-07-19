@@ -1663,6 +1663,12 @@
       });
       itemSelect.addEventListener('change', () => syncUnit(itemSelect, quantityInput, unitText, true));
       removeButton.addEventListener('click', () => {
+        if (row.dataset.pickerGenerated === 'true' && row.dataset.pickerCode) {
+          selectedItems.delete(row.dataset.pickerCode);
+          refreshJobPicker();
+          applySelectedItems();
+          return;
+        }
         row.remove();
         form.dispatchEvent(new Event('change', { bubbles: true }));
       });
@@ -1677,7 +1683,18 @@
         itemSelect.value = itemCode;
         syncUnit(itemSelect, quantityInput, unitText, true);
       }
-      if (generatedByPicker) row.dataset.pickerGenerated = 'true';
+      if (generatedByPicker) {
+        row.dataset.pickerGenerated = 'true';
+        row.dataset.pickerCode = itemCode;
+        const compactSummary = document.createElement('div');
+        compactSummary.className = 'additional-service-summary';
+        const compactGroup = document.createElement('span');
+        compactGroup.textContent = engine.getGroups().find((group) => group.id === groupId)?.label || 'Selected service';
+        const compactItem = document.createElement('strong');
+        compactItem.textContent = engine.getItem(itemCode)?.label || 'Selected job';
+        compactSummary.append(compactGroup, compactItem);
+        row.prepend(compactSummary);
+      }
       if (!generatedByPicker) groupSelect.focus();
       return row;
     };
@@ -1861,9 +1878,12 @@
 
     const applySelectedItems = () => {
       const entries = selectedItemEntries();
+      const disclosure = additionalContainer.closest('details');
+      const disclosureSummary = disclosure?.querySelector('[data-additional-summary]');
       additionalContainer.querySelectorAll('[data-picker-generated="true"]').forEach((row) => row.remove());
 
       if (!entries.length) {
+        if (disclosureSummary instanceof HTMLElement) disclosureSummary.textContent = 'Add another service or extra';
         pricingItem.value = '';
         quantity.value = '';
         syncUnit(pricingItem, quantity, unit);
@@ -1886,7 +1906,12 @@
         });
       });
 
-      const disclosure = additionalContainer.closest('details');
+      if (disclosureSummary instanceof HTMLElement) {
+        const additionalCount = Math.max(0, entries.length - 1);
+        disclosureSummary.textContent = additionalCount
+          ? `${additionalCount} additional job type${additionalCount === 1 ? '' : 's'} selected`
+          : 'Add another service or extra';
+      }
       if (disclosure instanceof HTMLDetailsElement && entries.length > 1) disclosure.open = true;
       form.dispatchEvent(new Event('change', { bubbles: true }));
     };
@@ -1966,6 +1991,16 @@
     setupImproveDescriptionButton(form);
     setupSmartEstimatePreview(form);
     setupScopeQuantityFields(form);
+
+    const notesCard = form.querySelector('.quote-notes-card');
+    const notesToggle = form.querySelector('[data-mobile-notes-toggle]');
+    if (notesCard instanceof HTMLElement && notesToggle instanceof HTMLButtonElement) {
+      notesToggle.addEventListener('click', () => {
+        const isOpen = notesCard.classList.toggle('is-open');
+        notesToggle.setAttribute('aria-expanded', String(isOpen));
+        notesToggle.textContent = isOpen ? 'Hide details' : 'Add details';
+      });
+    }
 
     const photoInput = form.querySelector('#photoUpload');
     if (photoInput instanceof HTMLInputElement) {
