@@ -2179,10 +2179,10 @@ summary:focus-visible {
   margin-bottom: 0 !important;
   font-size: 0.98rem !important;
   font-weight: 800;
-  color: #ffe66d !important;
+  color: #5bd0ff !important;
   letter-spacing: 0;
   text-shadow:
-    0 0 6px rgba(255, 222, 64, 0.58),
+    0 0 7px rgba(28, 174, 255, 0.62),
     0 2px 12px rgba(0, 16, 32, 0.78);
 }
 
