@@ -3317,7 +3317,27 @@
     await loadGiveawayStatus();
   }
 
+  function setupInitialScrollPosition() {
+    const resetToTop = () => {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    };
+
+    if (!window.location.hash) {
+      resetToTop();
+      window.requestAnimationFrame(resetToTop);
+    }
+
+    window.addEventListener('pageshow', () => {
+      if (window.location.hash) return;
+      resetToTop();
+      window.setTimeout(resetToTop, 80);
+    });
+  }
+
   function init() {
+    setupInitialScrollPosition();
     setCurrentYear();
     setupMobileNav();
     setupRevealAnimations();
