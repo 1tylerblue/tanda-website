@@ -102,25 +102,23 @@ function writeCachedTravel(address, result) {
 
 async function lookupTravelPricing(address) {
   const query = normalizeAddress(address);
-  const geocodeUrl = new URL('https://nominatim.openstreetmap.org/search');
+  const geocodeUrl = new URL('https://photon.komoot.io/api/');
   geocodeUrl.search = new URLSearchParams({
-    format: 'jsonv2',
-    limit: '1',
-    countrycodes: 'au',
-    addressdetails: '0',
     q: `${query}, Queensland, Australia`,
+    limit: '1',
+    lang: 'en',
   }).toString();
 
-  const places = await fetchJson(geocodeUrl, {
+  const geocodeResult = await fetchJson(geocodeUrl, {
     headers: {
       Accept: 'application/json',
       'Accept-Language': 'en-AU,en;q=0.9',
       'User-Agent': 'T-and-A-Pro-Cleaning-Website/1.0 (tandaprocleaning@gmail.com)',
     },
   });
-  const place = Array.isArray(places) ? places[0] : null;
-  const latitude = Number(place?.lat);
-  const longitude = Number(place?.lon);
+  const place = Array.isArray(geocodeResult?.features) ? geocodeResult.features[0] : null;
+  const longitude = Number(place?.geometry?.coordinates?.[0]);
+  const latitude = Number(place?.geometry?.coordinates?.[1]);
   if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
     throw new Error('We could not find that address.');
   }
@@ -149,7 +147,14 @@ async function lookupTravelPricing(address) {
 
   return {
     ...determineTravelPricing(distanceKm),
-    matchedAddress: String(place.display_name || query).slice(0, 220),
+    matchedAddress: [
+      place?.properties?.name,
+      place?.properties?.street,
+      place?.properties?.city,
+      place?.properties?.state,
+      place?.properties?.postcode,
+      place?.properties?.country,
+    ].filter(Boolean).filter((part, index, values) => values.indexOf(part) === index).join(', ').slice(0, 220) || query,
     distanceSource,
     attribution: 'Map data © OpenStreetMap contributors',
   };
