@@ -282,6 +282,21 @@
   }
 
   const API_BASE = getApiBase();
+  const QUOTE_SUBMIT_TIMEOUT_MS = 22_000;
+
+  async function fetchWithTimeout(url, options = {}, timeoutMs = QUOTE_SUBMIT_TIMEOUT_MS) {
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      return await fetch(url, {
+        ...options,
+        signal: controller.signal,
+      });
+    } finally {
+      window.clearTimeout(timeoutId);
+    }
+  }
 
   function toText(value) {
     return String(value ?? '').trim();
@@ -2115,7 +2130,7 @@
 
         const localResult = buildLocalResult(payload);
 
-        const response = await fetch(`${API_BASE}/api/leads`, {
+        const response = await fetchWithTimeout(`${API_BASE}/api/leads`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -2131,7 +2146,14 @@
 
         const mergedResult = normalizeApiResult(result, localResult);
         renderQuoteResult(mergedResult);
-        setFormMessage('Quote range prepared and sent to the T & A team.', 'success');
+        const emailDelivery = String(result?.deliveryStatus?.email || '');
+        const emailSent = emailDelivery.startsWith('Sent to ');
+        setFormMessage(
+          emailSent
+            ? 'Your quote request has been sent to the T & A team. We will contact you to confirm the final scope.'
+            : 'Your quote request was saved, but email delivery is delayed. Please call 0466 224 927 or email tandaprocleaning@gmail.com if your job is urgent.',
+          emailSent ? 'success' : 'error',
+        );
         trackEvent('quote_submit_success', {
           event_category: 'quote',
           event_label: 'api_success',
@@ -2144,9 +2166,12 @@
         renderQuoteResult(fallbackResult);
         bumpGiveawayCounterIfEligible(fallbackResult.eligibleForGiveaway);
 
-        const message = error instanceof Error
-          ? `${error.message} Showing the local quote preview while live submission reconnects.`
-          : 'Something went wrong while submitting the form. Showing the local quote preview.';
+        const timedOut = error instanceof DOMException && error.name === 'AbortError';
+        const message = timedOut
+          ? 'The connection took too long, so the form stopped waiting. Your estimate is shown below. Please call 0466 224 927 or email tandaprocleaning@gmail.com so we can confirm your request.'
+          : error instanceof Error
+            ? `${error.message} Your estimate is shown below. Please call 0466 224 927 or email tandaprocleaning@gmail.com if you do not receive a response.`
+            : 'We could not send the request automatically. Your estimate is shown below. Please call 0466 224 927 or email tandaprocleaning@gmail.com.';
         setFormMessage(message, 'error');
         trackEvent('quote_submit_fallback', {
           event_category: 'quote',

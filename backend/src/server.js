@@ -527,6 +527,9 @@ app.post('/api/leads', leadRateLimit, async (req, res) => {
   writeLeads(leads);
 
   const emailDispatch = await sendLeadEmail(lead);
+  if (!emailDispatch.sent) {
+    console.error(`[email] Quote lead ${lead.id} was saved but email delivery failed: ${emailDispatch.message}`);
+  }
   queueEmailPayload({
     id: lead.id,
     to: BUSINESS_EMAIL,
@@ -632,6 +635,9 @@ app.post('/api/referrals', leadRateLimit, async (req, res) => {
   writeSubmissions('referrals.json', referrals);
 
   const emailDispatch = await sendReferralEmail(referral);
+  if (!emailDispatch.sent) {
+    console.error(`[email] Referral ${referral.id} was saved but email delivery failed: ${emailDispatch.message}`);
+  }
   queueEmailPayload({
     id: referral.id,
     to: BUSINESS_EMAIL,
@@ -692,6 +698,9 @@ app.post('/api/subscriptions', leadRateLimit, async (req, res) => {
   writeSubmissions('subscriptions.json', subscriptions);
 
   const emailDispatch = await sendSubscriptionEmail(subscription);
+  if (!emailDispatch.sent) {
+    console.error(`[email] Subscription ${subscription.id} was saved but email delivery failed: ${emailDispatch.message}`);
+  }
   queueEmailPayload({
     id: subscription.id,
     to: BUSINESS_EMAIL,

@@ -3,6 +3,9 @@ import path from 'path';
 import nodemailer from 'nodemailer';
 
 const DEFAULT_EMAIL = 'tandaprocleaning@gmail.com';
+const EMAIL_CONNECTION_TIMEOUT_MS = 8_000;
+const EMAIL_SOCKET_TIMEOUT_MS = 12_000;
+const EMAIL_SEND_TIMEOUT_MS = 15_000;
 
 function toText(value) {
   return String(value ?? '').trim();
@@ -32,6 +35,9 @@ function buildEmailTransport() {
       host: smtpHost,
       port: Number.isFinite(smtpPort) ? smtpPort : 587,
       secure: smtpSecure,
+      connectionTimeout: EMAIL_CONNECTION_TIMEOUT_MS,
+      greetingTimeout: EMAIL_CONNECTION_TIMEOUT_MS,
+      socketTimeout: EMAIL_SOCKET_TIMEOUT_MS,
       auth: {
         user: smtpUser,
         pass: smtpPass,
@@ -42,6 +48,9 @@ function buildEmailTransport() {
   if (gmailAppPassword) {
     return nodemailer.createTransport({
       service: 'gmail',
+      connectionTimeout: EMAIL_CONNECTION_TIMEOUT_MS,
+      greetingTimeout: EMAIL_CONNECTION_TIMEOUT_MS,
+      socketTimeout: EMAIL_SOCKET_TIMEOUT_MS,
       auth: {
         user: smtpUser,
         pass: gmailAppPassword,
@@ -50,6 +59,26 @@ function buildEmailTransport() {
   }
 
   return null;
+}
+
+async function sendMailWithDeadline(transporter, options) {
+  let timeoutId;
+
+  try {
+    return await Promise.race([
+      transporter.sendMail(options),
+      new Promise((_, reject) => {
+        timeoutId = setTimeout(() => {
+          reject(new Error('Email delivery timed out. The submission was saved for follow-up.'));
+        }, EMAIL_SEND_TIMEOUT_MS);
+      }),
+    ]);
+  } finally {
+    clearTimeout(timeoutId);
+    if (typeof transporter.close === 'function') {
+      transporter.close();
+    }
+  }
 }
 
 function getAttachmentList(photoUploads = []) {
@@ -231,7 +260,7 @@ async function sendStructuredSubmissionEmail({ title, subject, submission, photo
   const attachments = getAttachmentList(photoUploads);
 
   try {
-    const result = await transporter.sendMail({
+    const result = await sendMailWithDeadline(transporter, {
       from,
       to,
       subject,
@@ -268,7 +297,7 @@ export async function sendLeadEmail(lead) {
   const attachments = getAttachmentList(lead?.photoUploads);
 
   try {
-    const result = await transporter.sendMail({
+    const result = await sendMailWithDeadline(transporter, {
       from,
       to,
       subject,
