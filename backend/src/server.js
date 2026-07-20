@@ -44,6 +44,7 @@ const PROD_ORIGINS = [
 const REQUIRED_FIELDS = [
   'firstName',
   'phone',
+  'email',
   'address',
   'service',
   'pricingItemCode',
@@ -85,6 +86,10 @@ app.use(express.json({ limit: '30mb' }));
 
 function toSafeString(value) {
   return String(value ?? '').trim();
+}
+
+function isValidEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(toSafeString(value));
 }
 
 function getClientIp(req) {
@@ -433,6 +438,7 @@ app.post('/api/leads', leadRateLimit, async (req, res) => {
   const cleanLead = {
     firstName: toSafeString(body.firstName),
     phone: toSafeString(body.phone),
+    email: toSafeString(body.email),
     address: toSafeString(body.address),
     service: toSafeString(body.service),
     serviceGroup: toSafeString(body.serviceGroup),
@@ -474,6 +480,12 @@ app.post('/api/leads', leadRateLimit, async (req, res) => {
   if (missingField) {
     return res.status(400).json({
       error: `Please complete the required field: ${missingField}.`,
+    });
+  }
+
+  if (!isValidEmail(cleanLead.email)) {
+    return res.status(400).json({
+      error: 'Please enter a valid email address.',
     });
   }
 

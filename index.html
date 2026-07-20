@@ -828,11 +828,15 @@
                     </div>
                     <div class="field">
                       <label for="phone">Phone Number</label>
-                      <input type="tel" id="phone" name="phone" required aria-required="true" />
+                      <input type="tel" id="phone" name="phone" autocomplete="tel" required aria-required="true" />
+                    </div>
+                    <div class="field span-2">
+                      <label for="email">Email Address</label>
+                      <input type="email" id="email" name="email" autocomplete="email" required aria-required="true" />
                     </div>
                     <div class="field span-2">
                       <label for="address">Address / Suburb</label>
-                      <input type="text" id="address" name="address" required aria-required="true" />
+                      <input type="text" id="address" name="address" autocomplete="street-address" required aria-required="true" />
                     </div>
                     <div class="field">
                       <label for="propertyType">Property Type</label>
@@ -1244,7 +1248,7 @@
   }
 </script>
 <script defer src="pricing-engine.js?v=20260711-master-price-list"></script>
-  <script defer src="app.js?v=20260720-quote-email-fix"></script>
+  <script defer src="app.js?v=20260720-customer-email-field"></script>
 <script defer src="gallery.js"></script>
 <script defer src="reviews.js?v=20260710-carousel-2"></script>
   </body>

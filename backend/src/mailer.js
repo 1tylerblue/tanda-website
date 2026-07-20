@@ -122,7 +122,7 @@ function getWebhookAttachments(photoUploads = []) {
     .filter(Boolean);
 }
 
-async function sendEmailViaWebhook({ subject, text, photoUploads }) {
+async function sendEmailViaWebhook({ subject, text, photoUploads, replyTo }) {
   const url = toText(process.env.EMAIL_WEBHOOK_URL);
   const secret = toText(process.env.EMAIL_WEBHOOK_SECRET);
   if (!url || !secret) {
@@ -142,6 +142,7 @@ async function sendEmailViaWebhook({ subject, text, photoUploads }) {
         secret,
         subject,
         text,
+        replyTo: toText(replyTo),
         attachments: getWebhookAttachments(photoUploads),
       }),
       signal: controller.signal,
@@ -189,6 +190,7 @@ function buildLeadText(lead) {
     'Customer',
     `- First name: ${toText(lead?.firstName)}`,
     `- Phone: ${toText(lead?.phone)}`,
+    `- Email: ${toText(lead?.email)}`,
     `- Address/Suburb: ${toText(lead?.address)}`,
     '',
     'Quote Inputs',
@@ -360,7 +362,12 @@ async function sendStructuredSubmissionEmail({ title, subject, submission, photo
 export async function sendLeadEmail(lead) {
   const subject = `New Quote Lead - ${toText(lead?.firstName) || 'Customer'} - ${toText(lead?.service) || 'Service'}`;
   const text = buildLeadText(lead);
-  const webhookResult = await sendEmailViaWebhook({ subject, text, photoUploads: lead?.photoUploads });
+  const webhookResult = await sendEmailViaWebhook({
+    subject,
+    text,
+    photoUploads: lead?.photoUploads,
+    replyTo: lead?.email,
+  });
   if (webhookResult) {
     return webhookResult;
   }
@@ -381,6 +388,7 @@ export async function sendLeadEmail(lead) {
     const result = await sendMailWithDeadline(transporter, {
       from,
       to,
+      replyTo: toText(lead?.email) || undefined,
       subject,
       text,
       attachments,

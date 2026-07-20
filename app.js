@@ -882,6 +882,7 @@
     const requiredFields = [
       'firstName',
       'phone',
+      'email',
       'address',
       'service',
       'propertyType',
@@ -1414,6 +1415,7 @@
     return {
       firstName: toText(formData.get('firstName')),
       phone: toText(formData.get('phone')),
+      email: toText(formData.get('email')),
       address: toText(formData.get('address')),
       service: toText(formData.get('service')) ? toText(form.querySelector('#service')?.selectedOptions?.[0]?.textContent) : '',
       serviceGroup: toText(formData.get('service')),
