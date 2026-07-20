@@ -6,6 +6,7 @@ const DEFAULT_EMAIL = 'tandaprocleaning@gmail.com';
 const EMAIL_CONNECTION_TIMEOUT_MS = 8_000;
 const EMAIL_SOCKET_TIMEOUT_MS = 12_000;
 const EMAIL_SEND_TIMEOUT_MS = 15_000;
+const MAX_WEBHOOK_ATTACHMENT_BYTES = 15 * 1024 * 1024;
 
 function toText(value) {
   return String(value ?? '').trim();
@@ -95,9 +96,79 @@ function getAttachmentList(photoUploads = []) {
       return {
         filename: toText(photo?.name) || path.basename(absolute),
         path: absolute,
+        contentType: toText(photo?.type) || 'application/octet-stream',
       };
     })
     .filter(Boolean);
+}
+
+function getWebhookAttachments(photoUploads = []) {
+  let totalBytes = 0;
+
+  return getAttachmentList(photoUploads)
+    .map((attachment) => {
+      const size = fs.statSync(attachment.path).size;
+      if (totalBytes + size > MAX_WEBHOOK_ATTACHMENT_BYTES) {
+        return null;
+      }
+
+      totalBytes += size;
+      return {
+        filename: attachment.filename,
+        mimeType: attachment.contentType,
+        content: fs.readFileSync(attachment.path).toString('base64'),
+      };
+    })
+    .filter(Boolean);
+}
+
+async function sendEmailViaWebhook({ subject, text, photoUploads }) {
+  const url = toText(process.env.EMAIL_WEBHOOK_URL);
+  const secret = toText(process.env.EMAIL_WEBHOOK_SECRET);
+  if (!url || !secret) {
+    return null;
+  }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), EMAIL_SEND_TIMEOUT_MS);
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        secret,
+        subject,
+        text,
+        attachments: getWebhookAttachments(photoUploads),
+      }),
+      signal: controller.signal,
+    });
+    const result = await response.json().catch(() => ({}));
+
+    if (!response.ok || result?.ok !== true) {
+      throw new Error(toText(result?.error) || `Email webhook returned HTTP ${response.status}.`);
+    }
+
+    return {
+      sent: true,
+      messageId: 'google-apps-script',
+      message: `Email sent to ${toText(process.env.QUOTE_TO_EMAIL) || DEFAULT_EMAIL}`,
+    };
+  } catch (error) {
+    return {
+      sent: false,
+      message: error instanceof Error && error.name === 'AbortError'
+        ? 'Email webhook timed out. The submission was saved for follow-up.'
+        : error instanceof Error
+          ? error.message
+          : 'Unknown email webhook error.',
+    };
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 function buildLeadText(lead) {
@@ -246,6 +317,12 @@ function buildStructuredSubmissionText(title, submission) {
 }
 
 async function sendStructuredSubmissionEmail({ title, subject, submission, photoUploads }) {
+  const text = buildStructuredSubmissionText(title, submission);
+  const webhookResult = await sendEmailViaWebhook({ subject, text, photoUploads });
+  if (webhookResult) {
+    return webhookResult;
+  }
+
   const transporter = buildEmailTransport();
   if (!transporter) {
     return {
@@ -256,7 +333,6 @@ async function sendStructuredSubmissionEmail({ title, subject, submission, photo
 
   const to = toText(process.env.QUOTE_TO_EMAIL) || DEFAULT_EMAIL;
   const from = toText(process.env.QUOTE_FROM_EMAIL) || toText(process.env.SMTP_USER) || DEFAULT_EMAIL;
-  const text = buildStructuredSubmissionText(title, submission);
   const attachments = getAttachmentList(photoUploads);
 
   try {
@@ -282,6 +358,13 @@ async function sendStructuredSubmissionEmail({ title, subject, submission, photo
 }
 
 export async function sendLeadEmail(lead) {
+  const subject = `New Quote Lead - ${toText(lead?.firstName) || 'Customer'} - ${toText(lead?.service) || 'Service'}`;
+  const text = buildLeadText(lead);
+  const webhookResult = await sendEmailViaWebhook({ subject, text, photoUploads: lead?.photoUploads });
+  if (webhookResult) {
+    return webhookResult;
+  }
+
   const transporter = buildEmailTransport();
   if (!transporter) {
     return {
@@ -292,8 +375,6 @@ export async function sendLeadEmail(lead) {
 
   const to = toText(process.env.QUOTE_TO_EMAIL) || DEFAULT_EMAIL;
   const from = toText(process.env.QUOTE_FROM_EMAIL) || toText(process.env.SMTP_USER) || DEFAULT_EMAIL;
-  const subject = `New Quote Lead - ${toText(lead?.firstName) || 'Customer'} - ${toText(lead?.service) || 'Service'}`;
-  const text = buildLeadText(lead);
   const attachments = getAttachmentList(lead?.photoUploads);
 
   try {
