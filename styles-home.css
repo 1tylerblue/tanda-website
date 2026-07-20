@@ -3407,6 +3407,7 @@ body.gallery-lightbox-open {
 
 .quote-form input[type="text"],
 .quote-form input[type="tel"],
+.quote-form input[type="email"],
 .quote-form input[type="date"],
 .quote-form select,
 .quote-form textarea,
@@ -3421,6 +3422,64 @@ body.gallery-lightbox-open {
   border-radius: 14px;
   border: 1px solid #cddced;
   background: #ffffff;
+}
+
+.address-travel-status {
+  position: relative;
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color: #4e6685;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.address-travel-status::before {
+  content: "";
+  position: absolute;
+  top: 0.42em;
+  left: 1px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #8aa0b9;
+}
+
+.address-travel-status[data-state="checking"]::before {
+  background: var(--brand-sky);
+  box-shadow: 0 0 0 4px rgba(0, 166, 239, 0.12);
+}
+
+.address-travel-status[data-state="clear"] {
+  color: #17673c;
+}
+
+.address-travel-status[data-state="clear"]::before {
+  background: #20a464;
+}
+
+.address-travel-status[data-state="fee"] {
+  color: #8a5200;
+}
+
+.address-travel-status[data-state="fee"]::before {
+  background: #e4a21a;
+  box-shadow: 0 0 0 4px rgba(228, 162, 26, 0.12);
+}
+
+.address-travel-status[data-state="error"] {
+  color: #a13a2d;
+}
+
+.address-travel-status[data-state="error"]::before {
+  background: #c64a3b;
+}
+
+.travel-attribution {
+  display: inline-block;
+  margin-top: 3px;
+  color: #71839a;
+  font-size: 0.66rem;
 }
 
 .estimate-preview[hidden],

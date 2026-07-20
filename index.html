@@ -34,7 +34,7 @@
     <link rel="canonical" href="https://www.tandaprocleaning.com.au/" />
     <link rel="icon" href="assets/images/logo.jpeg" />
     <link rel="manifest" href="manifest.json" />
-  <link rel="stylesheet" href="styles-home.css?v=20260720-mobile-quote-wizard" />
+  <link rel="stylesheet" href="styles-home.css?v=20260720-auto-travel-fee" />
     <!-- Google Analytics 4 (consent-gated by cookie banner) -->
     <script>
       window.__GA_MEASUREMENT_ID__ = 'G-XXXXXXXXXX';
@@ -837,6 +837,13 @@
                     <div class="field span-2">
                       <label for="address">Address / Suburb</label>
                       <input type="text" id="address" name="address" autocomplete="street-address" required aria-required="true" />
+                      <input type="hidden" id="travelBand" name="travelBand" value="unverified" />
+                      <input type="hidden" id="travelDistanceKm" name="travelDistanceKm" value="" />
+                      <input type="hidden" id="travelFeeIncGst" name="travelFeeIncGst" value="0" />
+                      <p class="address-travel-status" data-travel-status data-state="idle" aria-live="polite">
+                        Travel is checked automatically from Biggera Waters. A $50 fee applies only above 50 km.
+                      </p>
+                      <a class="travel-attribution" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">Map data © OpenStreetMap contributors</a>
                     </div>
                     <div class="field">
                       <label for="propertyType">Property Type</label>
@@ -1035,18 +1042,7 @@
 
                     <p class="advanced-title">Scheduling</p>
                     <div class="field-grid">
-                      <div class="field">
-                        <label for="travelBand">Travel from Biggera Waters</label>
-                        <select id="travelBand" name="travelBand">
-                          <option value="within25" selected>Within approximately 25 km</option>
-                          <option value="km26_40">26-40 km</option>
-                          <option value="km41_60">41-60 km</option>
-                          <option value="km61_90">61-90 km</option>
-                          <option value="km91_120">91-120 km</option>
-                          <option value="beyond120">Beyond 120 km</option>
-                        </select>
-                      </div>
-                      <div class="field">
+                      <div class="field span-2">
                         <label for="timingLoading">Booking Type</label>
                         <select id="timingLoading" name="timingLoading">
                           <option value="standard" selected>Standard weekday booking</option>
@@ -1247,8 +1243,8 @@
     window.__API_BASE__ = 'https://tanda-pro-cleaning-api.onrender.com';
   }
 </script>
-<script defer src="pricing-engine.js?v=20260711-master-price-list"></script>
-  <script defer src="app.js?v=20260720-customer-email-field"></script>
+<script defer src="pricing-engine.js?v=20260720-auto-travel-fee"></script>
+  <script defer src="app.js?v=20260720-auto-travel-fee"></script>
 <script defer src="gallery.js"></script>
 <script defer src="reviews.js?v=20260710-carousel-2"></script>
   </body>

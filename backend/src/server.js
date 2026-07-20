@@ -7,6 +7,7 @@ import { readLeads, writeLeads } from './db.js';
 import { estimateLead, generateAISummary, scoreLeadQuality } from './ai.js';
 import { sendLeadEmail, sendReferralEmail, sendSubscriptionEmail } from './mailer.js';
 import { startDailyBackupScheduler } from './backup.js';
+import { getCachedTravelPricing, resolveTravelPricing } from './travel.js';
 
 const app = express();
 
@@ -24,6 +25,7 @@ const MIN_FORM_FILL_MS = Number(process.env.MIN_FORM_FILL_MS || 2500);
 const SPAM_NOTES_PATTERN = /(casino|crypto|forex|seo\s*service|backlinks?|viagra|adult\s*dating|loan\s*offer|free\s*money)/i;
 const URL_PATTERN = /\b(?:https?:\/\/|www\.)\S+/gi;
 const leadRateMap = new Map();
+const travelRateMap = new Map();
 const LOCAL_ORIGINS = [
   'http://localhost:3000',
   'http://127.0.0.1:3000',
@@ -126,6 +128,18 @@ function leadRateLimit(req, res, next) {
 
   history.push(now);
   leadRateMap.set(ip, history);
+  return next();
+}
+
+function travelRateLimit(req, res, next) {
+  const now = Date.now();
+  const ip = getClientIp(req);
+  const history = (travelRateMap.get(ip) || []).filter((timestamp) => now - timestamp <= LEAD_RATE_LIMIT_WINDOW_MS);
+  if (history.length >= 20) {
+    return res.status(429).json({ error: 'Too many address checks. Please wait a few minutes and try again.' });
+  }
+  history.push(now);
+  travelRateMap.set(ip, history);
   return next();
 }
 
@@ -431,9 +445,27 @@ app.get('/api/giveaway/status', (_req, res) => {
   });
 });
 
+app.get('/api/travel-distance', travelRateLimit, async (req, res) => {
+  const address = toSafeString(req.query.address).slice(0, 180);
+  if (address.length < 4) {
+    return res.status(400).json({ error: 'Enter a complete address or suburb.' });
+  }
+
+  try {
+    const travel = await resolveTravelPricing(address);
+    return res.json(travel);
+  } catch (error) {
+    console.error(`[travel] Address lookup failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    return res.status(422).json({
+      error: 'We could not verify travel distance for that address. The team will confirm it before booking.',
+    });
+  }
+});
+
 app.post('/api/leads', leadRateLimit, async (req, res) => {
   const body = req.body || {};
   const photoUploads = normalizePhotoUploads(body.photoUploads);
+  const verifiedTravel = getCachedTravelPricing(body.address);
 
   const cleanLead = {
     firstName: toSafeString(body.firstName),
@@ -455,7 +487,9 @@ app.post('/api/leads', leadRateLimit, async (req, res) => {
     conditionLevel: toSafeString(body.conditionLevel),
     recurringFrequency: toSafeString(body.recurringFrequency) || 'one_off',
     timingLoading: toSafeString(body.timingLoading) || 'standard',
-    travelBand: toSafeString(body.travelBand) || 'within25',
+    travelBand: verifiedTravel?.travelBand || 'unverified',
+    travelDistanceKm: verifiedTravel?.distanceKm || 0,
+    travelFeeIncGst: verifiedTravel?.travelFeeIncGst || 0,
     discountEligibility: toSafeString(body.discountEligibility) || 'None',
     parking: toSafeString(body.parking),
     lastCleaned: toSafeString(body.lastCleaned),

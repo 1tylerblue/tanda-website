@@ -24,7 +24,7 @@ export function scoreLeadQuality(lead = {}) {
     lead.pricingItemCode || (Array.isArray(lead.lineItems) && lead.lineItems.length ? 'line-items' : ''),
     lead.conditionLevel,
     lead.accessDifficulty,
-    lead.travelBand,
+    toText(lead.travelBand) && toText(lead.travelBand) !== 'unverified' ? lead.travelBand : '',
   ];
   const completed = coreFields.filter((value) => toText(value)).length;
   const hasQuantity = Number(lead.scopeQuantity || 0) > 0 || (Array.isArray(lead.lineItems) && lead.lineItems.every((line) => Number(line.quantity) > 0));

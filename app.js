@@ -1410,6 +1410,119 @@
     return { uploads, warnings };
   }
 
+  function setupAddressTravelPricing(form) {
+    const addressInput = form.querySelector('#address');
+    const travelBandInput = form.querySelector('#travelBand');
+    const travelDistanceInput = form.querySelector('#travelDistanceKm');
+    const travelFeeInput = form.querySelector('#travelFeeIncGst');
+    const status = form.querySelector('[data-travel-status]');
+    if (
+      !(addressInput instanceof HTMLInputElement) ||
+      !(travelBandInput instanceof HTMLInputElement) ||
+      !(travelDistanceInput instanceof HTMLInputElement) ||
+      !(travelFeeInput instanceof HTMLInputElement) ||
+      !(status instanceof HTMLElement)
+    ) {
+      return { ensureCurrent: async () => false };
+    }
+
+    let debounceId = 0;
+    let requestId = 0;
+    let resolvedAddress = '';
+
+    const setStatus = (state, message) => {
+      status.dataset.state = state;
+      status.textContent = message;
+    };
+
+    const setUnverified = () => {
+      travelBandInput.value = 'unverified';
+      travelDistanceInput.value = '';
+      travelFeeInput.value = '0';
+      travelBandInput.dispatchEvent(new Event('change', { bubbles: true }));
+    };
+
+    const resolveAddress = async ({ force = false } = {}) => {
+      const address = toText(addressInput.value);
+      if (address.length < 4) {
+        resolvedAddress = '';
+        setUnverified();
+        setStatus('idle', 'Travel is checked automatically from Biggera Waters. A $50 fee applies only above 50 km.');
+        return false;
+      }
+
+      if (!force && address === resolvedAddress && travelBandInput.value !== 'unverified') {
+        return true;
+      }
+
+      const activeRequest = ++requestId;
+      setStatus('checking', 'Checking travel distance from Biggera Waters...');
+
+      try {
+        const response = await fetchWithTimeout(
+          `${API_BASE}/api/travel-distance?address=${encodeURIComponent(address)}`,
+          { headers: { Accept: 'application/json' } },
+          9000,
+        );
+        const result = await response.json().catch(() => ({}));
+        if (activeRequest !== requestId) return false;
+        if (!response.ok) {
+          throw new Error(String(result.error || 'Travel distance could not be verified.'));
+        }
+
+        const distanceKm = Number(result.distanceKm);
+        const feeApplied = Boolean(result.feeApplied);
+        if (!Number.isFinite(distanceKm)) {
+          throw new Error('Travel distance could not be verified.');
+        }
+
+        resolvedAddress = address;
+        travelBandInput.value = feeApplied ? 'beyond50' : 'within50';
+        travelDistanceInput.value = String(distanceKm);
+        travelFeeInput.value = feeApplied ? '50' : '0';
+        travelBandInput.dispatchEvent(new Event('change', { bubbles: true }));
+        setStatus(
+          feeApplied ? 'fee' : 'clear',
+          feeApplied
+            ? `Travel checked: $50 incl. GST added (${distanceKm} km from Biggera Waters).`
+            : `Travel checked: no extra fee (${distanceKm} km from Biggera Waters).`,
+        );
+        return true;
+      } catch (error) {
+        if (activeRequest !== requestId) return false;
+        resolvedAddress = '';
+        setUnverified();
+        setStatus(
+          'error',
+          error instanceof Error
+            ? error.message
+            : 'Travel could not be checked automatically. The team will confirm it before booking.',
+        );
+        return false;
+      }
+    };
+
+    addressInput.addEventListener('input', () => {
+      window.clearTimeout(debounceId);
+      if (toText(addressInput.value) !== resolvedAddress) {
+        setUnverified();
+      }
+      if (toText(addressInput.value).length >= 4) {
+        debounceId = window.setTimeout(() => resolveAddress(), 850);
+      } else {
+        setStatus('idle', 'Travel is checked automatically from Biggera Waters. A $50 fee applies only above 50 km.');
+      }
+    });
+    addressInput.addEventListener('blur', () => {
+      window.clearTimeout(debounceId);
+      resolveAddress();
+    });
+
+    return {
+      ensureCurrent: () => resolveAddress({ force: toText(addressInput.value) !== resolvedAddress }),
+    };
+  }
+
   function buildBasePayload(form) {
     const formData = new FormData(form);
     return {
@@ -1432,7 +1545,9 @@
       conditionLevel: toText(formData.get('conditionLevel')),
       recurringFrequency: toText(formData.get('recurringFrequency')) || 'one_off',
       timingLoading: toText(formData.get('timingLoading')) || 'standard',
-      travelBand: toText(formData.get('travelBand')) || 'within25',
+      travelBand: toText(formData.get('travelBand')) || 'unverified',
+      travelDistanceKm: Math.max(0, Number(formData.get('travelDistanceKm') || 0)),
+      travelFeeIncGst: Math.max(0, Number(formData.get('travelFeeIncGst') || 0)),
       discountEligibility: toText(formData.get('discountEligibility')) || 'None',
       parking: toText(formData.get('parking')),
       lastCleaned: toText(formData.get('lastCleaned')),
@@ -2076,6 +2191,7 @@
 
     hideEstimatePreview();
     setupImproveDescriptionButton(form);
+    const travelPricing = setupAddressTravelPricing(form);
     setupSmartEstimatePreview(form);
     setupScopeQuantityFields(form);
     setupMobileQuoteSteps(form);
@@ -2120,6 +2236,7 @@
       setFormMessage('Reviewing your details and preparing a quote range...', 'info');
 
       try {
+        await travelPricing.ensureCurrent();
         const payload = await buildPayload(form);
         if (payload.uploadWarnings.length) {
           updateUploadNote(payload.uploadWarnings.join(' '), 'error');

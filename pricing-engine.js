@@ -280,12 +280,9 @@
       specialist: { label: 'EWP, scaffolding or specialist access', manual: true, requiresPhotos: true },
     },
     travelCharges: {
-      within25: { label: 'Within approximately 25 km of Biggera Waters', amount: 0 },
-      km26_40: { label: '26-40 km from Biggera Waters', amount: 45 },
-      km41_60: { label: '41-60 km from Biggera Waters', amount: 85 },
-      km61_90: { label: '61-90 km from Biggera Waters', amount: 145 },
-      km91_120: { label: '91-120 km from Biggera Waters', amount: 220 },
-      beyond120: { label: 'Beyond 120 km from Biggera Waters', manual: true },
+      within50: { label: 'Within 50 km of Biggera Waters - no travel fee', amount: 0 },
+      beyond50: { label: 'More than 50 km from Biggera Waters - $50 incl. GST travel fee', amount: 50 / 1.1 },
+      unverified: { label: 'Travel distance requires confirmation', amount: 0, manual: true },
     },
     timingLoadings: {
       standard: { label: 'Standard weekday booking', rate: 0 },
@@ -438,7 +435,7 @@
     const access = PRICING_CONFIG.accessAdjustments[String(input.accessDifficulty || 'ground').toLowerCase()] || PRICING_CONFIG.accessAdjustments.ground;
     const recurring = PRICING_CONFIG.recurringMultipliers[String(input.recurringFrequency || 'one_off')] || PRICING_CONFIG.recurringMultipliers.one_off;
     const timing = PRICING_CONFIG.timingLoadings[String(input.timingLoading || 'standard')] || PRICING_CONFIG.timingLoadings.standard;
-    const travel = PRICING_CONFIG.travelCharges[String(input.travelBand || 'within25')] || PRICING_CONFIG.travelCharges.within25;
+    const travel = PRICING_CONFIG.travelCharges[String(input.travelBand || 'unverified')] || PRICING_CONFIG.travelCharges.unverified;
 
     [condition, access, travel].forEach((rule) => {
       if (rule.manual) manualReviewRequired = true;
@@ -474,7 +471,7 @@
       recurring.multiplier !== 1 ? `${recurring.label} pricing applied` : recurring.label,
       timing.rate ? `${timing.label} loading included` : timing.label,
       bundleRate ? `${eligibleServiceCount >= 3 ? 'Three-service' : 'Two-service'} bundle discount included` : '',
-      travelCharge ? `${travel.label} travel charge included` : travel.label,
+      travel.label,
       'GST added once at 10%',
       photoRequired ? 'Photographs are required before confirmation' : '',
       manualReviewRequired ? 'Team review or inspection required before final confirmation' : '',
