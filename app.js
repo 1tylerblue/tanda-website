@@ -12,7 +12,13 @@
   let analyticsEnabled = false;
   const GA_MEASUREMENT_ID = 'G-XXXXXXXXXX';
   const GA_SCRIPT_ATTRIBUTE = 'data-tac-ga';
+  const GOOGLE_ADS_CONVERSION_ID = 'AW-11132030271';
+  const GOOGLE_ADS_QUOTE_SEND_TO = 'AW-11132030271/8PYfCNyuw9QcEL-albwp';
+  const GOOGLE_ADS_PHONE_CLICK_SEND_TO = 'AW-11132030271/RBdMCMS3w9QcEL-albwp';
+  const GOOGLE_TAG_SCRIPT_ATTRIBUTE = 'data-tac-google-tag';
   let gaScriptRequested = false;
+  let googleTagConfigured = false;
+  let quoteConversionTracked = false;
   const GIVEAWAY_CONFIG = {
     unlockEntryTarget: 50,
     minimumEligibleJobValueExGst: 495,
@@ -50,6 +56,59 @@
     return `${formatted.replace(' at ', ', ')} AEST`;
   }
 
+  function ensureGtagFunction() {
+    window.dataLayer = window.dataLayer || [];
+    if (typeof window.gtag !== 'function') {
+      window.gtag = function () {
+        window.dataLayer.push(arguments);
+      };
+    }
+  }
+
+  function applyDefaultConsent() {
+    const consentConfig =
+      typeof window.__GA_ANALYTICS_CONFIG__ === 'object' && window.__GA_ANALYTICS_CONFIG__ !== null
+        ? window.__GA_ANALYTICS_CONFIG__
+        : (window.__GA_ANALYTICS_CONFIG__ = {});
+
+    if (consentConfig.consentDefaultApplied) {
+      return;
+    }
+
+    ensureGtagFunction();
+    window.gtag('consent', 'default', {
+      analytics_storage: 'denied',
+      ad_storage: 'denied',
+      functionality_storage: 'granted',
+      security_storage: 'granted',
+    });
+    consentConfig.consentDefaultApplied = true;
+  }
+
+  function ensureGoogleTagScript(configuredId) {
+    if (document.querySelector(`script[${GOOGLE_TAG_SCRIPT_ATTRIBUTE}="true"], script[src^="https://www.googletagmanager.com/gtag/js"]`)) {
+      return;
+    }
+
+    const googleTagScript = document.createElement('script');
+    googleTagScript.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(configuredId)}`;
+    googleTagScript.async = true;
+    googleTagScript.setAttribute(GOOGLE_TAG_SCRIPT_ATTRIBUTE, 'true');
+    document.head.appendChild(googleTagScript);
+  }
+
+  function loadGoogleAdsTag() {
+    applyDefaultConsent();
+    ensureGtagFunction();
+    ensureGoogleTagScript(GOOGLE_ADS_CONVERSION_ID);
+
+    if (!googleTagConfigured) {
+      window.gtag('js', new Date());
+      window.gtag('config', GOOGLE_ADS_CONVERSION_ID);
+      googleTagConfigured = true;
+    }
+  }
+
   function loadAnalyticsScript() {
     if (gaScriptRequested) {
       return;
@@ -63,31 +122,11 @@
       return;
     }
 
-    if (document.querySelector(`script[${GA_SCRIPT_ATTRIBUTE}=\"true\"]`)) {
-      gaScriptRequested = true;
-      return;
-    }
-
-    const gaScript = document.createElement('script');
-    gaScript.src = `https://www.googletagmanager.com/gtag/js?id=${configuredId}`;
-    gaScript.async = true;
-    gaScript.setAttribute(GA_SCRIPT_ATTRIBUTE, 'true');
-    document.head.appendChild(gaScript);
-    gaScriptRequested = true;
-
-    window.dataLayer = window.dataLayer || [];
-    if (typeof window.gtag !== 'function') {
-      window.gtag = function () {
-        window.dataLayer.push(arguments);
-      };
-    }
-
-    gaScript.addEventListener('load', () => {
-      window.gtag('js', new Date());
-      window.gtag('config', configuredId, {
-        anonymize_ip: true,
-      });
+    loadGoogleAdsTag();
+    window.gtag('config', configuredId, {
+      anonymize_ip: true,
     });
+    gaScriptRequested = true;
   }
 
   function setCookieConsentState(enabled) {
@@ -168,6 +207,43 @@
     }
 
     window.gtag('event', eventName, eventParams);
+  }
+
+  function trackGoogleAdsConversion(sendTo) {
+    if (!sendTo) {
+      return;
+    }
+
+    loadGoogleAdsTag();
+    window.gtag('event', 'conversion', {
+      send_to: sendTo,
+    });
+  }
+
+  function trackQuoteSubmittedConversion() {
+    if (quoteConversionTracked) {
+      return;
+    }
+
+    quoteConversionTracked = true;
+    trackGoogleAdsConversion(GOOGLE_ADS_QUOTE_SEND_TO);
+  }
+
+  function setupPhoneClickConversionTracking() {
+    document.addEventListener('click', (event) => {
+      const target = event.target instanceof Element ? event.target : null;
+      const link = target ? target.closest('a[href^="tel:"]') : null;
+      if (!(link instanceof HTMLAnchorElement)) {
+        return;
+      }
+
+      const phoneDigits = String(link.getAttribute('href') || '').replace(/\D/g, '');
+      if (phoneDigits !== '0466224927' && phoneDigits !== '61466224927') {
+        return;
+      }
+
+      trackGoogleAdsConversion(GOOGLE_ADS_PHONE_CLICK_SEND_TO);
+    });
   }
 
   // ===== Editable Smart Estimate Pricing Config (EX GST) =====
@@ -2277,6 +2353,7 @@
           event_category: 'quote',
           event_label: 'api_success',
         });
+        trackQuoteSubmittedConversion();
         bumpGiveawayCounterIfEligible(mergedResult.eligibleForGiveaway);
         await loadStats();
       } catch (error) {
@@ -3355,6 +3432,7 @@
   }
 
   function init() {
+    loadGoogleAdsTag();
     setupInitialScrollPosition();
     setCurrentYear();
     setupMobileNav();
@@ -3362,6 +3440,7 @@
     setupHeroAmbientMotion();
     setupGiveawayCountdown();
     initCookieConsent();
+    setupPhoneClickConversionTracking();
     setupPackageButtons();
     setupQuoteForm();
     loadStats();
