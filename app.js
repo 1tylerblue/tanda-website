@@ -210,15 +210,32 @@
     window.gtag('event', eventName, eventParams);
   }
 
-  function trackGoogleAdsConversion(sendTo) {
+  function trackGoogleAdsConversion(sendTo, options = {}) {
     if (!sendTo) {
-      return;
+      return false;
     }
 
     loadGoogleAdsTag();
-    window.gtag('event', 'conversion', {
+    const eventParams = {
       send_to: sendTo,
-    });
+    };
+
+    if (typeof options.eventCallback === 'function') {
+      let callbackFinished = false;
+      const finishCallback = () => {
+        if (callbackFinished) {
+          return;
+        }
+        callbackFinished = true;
+        options.eventCallback();
+      };
+      eventParams.event_callback = finishCallback;
+      eventParams.event_timeout = Number(options.eventTimeout) || 1500;
+      window.setTimeout(finishCallback, eventParams.event_timeout);
+    }
+
+    window.gtag('event', 'conversion', eventParams);
+    return true;
   }
 
   function trackQuoteSubmittedConversion() {
@@ -243,7 +260,21 @@
         return;
       }
 
-      trackGoogleAdsConversion(GOOGLE_ADS_PHONE_CLICK_SEND_TO);
+      const href = link.getAttribute('href');
+      if (!href || event.defaultPrevented) {
+        trackGoogleAdsConversion(GOOGLE_ADS_PHONE_CLICK_SEND_TO);
+        return;
+      }
+
+      event.preventDefault();
+      const tracked = trackGoogleAdsConversion(GOOGLE_ADS_PHONE_CLICK_SEND_TO, {
+        eventCallback: () => {
+          window.location.href = href;
+        },
+      });
+      if (!tracked) {
+        window.location.href = href;
+      }
     });
   }
 
