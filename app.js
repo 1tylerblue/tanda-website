@@ -131,8 +131,8 @@
 
   function setCookieConsentState(enabled) {
     analyticsEnabled = Boolean(enabled);
+    loadGoogleAdsTag();
     if (analyticsEnabled) {
-      loadGoogleAdsTag();
       loadAnalyticsScript();
     }
     if (typeof window.gtag !== 'function') {
@@ -211,7 +211,7 @@
   }
 
   function trackGoogleAdsConversion(sendTo) {
-    if (!sendTo || !analyticsEnabled) {
+    if (!sendTo) {
       return;
     }
 
