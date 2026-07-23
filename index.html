@@ -34,12 +34,14 @@
     <link rel="canonical" href="https://www.tandaprocleaning.com.au/" />
     <link rel="icon" href="assets/images/logo.jpeg" />
     <link rel="manifest" href="manifest.json" />
+    <link rel="preload" as="image" href="assets/images/hero-house-van-1920.webp" media="(min-width: 761px)" fetchpriority="high" />
+    <link rel="preload" as="image" href="assets/images/hero-house-van-900.webp" media="(max-width: 760px)" fetchpriority="high" />
     <script>
       if ('scrollRestoration' in history) {
         history.scrollRestoration = 'manual';
       }
     </script>
-  <link rel="stylesheet" href="styles-home.css?v=20260720-hero-trust-blue" />
+  <link rel="stylesheet" href="styles-home.css?v=20260723-performance-trust" />
     <!-- Google Analytics 4 (consent-gated by cookie banner) -->
     <script>
       window.__GA_MEASUREMENT_ID__ = 'G-XXXXXXXXXX';
@@ -203,8 +205,8 @@
         <p>Specialist cleaning, exterior maintenance, and recurring property care across Gold Coast, Brisbane, Logan and Ipswich.</p>
         <div class="hero-buttons">
           <a href="#quote" class="btn-primary">Get a Free Quote</a>
-          <a href="subscription-builder.html" class="btn-outline">Build a Subscription</a>
-          <a href="referrals.html" class="btn-secondary">Get Paid Through Referrals</a>
+          <a href="subscription-builder.html" class="btn-outline hero-secondary-action">Build a Subscription</a>
+          <a href="referrals.html" class="btn-secondary hero-secondary-action">Get Paid Through Referrals</a>
         </div>
         <p class="hero-trustline">$20M public liability insured &bull; ABN registered &bull; Family-run local team &bull; 5-star reviewed</p>
         <ul class="hero-trust-pills" aria-label="Trust indicators">
@@ -248,67 +250,25 @@
       </div>
     </section>
 
-    <section class="home-proof-stats" aria-label="Verified T and A Pro Cleaning statistics">
-      <div class="container home-proof-stats-grid">
-        <article>
-          <div class="home-proof-stat-value"><strong data-count-to="38">38</strong></div>
-          <span>Verified Reviews</span>
-          <small>Across Google and Airtasker</small>
-        </article>
-        <article>
-          <div class="home-proof-stat-value"><strong data-count-to="26">26</strong></div>
-          <span>Google Reviews</span>
-          <small>Genuine local customer feedback</small>
-        </article>
-        <article>
-          <div class="home-proof-stat-value"><strong data-count-to="12">12</strong></div>
-          <span>Airtasker Reviews</span>
-          <small>Verified completed-task reviews</small>
-        </article>
-        <article>
-          <div class="home-proof-stat-value"><strong data-count-to="10">10</strong><b aria-hidden="true">+</b></div>
-          <span>Fitness Locations</span>
-          <small>Commercial sites serviced</small>
-        </article>
-      </div>
-    </section>
-
-    <section class="home-trusted-band" aria-labelledby="home-trusted-band-title">
-      <div class="container home-trusted-band-layout">
-        <div class="home-trusted-band-heading">
-          <p class="eyebrow">Local Trust</p>
-          <h2 id="home-trusted-band-title">Trusted By</h2>
-        </div>
-        <div class="home-trusted-mark">
-          <strong>Homeowners</strong>
-          <span>Residential property care</span>
-        </div>
-        <div class="home-trusted-mark">
-          <strong>Property Managers</strong>
-          <span>Reliable presentation standards</span>
-        </div>
-        <div class="home-trusted-mark">
-          <strong>Commercial Facilities</strong>
-          <span>Recurring site maintenance</span>
-        </div>
-        <div class="home-trusted-rating" aria-label="Five-star rated across Google and Airtasker">
-          <span class="home-trusted-rating-stars" aria-hidden="true">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
-          <strong>5-Star Rated</strong>
-          <small>Google &amp; Airtasker</small>
-        </div>
-      </div>
-    </section>
-
     <section class="commercial-trust-section" aria-labelledby="commercial-trust-title">
       <div class="container commercial-trust-layout">
         <div class="commercial-trust-copy">
+          <p class="eyebrow">Local Credibility</p>
           <h2 id="commercial-trust-title">Trusted by Homeowners, Businesses &amp; Commercial Facilities Across South East Queensland</h2>
           <p>Owner-operated cleaning for properties that need to look cared for, from family homes to busy commercial sites.</p>
-          <a class="btn-primary" href="gallery.html">View Our Work</a>
+          <div class="commercial-review-proof" aria-label="Customer review summary">
+            <strong>38 verified reviews</strong>
+            <span aria-hidden="true">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
+            <small>Google &amp; Airtasker</small>
+          </div>
+          <div class="commercial-trust-actions">
+            <a class="btn-primary" href="gallery.html">View Our Work</a>
+            <a class="btn-outline" href="reviews/">Read Reviews</a>
+          </div>
         </div>
         <div class="commercial-trust-panel" aria-label="Client types serviced">
           <article>
-            <img class="commercial-trust-photo" src="assets/images/builders-clean.JPG" alt="Commercial gym interior serviced by T and A Pro Cleaning" loading="lazy" decoding="async" />
+            <img class="commercial-trust-photo" src="assets/images/builders-clean-1600.webp" alt="Commercial gym interior serviced by T and A Pro Cleaning" loading="lazy" decoding="async" />
             <div class="commercial-trust-card-copy">
               <span class="commercial-trust-mark">10+</span>
               <strong>Anytime Fitness Locations Serviced</strong>
@@ -324,7 +284,7 @@
             </div>
           </article>
           <article>
-            <img class="commercial-trust-photo" src="assets/images/clean house.jpg" alt="Premium residential property maintained by T and A Pro Cleaning" loading="lazy" decoding="async" />
+            <img class="commercial-trust-photo" src="assets/images/clean-house-1600.webp" alt="Premium residential property maintained by T and A Pro Cleaning" loading="lazy" decoding="async" />
             <div class="commercial-trust-card-copy">
               <span class="commercial-trust-mark">RH</span>
               <strong>Residential Homes</strong>
@@ -387,7 +347,7 @@
             </div>
           </div>
           <div class="service-card">
-            <img src="assets/images/pressure-washing.png?v=20260518-pressure-washing" alt="Pressure Washing" loading="lazy" decoding="async" />
+            <img src="assets/images/pressure-washing-1200.webp" alt="Pressure Washing" loading="lazy" decoding="async" />
             <div class="service-content">
               <h3>Pressure Washing</h3>
               <p>Restore driveways, paths and hard surfaces with visibly cleaner results.</p>
@@ -459,7 +419,7 @@
             </div>
           </div>
           <div class="service-card">
-            <img src="assets/images/builders-clean.JPG?v=20260518-builder-clean" alt="Builder Clean" loading="lazy" decoding="async" />
+            <img src="assets/images/builders-clean-1600.webp" alt="Builder Clean" loading="lazy" decoding="async" />
             <div class="service-content">
               <h3>Builder Clean</h3>
               <p>Detailed post-build cleaning that prepares sites for handover and presentation.</p>
@@ -577,7 +537,7 @@
         </article>
         <aside class="about-proof-card premium-card" aria-labelledby="difference-title">
           <figure class="about-team-visual">
-            <img src="assets/images/Tyler & Angel.png" alt="Tyler and Angel from T and A Pro Cleaning" loading="lazy" decoding="async" />
+            <img src="assets/images/tyler-angel-1400.webp" alt="Tyler and Angel from T and A Pro Cleaning" loading="lazy" decoding="async" />
             <figcaption>Tyler and Angel, the owner-led team behind T &amp; A Pro Cleaning.</figcaption>
           </figure>
           <div class="about-proof-content">
@@ -1147,7 +1107,7 @@
           </div>
 
           <aside class="quote-side-card">
-            <img src="assets/images/fleet-transparent.png" alt="T and A Pro Cleaning service fleet" loading="lazy" decoding="async" />
+            <img src="assets/images/fleet-transparent-1400.webp" alt="T and A Pro Cleaning service fleet" loading="lazy" decoding="async" />
             <div class="quote-side-body">
               <h3>Direct contact plus AI-assisted quoting.</h3>
               <p>Get a practical free quote estimate with AI help on notes, then review one recommended price before confirmation.</p>
@@ -1218,12 +1178,9 @@
               <a href="https://www.google.com/maps/search/?api=1&query=T%20%26%20A%20Pro%20Cleaning%20Gold%20Coast" target="_blank" rel="noopener noreferrer">Google Reviews</a>
             </div>
             <div>
-              <h4>Legal &amp; Social</h4>
+              <h4>Legal</h4>
               <a href="privacy.html">Privacy Policy</a>
               <a href="terms.html">Terms &amp; Conditions</a>
-              <!-- TODO: Replace social placeholder text with live Facebook and Instagram URLs when available. -->
-              <span>Facebook profile link coming soon</span>
-              <span>Instagram profile link coming soon</span>
             </div>
           </div>
         </div>
@@ -1249,7 +1206,7 @@
   }
 </script>
 <script defer src="pricing-engine.js?v=20260720-auto-travel-fee"></script>
-  <script defer src="app.js?v=20260722-google-ads-conversions"></script>
+  <script defer src="app.js?v=20260723-performance-trust"></script>
 <script defer src="gallery.js"></script>
 <script defer src="reviews.js?v=20260710-carousel-2"></script>
   </body>

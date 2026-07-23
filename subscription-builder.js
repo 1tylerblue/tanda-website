@@ -222,6 +222,8 @@
   const builderMessage = document.getElementById('builderMessage');
   const builderResult = document.getElementById('builderResult');
   const pricingConfig = SUBSCRIPTION_PRICING_CONFIG;
+  let stagePriceFirst = null;
+  let stagePriceMonthly = null;
 
   function byId(id) {
     return document.getElementById(id);
@@ -249,6 +251,105 @@
   function selectedRadio(name, fallback) {
     const node = form.querySelector(`input[name="${name}"]:checked`);
     return node instanceof HTMLInputElement ? node.value : fallback;
+  }
+
+  function setupProgressiveBuilder() {
+    const sections = Array.from(form.children).filter((node) => node.classList && node.classList.contains('builder-step'));
+    if (sections.length < 16) return;
+
+    const stages = [
+      { title: 'Plan & property', sections: sections.slice(0, 2) },
+      { title: 'Contact & property details', sections: sections.slice(2, 5) },
+      { title: 'Access & services', sections: sections.slice(5, 10) },
+      { title: 'Schedule & preferences', sections: sections.slice(10, 15) },
+      { title: 'Review & submit', sections: sections.slice(15, 16) }
+    ];
+    let currentStage = 0;
+
+    const progress = document.createElement('div');
+    progress.className = 'builder-progress';
+    progress.setAttribute('aria-label', 'Subscription builder progress');
+    progress.innerHTML = `
+      <div class="builder-progress-meta">
+        <span data-builder-step-label>Step 1 of ${stages.length}</span>
+        <strong data-builder-stage-title>${stages[0].title}</strong>
+      </div>
+      <div class="builder-progress-track" aria-hidden="true"><span data-builder-progress-bar></span></div>
+      <div class="builder-stage-price" aria-live="polite">
+        <span>First clean: <strong data-builder-first-price>$0 + GST</strong></span>
+        <span>Monthly: <strong data-builder-monthly-price>$0/month + GST</strong></span>
+      </div>
+    `;
+    form.prepend(progress);
+
+    const actions = document.createElement('div');
+    actions.className = 'builder-stage-actions';
+    actions.innerHTML = `
+      <button type="button" class="builder-stage-button" data-builder-back>Back</button>
+      <button type="button" class="builder-stage-button primary" data-builder-next>Continue</button>
+    `;
+    form.append(actions);
+
+    const stepLabel = progress.querySelector('[data-builder-step-label]');
+    const stageTitle = progress.querySelector('[data-builder-stage-title]');
+    const progressBar = progress.querySelector('[data-builder-progress-bar]');
+    const backButton = actions.querySelector('[data-builder-back]');
+    const nextButton = actions.querySelector('[data-builder-next]');
+    stagePriceFirst = progress.querySelector('[data-builder-first-price]');
+    stagePriceMonthly = progress.querySelector('[data-builder-monthly-price]');
+
+    function validateStage() {
+      const requiredFields = stages[currentStage].sections.flatMap((section) =>
+        Array.from(section.querySelectorAll('[required]'))
+      );
+      const invalidField = requiredFields.find((field) =>
+        field instanceof HTMLInputElement || field instanceof HTMLSelectElement || field instanceof HTMLTextAreaElement
+          ? !field.disabled && !field.checkValidity()
+          : false
+      );
+      if (!invalidField) return true;
+      invalidField.reportValidity();
+      invalidField.focus();
+      return false;
+    }
+
+    function renderStage(shouldScroll) {
+      stages.forEach((stage, stageIndex) => {
+        stage.sections.forEach((section) => {
+          section.hidden = stageIndex !== currentStage;
+        });
+      });
+      stepLabel.textContent = `Step ${currentStage + 1} of ${stages.length}`;
+      stageTitle.textContent = stages[currentStage].title;
+      progressBar.style.width = `${((currentStage + 1) / stages.length) * 100}%`;
+      backButton.hidden = currentStage === 0;
+      nextButton.hidden = currentStage === stages.length - 1;
+      progress.setAttribute('aria-label', `Step ${currentStage + 1} of ${stages.length}: ${stages[currentStage].title}`);
+
+      if (currentStage === stages.length - 1) {
+        renderFinalSummary(calculatePricing());
+      } else {
+        builderResult.classList.add('hidden');
+      }
+
+      if (shouldScroll) {
+        const top = form.getBoundingClientRect().top + window.scrollY - 100;
+        window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+      }
+    }
+
+    backButton.addEventListener('click', () => {
+      currentStage = Math.max(0, currentStage - 1);
+      renderStage(true);
+    });
+
+    nextButton.addEventListener('click', () => {
+      if (!validateStage()) return;
+      currentStage = Math.min(stages.length - 1, currentStage + 1);
+      renderStage(true);
+    });
+
+    renderStage(false);
   }
 
   function fileToDataUrl(file) {
@@ -686,6 +787,8 @@
     liveFirstClean.textContent = `${formatMoney(result.firstClean)} + GST`;
     liveRecurring.textContent = `${formatMoney(result.recurring)}/month + GST`;
     if (liveAnnual) liveAnnual.textContent = `${formatMoney(result.annualRecurring)}/year + GST`;
+    if (stagePriceFirst) stagePriceFirst.textContent = `${formatMoney(result.firstClean)} + GST`;
+    if (stagePriceMonthly) stagePriceMonthly.textContent = `${formatMoney(result.recurring)}/month + GST`;
 
     byId('visitDurationHint').value = `${result.worker.visitDuration.toFixed(1)} hours (calculated)`;
     byId('calculatedFirstClean').value = String(result.firstClean);
@@ -864,6 +967,7 @@
   buildServiceRows();
   applyPlanFromQuery();
   applyPlanDefaults(selectedPlanKey());
+  setupProgressiveBuilder();
   byId('builderYear').textContent = String(new Date().getFullYear());
   updateAll();
 

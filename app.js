@@ -132,6 +132,7 @@
   function setCookieConsentState(enabled) {
     analyticsEnabled = Boolean(enabled);
     if (analyticsEnabled) {
+      loadGoogleAdsTag();
       loadAnalyticsScript();
     }
     if (typeof window.gtag !== 'function') {
@@ -210,7 +211,7 @@
   }
 
   function trackGoogleAdsConversion(sendTo) {
-    if (!sendTo) {
+    if (!sendTo || !analyticsEnabled) {
       return;
     }
 
@@ -2173,6 +2174,17 @@
     pricingItem.addEventListener('change', () => syncUnit(pricingItem, quantity, unit, true));
     if (addButton instanceof HTMLButtonElement) addButton.addEventListener('click', () => createAdditionalRow());
     syncUnit(pricingItem, quantity, unit);
+
+    const requestedService = new URLSearchParams(window.location.search).get('service');
+    const requestedGroup = groups.find((group) => group.id === requestedService);
+    if (requestedGroup) {
+      selectedGroups.add(requestedGroup.id);
+      service.value = requestedGroup.id;
+      populateItems(service, pricingItem);
+      jobPicker.toggle.disabled = false;
+      refreshServicePicker();
+      refreshJobPicker();
+    }
   }
 
   function collectPricingLineItems(form) {
@@ -3432,7 +3444,6 @@
   }
 
   function init() {
-    loadGoogleAdsTag();
     setupInitialScrollPosition();
     setCurrentYear();
     setupMobileNav();

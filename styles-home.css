@@ -129,7 +129,7 @@
 
       /* Hero section */
       .hero {
-        background-image: url('assets/images/hero-house-van.png');
+        background-image: url('assets/images/hero-house-van-1920.webp');
         background-size: cover;
         background-position: center;
         padding: 160px 0;
@@ -2120,7 +2120,7 @@ summary:focus-visible {
   padding: 0;
   background:
     linear-gradient(135deg, rgba(8,17,31,0.72), rgba(0,127,190,0.34)),
-    url("assets/images/hero-house-van.png"),
+    url("assets/images/hero-house-van-1920.webp"),
     linear-gradient(135deg, #0b1630, #00a6ef);
   background-size: cover;
   background-position: center;
@@ -2172,6 +2172,21 @@ summary:focus-visible {
   flex-wrap: wrap;
   justify-content: center;
   gap: 14px;
+}
+
+.hero-buttons .hero-secondary-action {
+  min-height: 46px;
+  padding-inline: 20px;
+  border-color: rgba(255, 255, 255, 0.48);
+  background: rgba(8, 28, 51, 0.46);
+  color: rgba(255, 255, 255, 0.92);
+  box-shadow: none;
+}
+
+.hero-buttons .hero-secondary-action:hover,
+.hero-buttons .hero-secondary-action:focus-visible {
+  background: rgba(8, 28, 51, 0.68);
+  color: #ffffff;
 }
 
 .hero-trustline {
@@ -5405,6 +5420,41 @@ footer,
   line-height: 1.75;
 }
 
+.commercial-review-proof {
+  width: fit-content;
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 3px 12px;
+  margin: 0 0 24px;
+  padding: 14px 16px;
+  border: 1px solid rgba(20, 52, 91, 0.12);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 12px 30px rgba(3, 35, 72, 0.08);
+}
+
+.commercial-review-proof strong {
+  color: #071c33;
+  font-size: 1.05rem;
+}
+
+.commercial-review-proof > span {
+  color: #0a7fff;
+  letter-spacing: 1px;
+}
+
+.commercial-review-proof small {
+  grid-column: 1 / -1;
+  color: #607188;
+  font-weight: 700;
+}
+
+.commercial-trust-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
 .commercial-trust-panel {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -7493,5 +7543,117 @@ body.premium-home {
     min-height: 38px;
     padding-inline: 10px;
     font-size: 0.76rem;
+  }
+}
+
+/* Final performance and consent refinements. */
+.cookie-consent {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1200;
+  max-width: none;
+  margin: 0;
+  padding: 9px clamp(14px, 4vw, 52px);
+  border: 0;
+  border-top: 1px solid rgba(158, 214, 255, 0.28);
+  border-radius: 0;
+  background: rgba(7, 24, 42, 0.98);
+  box-shadow: 0 -10px 28px rgba(4, 16, 28, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.cookie-consent[hidden] {
+  display: none;
+}
+
+.cookie-consent-text {
+  display: block;
+  max-width: 760px;
+  margin: 0;
+  overflow: visible;
+  color: #d8e7f1;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  -webkit-line-clamp: initial;
+}
+
+.cookie-consent-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 8px;
+}
+
+.cookie-consent .btn-primary,
+.cookie-consent .btn-secondary,
+.cookie-consent-actions button {
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid rgba(255, 255, 255, 0.48);
+  border-radius: 8px;
+  background: transparent;
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.cookie-consent .btn-secondary {
+  border-color: #39b8ff;
+  background: #0a7fff;
+  color: #ffffff;
+}
+
+.cookie-consent button:focus-visible {
+  outline: 3px solid #9edcff;
+  outline-offset: 2px;
+}
+
+@media (max-width: 760px) {
+  .hero {
+    background:
+      linear-gradient(135deg, rgba(8,17,31,0.76), rgba(0,127,190,0.38)),
+      url("assets/images/hero-house-van-900.webp"),
+      linear-gradient(135deg, #0b1630, #00a6ef);
+    background-position: center;
+    background-size: cover;
+  }
+
+  .commercial-trust-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .commercial-trust-actions a {
+    width: 100%;
+  }
+
+  .cookie-consent {
+    right: 0;
+    left: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 8px 10px max(8px, env(safe-area-inset-bottom));
+    border-radius: 0;
+  }
+
+  .cookie-consent-text {
+    font-size: 0.72rem;
+    line-height: 1.35;
+  }
+
+  .cookie-consent-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+  }
+
+  .cookie-consent-actions button {
+    width: 100%;
   }
 }
