@@ -175,6 +175,7 @@ async function sendEmailViaWebhook({ subject, text, photoUploads, replyTo }) {
 function buildLeadText(lead) {
   const addons = toList(lead?.addons);
   const reasons = toList(lead?.estimateReasons);
+  const customerScope = toList(lead?.customerScope);
   const calculation = lead?.calculationBreakdown && typeof lead.calculationBreakdown === 'object' ? lead.calculationBreakdown : {};
   const pricedLines = Array.isArray(calculation.lines) ? calculation.lines : [];
   const pricedLineText = pricedLines.length
@@ -220,6 +221,9 @@ function buildLeadText(lead) {
     '',
     `Add-ons: ${addons.length ? addons.join(', ') : 'None'}`,
     `Customer notes: ${toText(lead?.notes) || 'None'}`,
+    '',
+    'Customer-ready service scope',
+    ...(customerScope.length ? customerScope.map((item) => `- ${item}`) : ['- Final scope requires team confirmation']),
     '',
     'Smart Estimate',
     `- Recommended estimate: ${toText(lead?.recommendedEstimateLabel || lead?.estimateLabel)}`,

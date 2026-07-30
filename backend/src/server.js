@@ -4,7 +4,7 @@ import cors from 'cors';
 import fs from 'fs';
 import path from 'path';
 import { readLeads, writeLeads } from './db.js';
-import { estimateLead, generateAISummary, scoreLeadQuality } from './ai.js';
+import { estimateLead, generateAISummary, generateServiceScope, scoreLeadQuality } from './ai.js';
 import { sendLeadEmail, sendReferralEmail, sendSubscriptionEmail } from './mailer.js';
 import { startDailyBackupScheduler } from './backup.js';
 import { getCachedTravelPricing, resolveTravelPricing } from './travel.js';
@@ -52,11 +52,9 @@ const REQUIRED_FIELDS = [
   'pricingItemCode',
   'propertyType',
   'storeys',
-  'rooms',
   'serviceArea',
-  'accessDifficulty',
-  'conditionLevel',
-  'preferredTime',
+  'scopeQuantity',
+  'agree',
 ];
 
 function readAllowedOrigins() {
@@ -532,6 +530,7 @@ app.post('/api/leads', leadRateLimit, async (req, res) => {
   }
 
   const estimate = estimateLead(cleanLead);
+  const customerScope = generateServiceScope(cleanLead);
   const aiSummary = generateAISummary(cleanLead, estimate);
   const leadQuality = scoreLeadQuality(cleanLead);
   const eligibleForGiveaway = isWithinGiveawayCampaign() && estimate.recommendedEstimate >= GIVEAWAY_MIN_ESTIMATE;
@@ -541,6 +540,7 @@ app.post('/api/leads', leadRateLimit, async (req, res) => {
   const lead = {
     id: leadId,
     ...cleanLead,
+    customerScope,
     photoUploads: savedPhotos,
     photoUploadCount: savedPhotos.length,
     estimateMin: estimate.estimateMin,
@@ -606,6 +606,7 @@ app.post('/api/leads', leadRateLimit, async (req, res) => {
     manualReviewRequired: estimate.manualReviewRequired,
     photoRequired: estimate.photoRequired,
     calculationBreakdown: estimate.calculationBreakdown,
+    customerScope,
     aiSummary,
     leadQuality,
     eligibleForGiveaway,

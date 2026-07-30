@@ -1,6 +1,6 @@
 import pricingEngine from '../../pricing-engine.js';
 
-const { calculateEstimate, generateSummary } = pricingEngine;
+const { buildServiceScope, calculateEstimate, generateSummary } = pricingEngine;
 
 function toText(value) {
   return String(value ?? '').trim();
@@ -13,6 +13,10 @@ export function estimateLead(lead = {}) {
 export function generateAISummary(lead = {}, estimate = null) {
   const resolvedEstimate = estimate || calculateEstimate(lead);
   return generateSummary(lead, resolvedEstimate);
+}
+
+export function generateServiceScope(lead = {}) {
+  return buildServiceScope(lead);
 }
 
 export function scoreLeadQuality(lead = {}) {

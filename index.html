@@ -44,7 +44,6 @@
   <link rel="stylesheet" href="styles-home.css?v=20260723-performance-trust" />
     <!-- Google Analytics 4 (consent-gated by cookie banner) -->
     <script>
-      window.__GA_MEASUREMENT_ID__ = 'G-XXXXXXXXXX';
       window.dataLayer = window.dataLayer || [];
       window.__GA_ANALYTICS_CONFIG__ = {
         consentDefaultApplied: true,
@@ -205,8 +204,10 @@
         <p>Specialist cleaning, exterior maintenance, and recurring property care across Gold Coast, Brisbane, Logan and Ipswich.</p>
         <div class="hero-buttons">
           <a href="#quote" class="btn-primary">Get a Free Quote</a>
-          <a href="subscription-builder.html" class="btn-outline hero-secondary-action">Build a Subscription</a>
-          <a href="referrals.html" class="btn-secondary hero-secondary-action">Get Paid Through Referrals</a>
+        </div>
+        <div class="hero-secondary-links" aria-label="More ways to work with T and A Pro Cleaning">
+          <a href="subscription-builder.html">Property Care Plans</a>
+          <a href="referrals.html">Referral Rewards</a>
         </div>
         <p class="hero-trustline">$20M public liability insured &bull; ABN registered &bull; Family-run local team &bull; 5-star reviewed</p>
         <ul class="hero-trust-pills" aria-label="Trust indicators">
@@ -216,37 +217,6 @@
           <li>Recurring property care systems</li>
         </ul>
         <p id="areas" class="hero-area-links">Service areas: <a href="areas/gold-coast.html">Gold Coast</a> | <a href="areas/brisbane.html">Brisbane</a> | <a href="areas/logan.html">Logan</a> | <a href="areas/ipswich.html">Ipswich</a></p>
-      </div>
-    </section>
-
-    <section class="giveaway-promo-banner giveaway-promo-priority" aria-labelledby="giveaway-promo-title">
-      <div class="container giveaway-promo-layout">
-        <div class="giveaway-promo-copy">
-          <p class="referral-kicker">Monthly Client Giveaway</p>
-          <h2 id="giveaway-promo-title">Enter Our Giveaway</h2>
-          <p>Book your clean with T&amp;A PRO Cleaning for your chance to win both Samsung cleaning appliances or $3,300 cash.</p>
-          <div class="giveaway-celebration-pills" aria-label="Giveaway prize highlights">
-            <span>Samsung prize bundle</span>
-            <span>$3,300 cash option</span>
-            <span>You choose the prize</span>
-          </div>
-          <p class="giveaway-celebration-note">A premium monthly client reward for eligible quote, service and subscription requests.</p>
-          <a class="btn-primary" href="giveaway.html">View Giveaway</a>
-        </div>
-        <a class="giveaway-promo-image-link" href="giveaway.html" aria-label="View the T and A Pro Cleaning giveaway">
-          <span class="sr-only">View the T and A Pro Cleaning giveaway</span>
-          <picture>
-            <source srcset="assets/images/giveaway-promo.webp" type="image/webp" />
-            <img
-              src="assets/images/giveaway-promo.png"
-              alt="Enter to win Samsung cleaning appliances or $3,300 cash with T and A Pro Cleaning"
-              width="1254"
-              height="1254"
-              loading="eager"
-              decoding="async"
-            />
-          </picture>
-        </a>
       </div>
     </section>
 
@@ -435,6 +405,36 @@
             </div>
           </div>
         </div>
+      </div>
+    </section>
+    <section class="giveaway-promo-banner giveaway-promo-priority" aria-labelledby="giveaway-promo-title">
+      <div class="container giveaway-promo-layout">
+        <div class="giveaway-promo-copy">
+          <p class="referral-kicker">Monthly Client Giveaway</p>
+          <h2 id="giveaway-promo-title">Enter Our Giveaway</h2>
+          <p>Book your clean with T&amp;A PRO Cleaning for your chance to win both Samsung cleaning appliances or $3,300 cash.</p>
+          <div class="giveaway-celebration-pills" aria-label="Giveaway prize highlights">
+            <span>Samsung prize bundle</span>
+            <span>$3,300 cash option</span>
+            <span>You choose the prize</span>
+          </div>
+          <p class="giveaway-celebration-note">A premium monthly client reward for eligible quote, service and subscription requests.</p>
+          <a class="btn-primary" href="giveaway.html">View Giveaway</a>
+        </div>
+        <a class="giveaway-promo-image-link" href="giveaway.html" aria-label="View the T and A Pro Cleaning giveaway">
+          <span class="sr-only">View the T and A Pro Cleaning giveaway</span>
+          <picture>
+            <source srcset="assets/images/giveaway-promo.webp" type="image/webp" />
+            <img
+              src="assets/images/giveaway-promo.png"
+              alt="Enter to win Samsung cleaning appliances or $3,300 cash with T and A Pro Cleaning"
+              width="1254"
+              height="1254"
+              loading="lazy"
+              decoding="async"
+            />
+          </picture>
+        </a>
       </div>
     </section>
     <section class="features" aria-labelledby="why-title">
@@ -832,8 +832,8 @@
                       </select>
                     </div>
                     <div class="field">
-                      <label for="rooms">Number of Rooms</label>
-                      <select id="rooms" name="rooms" required aria-required="true">
+                      <label for="rooms">Number of Rooms (optional)</label>
+                      <select id="rooms" name="rooms">
                         <option value="">Select rooms</option>
                         <option value="1-2">1-2</option>
                         <option value="3-4">3-4</option>
@@ -1076,6 +1076,15 @@
                   <ul data-preview-reasons></ul>
                 </section>
 
+                <section class="quote-inclusions-card" data-quote-inclusions aria-live="polite">
+                  <div class="quote-inclusions-heading">
+                    <span>Scope preview</span>
+                    <h3>Your quote includes</h3>
+                  </div>
+                  <p class="group-copy" data-quote-inclusions-empty>Choose your service and job type to see the work included.</p>
+                  <ul data-quote-inclusions-list></ul>
+                </section>
+
                 <p id="formMessage" class="form-message" aria-live="polite"></p>
                 <label class="agreement-check">
                   <input type="checkbox" name="agree" required aria-required="true" />
@@ -1097,6 +1106,8 @@
                 <span class="status-pill quality-medium" data-result-quality>Detail Level: Medium</span>
               </div>
               <p class="group-copy" data-result-note>Final pricing is confirmed once the full scope is reviewed.</p>
+              <p class="group-copy"><strong>Your quote includes</strong></p>
+              <ul class="result-inclusions" data-result-inclusions></ul>
               <div class="estimate-calculation" data-result-breakdown></div>
               <p class="group-copy"><strong>Why this estimate was generated</strong></p>
               <ul data-result-reasons></ul>
@@ -1205,8 +1216,8 @@
     window.__API_BASE__ = 'https://tanda-pro-cleaning-api.onrender.com';
   }
 </script>
-<script defer src="pricing-engine.js?v=20260720-auto-travel-fee"></script>
-  <script defer src="app.js?v=20260723-conversion-tracking-2"></script>
+<script defer src="pricing-engine.js?v=20260731-quote-scope"></script>
+  <script defer src="app.js?v=20260731-quote-scope"></script>
 <script defer src="gallery.js"></script>
 <script defer src="reviews.js?v=20260710-carousel-2"></script>
   </body>

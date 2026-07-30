@@ -10,7 +10,7 @@
   const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
   const COOKIE_CONSENT_KEY = 'tac_cookie_consent_v1';
   let analyticsEnabled = false;
-  const GA_MEASUREMENT_ID = 'G-XXXXXXXXXX';
+  const GA_MEASUREMENT_ID = '';
   const GA_SCRIPT_ATTRIBUTE = 'data-tac-ga';
   const GOOGLE_ADS_CONVERSION_ID = 'AW-11132030271';
   const GOOGLE_ADS_QUOTE_SEND_TO = 'AW-11132030271/8PYfCNyuw9QcEL-albwp';
@@ -118,7 +118,7 @@
       typeof window.__GA_MEASUREMENT_ID__ === 'string' && window.__GA_MEASUREMENT_ID__.trim()
         ? window.__GA_MEASUREMENT_ID__.trim()
         : GA_MEASUREMENT_ID;
-    if (configuredId === 'G-XXXXXXXXXX' || !/^G-[A-Z0-9]+$/i.test(configuredId)) {
+    if (!/^G-[A-Z0-9]+$/i.test(configuredId)) {
       return;
     }
 
@@ -201,7 +201,6 @@
 
     if (
       typeof window.__GA_MEASUREMENT_ID__ === 'string' &&
-      window.__GA_MEASUREMENT_ID__ !== 'G-XXXXXXXXXX' &&
       /^G-[A-Z0-9]+$/.test(window.__GA_MEASUREMENT_ID__)
     ) {
       eventParams.send_to = window.__GA_MEASUREMENT_ID__;
@@ -259,6 +258,11 @@
       if (phoneDigits !== '0466224927' && phoneDigits !== '61466224927') {
         return;
       }
+
+      trackEvent('phone_click', {
+        event_category: 'contact',
+        event_label: '0466224927',
+      });
 
       const href = link.getAttribute('href');
       if (!href || event.defaultPrevented) {
@@ -995,11 +999,9 @@
       'service',
       'propertyType',
       'storeys',
-      'rooms',
       'serviceArea',
       'accessDifficulty',
       'conditionLevel',
-      'preferredTime',
     ];
     const completedRequired = requiredFields.filter((field) => toText(lead[field])).length;
 
@@ -1032,7 +1034,8 @@
     const addons = normalizeAddons(lead.addons);
 
     segments.push(`${propertyType} property requiring ${service.toLowerCase()} across ${serviceArea.toLowerCase()} areas.`);
-    segments.push(`Site profile: ${toText(lead.storeys)} storey, ${toText(lead.rooms)} rooms, ${toText(lead.accessDifficulty).toLowerCase()} access, ${toText(lead.conditionLevel).toLowerCase()} condition.`);
+    const roomDescription = toText(lead.rooms) ? `, ${toText(lead.rooms)} rooms` : '';
+    segments.push(`Site profile: ${toText(lead.storeys)} storey${roomDescription}, ${toText(lead.accessDifficulty).toLowerCase()} access, ${toText(lead.conditionLevel).toLowerCase()} condition.`);
 
     if (addons.length) {
       segments.push(`Add-ons selected: ${toSentenceList(addons)}.`);
@@ -1348,6 +1351,7 @@
     const qualityNode = document.querySelector('[data-result-quality]');
     const giveawayNode = document.querySelector('[data-result-giveaway]');
     const breakdownNode = document.querySelector('[data-result-breakdown]');
+    const inclusionsNode = document.querySelector('[data-result-inclusions]');
 
     if (!panel || !rangeNode || !typeNode || !accuracyNode || !noteNode || !reasonsNode || !summaryNode || !qualityNode || !giveawayNode) {
       return;
@@ -1364,6 +1368,7 @@
     applyAccuracyBadge(accuracyNode, accuracyText);
 
     noteNode.textContent = String(result.estimateGuidance || 'Final pricing confirmed after site inspection.');
+    renderScopeItems(inclusionsNode, result.customerScope);
     renderCalculationBreakdown(breakdownNode, result.calculationBreakdown);
 
     reasonsNode.innerHTML = '';
@@ -1692,15 +1697,56 @@
       Number(payload.scopeQuantity || 0) > 0 &&
       toText(payload.propertyType) &&
       toText(payload.storeys) &&
-      toText(payload.rooms) &&
       toText(payload.serviceArea)
     );
+  }
+
+  function buildCustomerScope(payload) {
+    const engine = window.TAPricing;
+    if (!engine || typeof engine.buildServiceScope !== 'function') return [];
+    return engine.buildServiceScope(payload);
+  }
+
+  function renderScopeItems(listNode, scopeItems, emptyNode = null) {
+    if (!(listNode instanceof HTMLElement)) return;
+    const items = Array.isArray(scopeItems) ? scopeItems.filter((item) => toText(item)) : [];
+    listNode.replaceChildren();
+    items.forEach((item) => {
+      const listItem = document.createElement('li');
+      listItem.textContent = toText(item);
+      listNode.appendChild(listItem);
+    });
+    if (emptyNode instanceof HTMLElement) {
+      emptyNode.hidden = items.length > 0;
+    }
+    listNode.hidden = items.length === 0;
+  }
+
+  function setupQuoteScopePreview(form) {
+    const listNode = form.querySelector('[data-quote-inclusions-list]');
+    const emptyNode = form.querySelector('[data-quote-inclusions-empty]');
+    if (!(listNode instanceof HTMLElement)) return;
+
+    let rafId = 0;
+    const update = () => {
+      rafId = 0;
+      renderScopeItems(listNode, buildCustomerScope(buildBasePayload(form)), emptyNode);
+    };
+    const queueUpdate = () => {
+      if (rafId) return;
+      rafId = window.requestAnimationFrame(update);
+    };
+
+    form.addEventListener('input', queueUpdate, { passive: true });
+    form.addEventListener('change', queueUpdate, { passive: true });
+    update();
   }
 
   function buildLocalResult(payload) {
     const estimate = estimateLeadSmart(payload);
     return {
       ...estimate,
+      customerScope: buildCustomerScope(payload),
       aiSummary: generateAISummary(payload, estimate),
       leadQuality: scoreLeadQuality(payload),
       eligibleForGiveaway: estimate.eligibleForGiveaway,
@@ -1723,6 +1769,10 @@
 
     if (!toText(merged.aiSummary)) {
       merged.aiSummary = fallbackResult.aiSummary;
+    }
+
+    if (!Array.isArray(merged.customerScope) || !merged.customerScope.length) {
+      merged.customerScope = fallbackResult.customerScope;
     }
 
     if (!toText(merged.leadQuality)) {
@@ -2313,7 +2363,22 @@
     const travelPricing = setupAddressTravelPricing(form);
     setupSmartEstimatePreview(form);
     setupScopeQuantityFields(form);
+    setupQuoteScopePreview(form);
     setupMobileQuoteSteps(form);
+
+    let quoteStartTracked = false;
+    const trackQuoteStart = () => {
+      if (quoteStartTracked) return;
+      quoteStartTracked = true;
+      form.removeEventListener('input', trackQuoteStart);
+      form.removeEventListener('change', trackQuoteStart);
+      trackEvent('quote_start', {
+        event_category: 'quote',
+        event_label: 'form_interaction',
+      });
+    };
+    form.addEventListener('input', trackQuoteStart);
+    form.addEventListener('change', trackQuoteStart);
 
     const notesCard = form.querySelector('.quote-notes-card');
     const notesToggle = form.querySelector('[data-mobile-notes-toggle]');
@@ -2360,12 +2425,6 @@
         if (payload.uploadWarnings.length) {
           updateUploadNote(payload.uploadWarnings.join(' '), 'error');
         }
-        trackEvent('quote_submit_attempt', {
-          service: payload.service || 'unknown',
-          property_type: payload.propertyType || 'unknown',
-          has_subscription_package: Boolean(payload.subscriptionPackage),
-        });
-
         const localResult = buildLocalResult(payload);
 
         const response = await fetchWithTimeout(`${API_BASE}/api/leads`, {
@@ -2392,9 +2451,12 @@
             : 'Your quote request was saved, but email delivery is delayed. Please call 0466 224 927 or email tandaprocleaning@gmail.com if your job is urgent.',
           emailSent ? 'success' : 'error',
         );
-        trackEvent('quote_submit_success', {
+        trackEvent('quote_submit', {
           event_category: 'quote',
           event_label: 'api_success',
+          service: payload.service || 'unknown',
+          property_type: payload.propertyType || 'unknown',
+          has_subscription_package: Boolean(payload.subscriptionPackage),
         });
         trackQuoteSubmittedConversion();
         bumpGiveawayCounterIfEligible(mergedResult.eligibleForGiveaway);
@@ -2412,7 +2474,7 @@
             ? `${error.message} Your estimate is shown below. Please call 0466 224 927 or email tandaprocleaning@gmail.com if you do not receive a response.`
             : 'We could not send the request automatically. Your estimate is shown below. Please call 0466 224 927 or email tandaprocleaning@gmail.com.';
         setFormMessage(message, 'error');
-        trackEvent('quote_submit_fallback', {
+        trackEvent('quote_delivery_error', {
           event_category: 'quote',
           event_label: 'fallback_used',
         });
@@ -2429,7 +2491,8 @@
     const lines = [];
     lines.push('Customer requested a free quote estimate.');
     lines.push(`Primary scope: ${payload.service} for a ${payload.propertyType} property with ${payload.serviceArea.toLowerCase()} coverage.`);
-    lines.push(`Site profile: ${payload.storeys} storey, ${payload.rooms} rooms, ${payload.accessDifficulty.toLowerCase()} access, ${payload.conditionLevel.toLowerCase()} condition.`);
+    const roomDescription = payload.rooms ? `, ${payload.rooms} rooms` : '';
+    lines.push(`Site profile: ${payload.storeys} storey${roomDescription}, ${payload.accessDifficulty.toLowerCase()} access, ${payload.conditionLevel.toLowerCase()} condition.`);
 
     if (Number(payload.scopeQuantity || 0) > 0 && payload.scopeUnit) {
       lines.push(`Measured scope supplied: approximately ${Number(payload.scopeQuantity)} ${formatScopeUnit(payload.scopeUnit, Number(payload.scopeQuantity))}.`);
@@ -2468,8 +2531,8 @@
 
     button.addEventListener('click', () => {
       const payload = buildBasePayload(form);
-      if (!payload.service || !payload.propertyType || !payload.storeys || !payload.rooms || !payload.serviceArea) {
-        setFormMessage('Please choose service, property type, stories, rooms and service area first.', 'error');
+      if (!payload.service || !payload.propertyType || !payload.storeys || !payload.serviceArea) {
+        setFormMessage('Please choose service, property type, stories and service area first.', 'error');
         return;
       }
 

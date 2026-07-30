@@ -551,10 +551,64 @@
     return `This estimate uses the T&A Pro Cleaning master price list for ${lineText || 'the selected cleaning scope'}. Service minimums are applied once per category and 10% GST is added once at the end.${estimate.manualReviewRequired ? ' Photographs or inspection and team confirmation are required.' : ' Final scope is confirmed before work starts.'}`;
   }
 
+  function buildServiceScope(input = {}) {
+    const requestedLines = normalizeLineItems(input);
+    const resolvedLines = requestedLines
+      .map((line) => {
+        const entry = itemByCode.get(String(line.code || ''));
+        if (!entry) return null;
+        return {
+          ...entry,
+          quantity: entry.mode === 'fixed' ? Math.max(1, number(line.quantity, 1)) : Math.max(0, number(line.quantity)),
+        };
+      })
+      .filter(Boolean);
+
+    if (!resolvedLines.length) return [];
+
+    const areaValue = String(input.serviceArea || '').trim().toLowerCase();
+    const areaLabel = areaValue === 'interior'
+      ? 'Interior'
+      : areaValue === 'exterior'
+        ? 'Exterior'
+        : areaValue === 'both'
+          ? 'Interior and exterior'
+          : 'Selected';
+    const scope = [];
+
+    resolvedLines.forEach((line) => {
+      const quantity = line.quantity || 1;
+      scope.push(`${quantity} ${unitLabel(line.unit, quantity)} - ${line.label}`);
+    });
+
+    const windowLines = resolvedLines.filter((line) => line.groupId === 'window-cleaning');
+    if (windowLines.length) {
+      const codes = new Set(windowLines.map((line) => line.code));
+      const hasPackage = windowLines.some((line) => line.code.startsWith('window_package_'));
+      const hasMainGlass = windowLines.some((line) => !line.addonOnly);
+
+      if (hasMainGlass) scope.push(`${areaLabel} window glass cleaned`);
+      if (hasMainGlass || hasPackage) scope.push(`${areaLabel} window frames and sills detailed`);
+      if (hasPackage || codes.has('window_flyscreen') || codes.has('window_screen_door')) {
+        scope.push('Selected fly screens and screen doors cleaned');
+      }
+      if (hasPackage || codes.has('window_deep_track')) {
+        scope.push('Selected window and door tracks cleaned');
+      }
+      if (codes.has('window_balustrade')) {
+        scope.push('Selected pool-fence and glass-balustrade panels cleaned');
+      }
+    }
+
+    scope.push('Final access, condition and scope confirmed before booking');
+    return [...new Set(scope)];
+  }
+
   return {
     PRICING_CONFIG,
     calculateEstimate,
     generateSummary,
+    buildServiceScope,
     getGroups: () => PRICING_CONFIG.groups,
     getItemsForGroup: (groupId) => groupById.get(groupId)?.items || [],
     getItem: (code) => itemByCode.get(code) || null,
