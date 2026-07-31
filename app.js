@@ -1546,6 +1546,7 @@
     const setStatus = (state, message) => {
       status.dataset.state = state;
       status.textContent = message;
+      status.hidden = state === 'idle' || !message;
     };
 
     const setUnverified = () => {
@@ -1560,7 +1561,7 @@
       if (address.length < 4) {
         resolvedAddress = '';
         setUnverified();
-        setStatus('idle', 'Travel is checked automatically from Biggera Waters. A $50 fee applies only above 50 km.');
+        setStatus('idle', '');
         return false;
       }
 
@@ -1623,7 +1624,7 @@
       if (toText(addressInput.value).length >= 4) {
         debounceId = window.setTimeout(() => resolveAddress(), 850);
       } else {
-        setStatus('idle', 'Travel is checked automatically from Biggera Waters. A $50 fee applies only above 50 km.');
+        setStatus('idle', '');
       }
     });
     addressInput.addEventListener('blur', () => {
