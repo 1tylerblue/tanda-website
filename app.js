@@ -10,7 +10,7 @@
   const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
   const COOKIE_CONSENT_KEY = 'tac_cookie_consent_v1';
   let analyticsEnabled = false;
-  const GA_MEASUREMENT_ID = '';
+  const GA_MEASUREMENT_ID = 'G-GDWFQH85WN';
   const GA_SCRIPT_ATTRIBUTE = 'data-tac-ga';
   const GOOGLE_ADS_CONVERSION_ID = 'AW-11132030271';
   const GOOGLE_ADS_QUOTE_SEND_TO = 'AW-11132030271/8PYfCNyuw9QcEL-albwp';
@@ -19,6 +19,10 @@
   let gaScriptRequested = false;
   let googleTagConfigured = false;
   let quoteConversionTracked = false;
+  let funnelPageViewTracked = false;
+  let pageExitTracked = false;
+  let highestScrollMilestone = 0;
+  const trackedScrollMilestones = new Set();
   const GIVEAWAY_CONFIG = {
     unlockEntryTarget: 50,
     minimumEligibleJobValueExGst: 495,
@@ -63,6 +67,14 @@
         window.dataLayer.push(arguments);
       };
     }
+  }
+
+  function getGaMeasurementId() {
+    const configuredId =
+      typeof window.__GA_MEASUREMENT_ID__ === 'string' && window.__GA_MEASUREMENT_ID__.trim()
+        ? window.__GA_MEASUREMENT_ID__.trim()
+        : GA_MEASUREMENT_ID;
+    return /^G-[A-Z0-9]+$/i.test(configuredId) ? configuredId : '';
   }
 
   function applyDefaultConsent() {
@@ -114,17 +126,16 @@
       return;
     }
 
-    const configuredId =
-      typeof window.__GA_MEASUREMENT_ID__ === 'string' && window.__GA_MEASUREMENT_ID__.trim()
-        ? window.__GA_MEASUREMENT_ID__.trim()
-        : GA_MEASUREMENT_ID;
-    if (!/^G-[A-Z0-9]+$/i.test(configuredId)) {
+    const configuredId = getGaMeasurementId();
+    if (!configuredId) {
       return;
     }
 
     loadGoogleAdsTag();
     window.gtag('config', configuredId, {
       anonymize_ip: true,
+      allow_google_signals: false,
+      allow_ad_personalization_signals: false,
     });
     gaScriptRequested = true;
   }
@@ -132,9 +143,6 @@
   function setCookieConsentState(enabled) {
     analyticsEnabled = Boolean(enabled);
     loadGoogleAdsTag();
-    if (analyticsEnabled) {
-      loadAnalyticsScript();
-    }
     if (typeof window.gtag !== 'function') {
       return;
     }
@@ -145,6 +153,12 @@
       functionality_storage: 'granted',
       security_storage: 'granted',
     });
+
+    if (analyticsEnabled) {
+      loadAnalyticsScript();
+      trackFunnelPageView();
+      captureFunnelScrollDepth();
+    }
   }
 
   function getCookieConsent() {
@@ -199,14 +213,122 @@
       ...(params || {}),
     };
 
-    if (
-      typeof window.__GA_MEASUREMENT_ID__ === 'string' &&
-      /^G-[A-Z0-9]+$/.test(window.__GA_MEASUREMENT_ID__)
-    ) {
-      eventParams.send_to = window.__GA_MEASUREMENT_ID__;
+    const measurementId = getGaMeasurementId();
+    if (measurementId) {
+      eventParams.send_to = measurementId;
     }
 
     window.gtag('event', eventName, eventParams);
+  }
+
+  function getTrackingLocation(element) {
+    if (!(element instanceof Element)) return 'main';
+    if (element.closest('header, nav')) return 'header';
+    if (element.closest('.hero')) return 'hero';
+    if (element.closest('#quote, .quote')) return 'quote';
+    if (element.closest('footer')) return 'footer';
+    return 'main';
+  }
+
+  function trackFunnelPageView() {
+    if (!analyticsEnabled || funnelPageViewTracked) {
+      return;
+    }
+
+    const path = window.location.pathname.toLowerCase().replace(/\/$/, '/index.html');
+    let eventName = '';
+    if (path.endsWith('/services/window-cleaning-gold-coast.html')) {
+      eventName = 'window_landing_view';
+    } else if (path.endsWith('/index.html')) {
+      eventName = 'home_landing_view';
+    }
+
+    if (!eventName) {
+      return;
+    }
+
+    trackEvent(eventName);
+    funnelPageViewTracked = true;
+  }
+
+  function captureFunnelScrollDepth() {
+    if (!analyticsEnabled) {
+      return;
+    }
+
+    const documentHeight = Math.max(
+      document.documentElement.scrollHeight,
+      document.body ? document.body.scrollHeight : 0,
+      window.innerHeight,
+    );
+    const viewportBottom = window.scrollY + window.innerHeight;
+    const percentScrolled = Math.min(100, Math.round((viewportBottom / documentHeight) * 100));
+
+    [25, 50, 75, 90].forEach((milestone) => {
+      if (percentScrolled < milestone || trackedScrollMilestones.has(milestone)) {
+        return;
+      }
+      trackedScrollMilestones.add(milestone);
+      highestScrollMilestone = Math.max(highestScrollMilestone, milestone);
+      trackEvent(`scroll_depth_${milestone}`);
+    });
+  }
+
+  function setupFunnelTracking() {
+    trackFunnelPageView();
+    captureFunnelScrollDepth();
+
+    let scrollFrameRequested = false;
+    window.addEventListener(
+      'scroll',
+      () => {
+        if (scrollFrameRequested) return;
+        scrollFrameRequested = true;
+        window.requestAnimationFrame(() => {
+          scrollFrameRequested = false;
+          captureFunnelScrollDepth();
+        });
+      },
+      { passive: true },
+    );
+
+    document.addEventListener('click', (event) => {
+      const target = event.target instanceof Element ? event.target : null;
+      const link = target ? target.closest('a[href]') : null;
+      if (!(link instanceof HTMLAnchorElement)) {
+        return;
+      }
+
+      let destination;
+      try {
+        destination = new URL(link.href, window.location.href);
+      } catch {
+        return;
+      }
+
+      if (destination.hash !== '#quote' || destination.origin !== window.location.origin) {
+        return;
+      }
+
+      const destinationPath = destination.pathname.toLowerCase().replace(/\/$/, '/index.html');
+      if (!destinationPath.endsWith('/index.html')) {
+        return;
+      }
+
+      trackEvent(`quote_cta_${getTrackingLocation(link)}`);
+    });
+
+    window.addEventListener('pagehide', (event) => {
+      if (event.persisted || pageExitTracked) {
+        return;
+      }
+
+      pageExitTracked = true;
+      const exitDepth = highestScrollMilestone ? `after_${highestScrollMilestone}` : 'before_25';
+      trackEvent(`page_exit_${exitDepth}`, {
+        transport_type: 'beacon',
+      });
+    });
   }
 
   function trackGoogleAdsConversion(sendTo, options = {}) {
@@ -259,10 +381,7 @@
         return;
       }
 
-      trackEvent('phone_click', {
-        event_category: 'contact',
-        event_label: '0466224927',
-      });
+      trackEvent(`phone_click_${getTrackingLocation(link)}`);
 
       const href = link.getAttribute('href');
       if (!href || event.defaultPrevented) {
@@ -2367,19 +2486,108 @@
     setupQuoteScopePreview(form);
     setupMobileQuoteSteps(form);
 
+    const trackedQuoteFields = new Set();
+    const quoteFieldNames = new Map([
+      ['firstName', 'first_name'],
+      ['phone', 'phone'],
+      ['email', 'email'],
+      ['address', 'address'],
+      ['propertyType', 'property_type'],
+      ['storeys', 'storeys'],
+      ['service', 'service'],
+      ['pricingItemCode', 'job_type'],
+      ['scopeQuantity', 'quantity'],
+      ['serviceArea', 'service_area'],
+      ['accessDifficulty', 'optional_details'],
+      ['conditionLevel', 'optional_details'],
+      ['lastCleaned', 'optional_details'],
+      ['parking', 'optional_details'],
+      ['recurringFrequency', 'optional_details'],
+      ['paymentPreference', 'optional_details'],
+      ['timingLoading', 'optional_details'],
+      ['preferredDate', 'optional_details'],
+      ['preferredTime', 'optional_details'],
+      ['notes', 'optional_details'],
+      ['photoUpload', 'optional_details'],
+      ['agree', 'consent'],
+    ]);
     let quoteStartTracked = false;
+    let quoteSubmissionSucceeded = false;
+    let quoteExitTracked = false;
+    let lastQuoteField = 'form_start';
+    let lastValidationField = '';
+    let lastValidationAt = 0;
+
     const trackQuoteStart = () => {
       if (quoteStartTracked) return;
       quoteStartTracked = true;
-      form.removeEventListener('input', trackQuoteStart);
-      form.removeEventListener('change', trackQuoteStart);
-      trackEvent('quote_start', {
-        event_category: 'quote',
-        event_label: 'form_interaction',
-      });
+      trackEvent('quote_form_start');
     };
-    form.addEventListener('input', trackQuoteStart);
-    form.addEventListener('change', trackQuoteStart);
+
+    const trackQuoteField = (fieldName) => {
+      if (!fieldName) return;
+      trackQuoteStart();
+      lastQuoteField = fieldName;
+      if (trackedQuoteFields.has(fieldName)) return;
+      trackedQuoteFields.add(fieldName);
+      trackEvent(`quote_field_${fieldName}`);
+    };
+
+    const trackQuoteInteraction = (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement || target instanceof HTMLSelectElement || target instanceof HTMLTextAreaElement)) {
+        return;
+      }
+      const fieldName = quoteFieldNames.get(target.id || target.name);
+      trackQuoteField(fieldName);
+    };
+
+    form.addEventListener('focusin', trackQuoteInteraction);
+    form.addEventListener('input', trackQuoteInteraction);
+    form.addEventListener('change', trackQuoteInteraction);
+
+    form.addEventListener(
+      'invalid',
+      (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLInputElement || target instanceof HTMLSelectElement || target instanceof HTMLTextAreaElement)) {
+          return;
+        }
+        const fieldName = quoteFieldNames.get(target.id || target.name);
+        if (!fieldName) return;
+
+        trackQuoteStart();
+        lastQuoteField = fieldName;
+        const now = Date.now();
+        if (fieldName === lastValidationField && now - lastValidationAt < 1000) {
+          return;
+        }
+        lastValidationField = fieldName;
+        lastValidationAt = now;
+        trackEvent(`quote_error_${fieldName}`);
+      },
+      true,
+    );
+
+    const reviewButton = form.querySelector('[data-mobile-quote-next="3"]');
+    if (reviewButton instanceof HTMLButtonElement) {
+      reviewButton.addEventListener('click', () => trackQuoteField('review'));
+    }
+
+    const submitButton = form.querySelector('button[type="submit"]');
+    if (submitButton instanceof HTMLButtonElement) {
+      submitButton.addEventListener('click', () => trackQuoteField('submit_attempt'));
+    }
+
+    window.addEventListener('pagehide', (event) => {
+      if (event.persisted || quoteExitTracked || !quoteStartTracked || quoteSubmissionSucceeded) {
+        return;
+      }
+      quoteExitTracked = true;
+      trackEvent(`quote_exit_after_${lastQuoteField}`, {
+        transport_type: 'beacon',
+      });
+    });
 
     const notesCard = form.querySelector('.quote-notes-card');
     const notesToggle = form.querySelector('[data-mobile-notes-toggle]');
@@ -2452,13 +2660,10 @@
             : 'Your quote request was saved, but email delivery is delayed. Please call 0466 224 927 or email tandaprocleaning@gmail.com if your job is urgent.',
           emailSent ? 'success' : 'error',
         );
-        trackEvent('quote_submit', {
-          event_category: 'quote',
-          event_label: 'api_success',
-          service: payload.service || 'unknown',
-          property_type: payload.propertyType || 'unknown',
-          has_subscription_package: Boolean(payload.subscriptionPackage),
-        });
+        if (!quoteSubmissionSucceeded) {
+          quoteSubmissionSucceeded = true;
+          trackEvent('quote_submit_success');
+        }
         trackQuoteSubmittedConversion();
         bumpGiveawayCounterIfEligible(mergedResult.eligibleForGiveaway);
         await loadStats();
@@ -3546,6 +3751,7 @@
     setupHeroAmbientMotion();
     setupGiveawayCountdown();
     initCookieConsent();
+    setupFunnelTracking();
     setupPhoneClickConversionTracking();
     setupPackageButtons();
     setupQuoteForm();
