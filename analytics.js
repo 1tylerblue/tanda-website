@@ -1036,7 +1036,6 @@
           state.posthogReady = true;
           window.__TANDA_POSTHOG_LOADED__ = true;
           state.disabledReason = '';
-          posthogInstance.opt_in_capturing();
           if (config.sessionRecordingEnabled) posthogInstance.startSessionRecording();
           flushQueue();
         } catch {
@@ -1048,7 +1047,6 @@
 
     try {
       window.posthog.init(config.projectKey, postHogConfig);
-      window.posthog.opt_in_capturing();
       return true;
     } catch (error) {
       state.disabledReason = core.classifyError(error);
