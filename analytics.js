@@ -1014,8 +1014,10 @@
       mask_all_text: true,
       mask_all_element_attributes: true,
       respect_dnt: true,
-      opt_out_capturing_by_default: true,
-      opt_out_persistence_by_default: true,
+      // The SDK is initialized only after first-party consent has been accepted.
+      // Starting opted out can leave PostHog's first-session request queue paused after opt-in.
+      opt_out_capturing_by_default: false,
+      opt_out_persistence_by_default: false,
       persistence: 'localStorage+cookie',
       session_recording: {
         maskAllInputs: true,

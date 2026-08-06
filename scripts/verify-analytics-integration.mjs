@@ -66,6 +66,8 @@ assert.doesNotMatch(analyticsSource, /phc_[A-Za-z0-9]{8,}/, 'No PostHog project 
 assert.match(analyticsSource, /maskAllInputs:\s*true/, 'Session recording must mask every input');
 assert.match(analyticsSource, /blockSelector:\s*privacySelector/, 'Sensitive containers must be blocked');
 assert.match(analyticsSource, /enable_recording_console_log:\s*false/, 'Console recording must stay disabled');
+assert.match(analyticsSource, /if \(state\.consent !== 'accepted'\) return false;/, 'Capture must remain gated by explicit consent');
+assert.match(analyticsSource, /opt_out_capturing_by_default:\s*false/, 'Post-consent initialization must not pause the first-session request queue');
 assert.match(appSource, /TandaAnalytics\?\.quoteSubmitted/, 'Quote success must connect to the central utility');
 assert.match(subscriptionSource, /TandaAnalytics\?\.subscriptionCompleted/, 'Subscription success must connect to the central utility');
 
