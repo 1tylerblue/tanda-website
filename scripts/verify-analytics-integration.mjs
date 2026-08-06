@@ -75,6 +75,7 @@ assert.match(
 );
 assert.doesNotMatch(analyticsSource, /opt_out_useragent_filter:\s*true/, 'Production bot filtering must not be disabled globally');
 assert.doesNotMatch(analyticsSource, /posthog(?:Instance)?\.opt_in_capturing\(\)/, 'Post-consent initialization must not re-pause the first-session queue through redundant opt-in calls');
+assert.match(analyticsSource, /else if \(previousStep && previousStep !== stepId\)/, 'Quote step returns must require an actual move back to a previously viewed step');
 assert.match(appSource, /TandaAnalytics\?\.quoteSubmitted/, 'Quote success must connect to the central utility');
 assert.match(subscriptionSource, /TandaAnalytics\?\.subscriptionCompleted/, 'Subscription success must connect to the central utility');
 

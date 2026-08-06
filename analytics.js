@@ -675,6 +675,7 @@
       viewedSteps: new Set(),
       completedSteps: new Set(),
       stepStartedAt: new Map(),
+      revisitCounts: new Map(),
       services: new Set(),
       options: new Set(),
       optionServices: new Map(),
@@ -1705,12 +1706,23 @@
     state.quote.lastStep = stepId;
     state.quote.stepStartedAt.set(stepId, state.quote.stepStartedAt.get(stepId) || Date.now());
     if (quoteStepIndex(stepId) > quoteStepIndex(state.quote.furthestStepViewed)) state.quote.furthestStepViewed = stepId;
-    sendSafeEvent(alreadyViewed ? 'quote_step_returned' : 'quote_step_viewed', {
-      step_id: stepId,
-      previous_step: previousStep,
-      revisit_count: alreadyViewed ? 1 : 0,
-      trigger,
-    }, { dedupeKey: alreadyViewed ? '' : `quote_step_viewed:${state.pageViewId}:${stepId}` });
+    if (!alreadyViewed) {
+      sendSafeEvent('quote_step_viewed', {
+        step_id: stepId,
+        previous_step: previousStep,
+        revisit_count: 0,
+        trigger,
+      }, { dedupeKey: `quote_step_viewed:${state.pageViewId}:${stepId}` });
+    } else if (previousStep && previousStep !== stepId) {
+      const revisitCount = (state.quote.revisitCounts.get(stepId) || 0) + 1;
+      state.quote.revisitCounts.set(stepId, revisitCount);
+      sendSafeEvent('quote_step_returned', {
+        step_id: stepId,
+        previous_step: previousStep,
+        revisit_count: revisitCount,
+        trigger,
+      });
+    }
     persistQuoteState();
   }
 
