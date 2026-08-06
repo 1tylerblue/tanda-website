@@ -334,8 +334,10 @@
 
   function sanitizePostHogTransportProperties(properties = {}) {
     const safeProperties = {};
-    const token = String(properties.$token || '').trim();
-    if (/^phc_[A-Za-z0-9_-]{20,216}$/.test(token)) safeProperties.$token = token;
+    ['$token', 'token'].forEach((key) => {
+      const token = String(properties[key] || '').trim();
+      if (/^phc_[A-Za-z0-9_-]{20,216}$/.test(token)) safeProperties[key] = token;
+    });
 
     ['distinct_id', '$device_id', '$session_id', '$window_id'].forEach((key) => {
       const value = String(properties[key] || '').trim();
@@ -411,7 +413,7 @@
       };
     }
 
-    return { ...envelope, properties };
+    return { ...envelope, properties: { ...properties, ...transportProperties } };
   }
 
   function normalizeConfig(input = {}) {

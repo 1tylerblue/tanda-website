@@ -96,7 +96,7 @@ test('custom event envelopes retain only valid anonymous PostHog transport prope
   const event = analytics.sanitizePostHogEnvelope({
     event: 'quote_submitted',
     properties: {
-      $token: 'phc_abcdefghijklmnopqrstuvwxyz123456',
+      token: 'phc_abcdefghijklmnopqrstuvwxyz123456',
       distinct_id: '019fd7d0-42d9-747c-af70-e23bfb926c15',
       $device_id: '019fd7d0-42d9-747c-af70-e23bfb926c15',
       customer_name: 'Private Customer',
@@ -104,12 +104,32 @@ test('custom event envelopes retain only valid anonymous PostHog transport prope
       http_status: 201,
     },
   });
-  assert.equal(event.properties.$token, 'phc_abcdefghijklmnopqrstuvwxyz123456');
+  assert.equal(event.properties.token, 'phc_abcdefghijklmnopqrstuvwxyz123456');
   assert.equal(event.properties.distinct_id, '019fd7d0-42d9-747c-af70-e23bfb926c15');
   assert.equal(event.properties.$device_id, '019fd7d0-42d9-747c-af70-e23bfb926c15');
   assert.equal(event.properties.http_status, 201);
   assert.equal('customer_name' in event.properties, false);
   assert.equal('email' in event.properties, false);
+});
+
+test('PostHog SDK events keep only a validated routing token', () => {
+  const event = analytics.sanitizePostHogEnvelope({
+    event: '$snapshot',
+    properties: {
+      token: 'phc_abcdefghijklmnopqrstuvwxyz123456',
+      distinct_id: '019fd7d0-42d9-747c-af70-e23bfb926c15',
+      filename: 'private-customer-photo.jpg',
+    },
+  });
+  assert.equal(event.properties.token, 'phc_abcdefghijklmnopqrstuvwxyz123456');
+  assert.equal(event.properties.distinct_id, '019fd7d0-42d9-747c-af70-e23bfb926c15');
+  assert.equal('filename' in event.properties, false);
+
+  const invalid = analytics.sanitizePostHogEnvelope({
+    event: '$snapshot',
+    properties: { token: 'not-a-project-token' },
+  });
+  assert.equal('token' in invalid.properties, false);
 });
 
 test('bot and service normalization cover the website service catalogue', () => {
