@@ -332,14 +332,30 @@
     return { event: eventName, properties: safeProperties };
   }
 
+  function sanitizePostHogTransportProperties(properties = {}) {
+    const safeProperties = {};
+    const token = String(properties.$token || '').trim();
+    if (/^phc_[A-Za-z0-9_-]{20,216}$/.test(token)) safeProperties.$token = token;
+
+    ['distinct_id', '$device_id', '$session_id', '$window_id'].forEach((key) => {
+      const value = String(properties[key] || '').trim();
+      if (/^[A-Za-z0-9:_-]{20,120}$/.test(value)) safeProperties[key] = value;
+    });
+    if (typeof properties.$process_person_profile === 'boolean') {
+      safeProperties.$process_person_profile = properties.$process_person_profile;
+    }
+    return safeProperties;
+  }
+
   function sanitizePostHogEnvelope(envelope) {
     if (!envelope || typeof envelope !== 'object') return null;
     const eventName = String(envelope.event || '');
     const originalProperties = envelope.properties && typeof envelope.properties === 'object' ? envelope.properties : {};
     const properties = { ...originalProperties };
+    const transportProperties = sanitizePostHogTransportProperties(properties);
 
     if (eventName === '$autocapture') {
-      const safeProperties = {};
+      const safeProperties = { ...transportProperties };
       ['$event_type', '$session_id', '$window_id', '$lib', '$lib_version'].forEach((key) => {
         if (typeof properties[key] === 'string' && !containsSensitiveValue(properties[key])) {
           safeProperties[key] = properties[key].slice(0, 120);
@@ -391,7 +407,7 @@
       return {
         ...envelope,
         event: safeCustomEvent.event,
-        properties: { ...safeCustomEvent.properties, ...postHogSessionProperties },
+        properties: { ...safeCustomEvent.properties, ...transportProperties, ...postHogSessionProperties },
       };
     }
 
