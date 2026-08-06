@@ -142,6 +142,7 @@
 
   function setCookieConsentState(enabled) {
     analyticsEnabled = Boolean(enabled);
+    window.TandaAnalytics?.setConsent(analyticsEnabled);
     loadGoogleAdsTag();
     if (typeof window.gtag !== 'function') {
       return;
@@ -1300,7 +1301,7 @@
     const denyButton = document.getElementById('cookie-decline');
 
     if (!consentBanner || !acceptButton || !denyButton) {
-      setCookieConsentState(false);
+      setCookieConsentState(getCookieConsent() === 'accepted');
       return;
     }
 
@@ -1798,6 +1799,7 @@
         email: 'tandaprocleaning@gmail.com',
         commandCentre: 'T & A Quote Desk',
       },
+      analytics: window.TandaAnalytics?.getLeadContext?.() || undefined,
     };
   }
 
@@ -2513,6 +2515,7 @@
     ]);
     let quoteStartTracked = false;
     let quoteSubmissionSucceeded = false;
+    let quoteSubmissionInFlight = false;
     let quoteExitTracked = false;
     let lastQuoteField = 'form_start';
     let lastValidationField = '';
@@ -2619,6 +2622,13 @@
         return;
       }
 
+      if (quoteSubmissionInFlight) {
+        return;
+      }
+      quoteSubmissionInFlight = true;
+      const submissionStartedAt = performance.now();
+      let responseStatus = 0;
+
       const button = form.querySelector('button[type="submit"]');
 
       if (button instanceof HTMLButtonElement) {
@@ -2643,6 +2653,7 @@
           },
           body: JSON.stringify(payload),
         });
+        responseStatus = response.status;
 
         const result = await response.json().catch(() => ({}));
 
@@ -2664,6 +2675,12 @@
           quoteSubmissionSucceeded = true;
           trackEvent('quote_submit_success');
         }
+        window.TandaAnalytics?.quoteSubmitted({
+          analyticsLeadId: result.analyticsLeadId,
+          durationMs: performance.now() - submissionStartedAt,
+          httpStatus: response.status,
+          emailDeliveryStatus: emailSent ? 'sent' : 'delayed',
+        });
         trackQuoteSubmittedConversion();
         bumpGiveawayCounterIfEligible(mergedResult.eligibleForGiveaway);
         await loadStats();
@@ -2684,7 +2701,26 @@
           event_category: 'quote',
           event_label: 'fallback_used',
         });
+        window.TandaAnalytics?.quoteSubmissionFailed({
+          durationMs: performance.now() - submissionStartedAt,
+          httpStatus: responseStatus,
+          errorCategory: timedOut
+            ? 'timeout'
+            : responseStatus >= 500
+              ? 'server_error'
+              : responseStatus >= 400
+                ? 'request_rejected'
+                : error instanceof TypeError
+                  ? 'network_error'
+                  : 'request_failed',
+          errorCode: timedOut
+            ? 'request_timeout'
+            : responseStatus
+              ? `http_${responseStatus}`
+              : 'quote_api_unavailable',
+        });
       } finally {
+        quoteSubmissionInFlight = false;
         if (button instanceof HTMLButtonElement) {
           button.disabled = false;
           setButtonLabel(button, 'Get a Free Quote');

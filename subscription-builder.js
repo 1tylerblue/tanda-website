@@ -224,6 +224,7 @@
   const pricingConfig = SUBSCRIPTION_PRICING_CONFIG;
   let stagePriceFirst = null;
   let stagePriceMonthly = null;
+  let subscriptionSubmissionInFlight = false;
 
   function byId(id) {
     return document.getElementById(id);
@@ -954,7 +955,8 @@
         source: 'subscription-builder.html',
         submittedAt: new Date().toISOString(),
         userAgent: window.navigator.userAgent
-      }
+      },
+      analytics: window.TandaAnalytics?.getLeadContext?.() || undefined
     };
   }
 
@@ -997,6 +999,9 @@
     renderFinalSummary(result);
 
     if (!validateForm()) return;
+    if (subscriptionSubmissionInFlight) return;
+    subscriptionSubmissionInFlight = true;
+    const submissionStartedAt = performance.now();
 
     const submitButton = form.querySelector('button[type="submit"]');
     if (submitButton instanceof HTMLButtonElement) {
@@ -1029,10 +1034,23 @@
       const warningText = warnings.length ? ` ${warnings.join(' ')}` : '';
       builderMessage.textContent = `Subscription request sent to the T & A team. We can now review the exact calculated pricing, access details, selected services and recurring schedule before confirming the first service.${warningText}`;
       builderMessage.className = 'builder-step-note builder-message-success';
+      window.TandaAnalytics?.subscriptionCompleted({
+        analyticsLeadId: apiResult.analyticsLeadId,
+        packageId: selectedPlanKey(),
+        selectedServiceCount: result.services.length,
+        durationMs: performance.now() - submissionStartedAt,
+        httpStatus: response.status
+      });
     } catch (error) {
       builderMessage.textContent = error instanceof Error ? error.message : 'Subscription request could not be submitted. Please try again or contact the team.';
       builderMessage.className = 'builder-step-note builder-message-error';
+      window.TandaAnalytics?.capture('website_error_detected', {
+        feature: 'subscription_api',
+        error_category: error instanceof TypeError ? 'network_error' : 'request_failed',
+        error_code: 'subscription_api_unavailable'
+      });
     } finally {
+      subscriptionSubmissionInFlight = false;
       if (submitButton instanceof HTMLButtonElement) {
         submitButton.disabled = false;
         submitButton.textContent = 'Submit Subscription Request';

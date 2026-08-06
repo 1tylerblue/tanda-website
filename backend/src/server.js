@@ -8,6 +8,7 @@ import { estimateLead, generateAISummary, generateServiceScope, scoreLeadQuality
 import { sendLeadEmail, sendReferralEmail, sendSubscriptionEmail } from './mailer.js';
 import { startDailyBackupScheduler } from './backup.js';
 import { getCachedTravelPricing, resolveTravelPricing } from './travel.js';
+import { createAnalyticsLeadId, getPublicAnalyticsConfig, normalizeAnalyticsContext } from './analytics.js';
 
 const app = express();
 
@@ -427,6 +428,12 @@ app.get('/api/stats', (_req, res) => {
   });
 });
 
+app.get('/api/analytics-config', (_req, res) => {
+  res.set('Cache-Control', 'no-store, max-age=0');
+  res.set('Pragma', 'no-cache');
+  return res.json(getPublicAnalyticsConfig());
+});
+
 app.get('/api/giveaway/status', (_req, res) => {
   const leads = readLeads();
   const giveaway = getGiveawayState(leads);
@@ -535,10 +542,16 @@ app.post('/api/leads', leadRateLimit, async (req, res) => {
   const leadQuality = scoreLeadQuality(cleanLead);
   const eligibleForGiveaway = isWithinGiveawayCampaign() && estimate.recommendedEstimate >= GIVEAWAY_MIN_ESTIMATE;
   const leadId = `${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+  const analyticsLeadId = createAnalyticsLeadId();
+  const analyticsContext = normalizeAnalyticsContext(body.analytics);
   const savedPhotos = savePhotoUploads(leadId, photoUploads);
 
   const lead = {
     id: leadId,
+    analytics: {
+      analyticsLeadId,
+      ...analyticsContext,
+    },
     ...cleanLead,
     customerScope,
     photoUploads: savedPhotos,
@@ -587,6 +600,7 @@ app.post('/api/leads', leadRateLimit, async (req, res) => {
   });
 
   return res.status(201).json({
+    analyticsLeadId,
     lead,
     estimateMin: estimate.estimateMin,
     estimateMax: estimate.estimateMax,
@@ -708,9 +722,14 @@ app.post('/api/referrals', leadRateLimit, async (req, res) => {
 app.post('/api/subscriptions', leadRateLimit, async (req, res) => {
   const body = parsePayload(req.body || {});
   const photoUploads = normalizePhotoUploads(body.photoUploads);
+  const analyticsLeadId = createAnalyticsLeadId();
 
   const subscription = {
     id: makeSubmissionId('subscription'),
+    analytics: {
+      analyticsLeadId,
+      ...normalizeAnalyticsContext(body.analytics),
+    },
     type: 'subscription_builder',
     plan: body.plan && typeof body.plan === 'object' ? body.plan : {},
     customer: body.customer && typeof body.customer === 'object' ? body.customer : {},
@@ -759,6 +778,7 @@ app.post('/api/subscriptions', leadRateLimit, async (req, res) => {
   });
 
   return res.status(201).json({
+    analyticsLeadId,
     subscription,
     deliveryStatus: {
       email: emailDispatch.sent ? `Sent to ${BUSINESS_EMAIL}` : `Queued for ${BUSINESS_EMAIL} (${emailDispatch.message})`,
