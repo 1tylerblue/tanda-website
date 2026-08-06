@@ -2,7 +2,7 @@
 
 ## Status
 
-The repository contains a consent-gated PostHog implementation, but analytics is disabled by default. Production must remain disabled until a real project key and host are configured, production and test projects are separated, and masking is verified in a test PostHog project. Existing Google Analytics 4 and Google Ads tracking remain in `app.js`.
+The repository contains a consent-gated PostHog implementation that is disabled by default. It has been verified in separate, isolated Render test services using a dedicated EU Cloud PostHog test project. Production remains unconfigured and unchanged; it must stay disabled until a separate production project is configured and the production release receives explicit approval. Existing Google Analytics 4 and Google Ads tracking remain in `app.js`.
 
 ## Architecture
 
@@ -12,6 +12,17 @@ The repository contains a consent-gated PostHog implementation, but analytics is
 - Quote and subscription requests include only an allowlisted anonymous analytics context. The backend regenerates the context and returns a random UUID after a successful request.
 - No customer contact field is used as a PostHog distinct ID. The client never calls `identify`.
 - PostHog failures are caught and do not affect rendering, pricing, uploads or form delivery.
+
+## Isolated Test Deployment
+
+- Test branch: `analytics/posthog-test`.
+- Test frontend: `https://tanda-website-posthog-test.onrender.com`.
+- Test backend: `https://tanda-pro-cleaning-api-posthog-test.onrender.com`.
+- Test analytics endpoint: `GET /api/analytics-config` returns the browser-safe test configuration with no private project key written to source control or reports.
+- The test frontend points only to the isolated test backend. Production API requests were explicitly blocked during controlled browser QA.
+- No SMTP, SMS, CRM, webhook or production notification credentials are configured on the isolated backend.
+- A controlled synthetic journey and an actual PostHog test-project session recording were inspected. Captured browser payloads, including all `$snapshot` payloads, contained none of the synthetic name, phone, email, address, message, upload filename or image-preview marker.
+- The current production Render services and `tandaprocleaning.com.au` were not changed by this test deployment.
 
 ## Environment Variables
 

@@ -1,13 +1,16 @@
 # T&A Pro Cleaning Analytics Implementation Report
 
-Date: 6 August 2026 (AEST)
+Date: 7 August 2026 (AEST)
 
 ## 1. Project and Branch
 
 - Confirmed repository: `1tylerblue/tanda-website`.
 - Confirmed local project: `tanda-pro-polished-v3-fixed/deploy/frontend-publish-repo-20260717`.
 - Confirmed production branch: `main`.
-- Before this work, local `HEAD` and `origin/main` were both `30b62f5` with divergence `0 0`.
+- Isolated test branch: `analytics/posthog-test`.
+- Initial implementation commit: `0658ca1`.
+- Latest tested implementation commit before this report: `44c327b`.
+- Production `main` was not merged, pushed or redeployed during isolated testing.
 
 ## 2. Existing Analytics Found
 
@@ -71,11 +74,13 @@ Safe step IDs cover property details, service selection, access details, photos 
 
 ## 8. Heatmaps and Recordings
 
-- Both features are independently disabled by default.
+- Both features are independently disabled by default and were enabled only on the isolated test services.
 - Forms, controls, uploads, previews, generated images and result panels are blocked.
 - All input and visible text masking is configured; attributes, console recording and network bodies are disabled.
 - Heatmap autocapture is limited to non-form links/buttons and strips text and attributes.
-- Implemented locally, but not verified in a real PostHog test recording. Production flags must remain off.
+- A real isolated PostHog session recording was created and opened in the `T&A Website - Test` EU Cloud project.
+- All six captured `$snapshot` payloads and the remaining PostHog transport payloads were decoded and checked. No synthetic contact detail, message, filename, form value or image-preview marker was present.
+- Production flags remain off and unconfigured.
 
 ## 9. Dashboards
 
@@ -103,7 +108,7 @@ The backend creates a random UUID for each quote/subscription and stores only a 
 ## 14. Automated Validation
 
 - JavaScript syntax: all frontend analytics/app/pricing/subscription and backend analytics/server/mailer files passed.
-- Analytics utility tests: 7 passed, 0 failed.
+- Analytics utility tests: 10 passed, 0 failed.
 - Backend analytics tests: 5 passed, 0 failed.
 - Existing backend pricing/scope tests: 8 passed, 0 failed.
 - HTML/link/asset audit: 24 pages, 23 intended analytics loaders, zero missing local files.
@@ -113,7 +118,7 @@ The backend creates a random UUID for each quote/subscription and stores only a 
 
 ## 15. Desktop, Tablet and Mobile
 
-Playwright verified the homepage at 1440x900, 820x1180 and 390x844. The quote form remained present, analytics loaded and no horizontal overflow occurred. A second mobile scan checked all 23 analytics-enabled pages with zero page failures, console errors, page errors or horizontal overflow.
+Playwright verified the homepage at 1440x900, 820x1180 and 390x844. The quote form remained present, analytics loaded and no horizontal overflow occurred. A second mobile scan checked all 23 analytics-enabled pages with zero page failures, console errors, page errors or horizontal overflow. The deployed isolated test site was checked again at 1440x900 and 390x844: the service picker and Done control fit the viewport, the mobile Details -> Cleaning transition worked, and no website-origin console, page or resource errors were found.
 
 ## 16. Quote and Subscription Submission
 
@@ -126,38 +131,50 @@ Playwright verified the homepage at 1440x900, 820x1180 and 390x844. The quote fo
 
 ## 17. Sensitive Data Verification
 
-Synthetic PII-shaped names, phones, emails, addresses, query parameters and filenames were used. No probe appeared in captured analytics events or browser analytics storage. URL sanitation, campaign sanitation, event sanitation and backend context sanitation also passed unit tests. Real PostHog `$snapshot` payloads and recordings could not be verified without a test project.
+Synthetic PII-shaped names, phones, emails, addresses, query parameters, messages and filenames were used only in the isolated test. No probe appeared in custom event properties, browser analytics storage or decoded outgoing PostHog payloads. All six real `$snapshot` payloads were checked. An anonymous 17-second session recording appeared in the actual EU Cloud test project and was opened for review. The session contained no customer data, real upload or production action.
 
 ## 18. Performance Impact
 
-- `analytics.js`: 93,996 bytes raw and 21,692 bytes at gzip level 9.
+- `analytics.js`: 96,852 bytes raw and 22,441 bytes compressed with the local gzip verification.
 - It is dependency-free, loaded with `defer`, and loads PostHog asynchronously only after consent/configuration.
 - Performance events are sampled (default 25%) and each metric is deduplicated.
 - No visible HTML/CSS layout was changed and responsive QA found no new overflow or console errors.
 
 ## 19. Deployment Status
 
-Not deployed. The implementation is complete and tested locally, but mandatory production gates are not met. No commit was pushed and the live website remains unchanged by this work. A read-only check of the current Render backend returned `404` for `/api/analytics-config`, confirming that this backend endpoint is not yet live.
+Deployed to isolated test services only:
+
+- Frontend Render service `tanda-website-posthog-test`: `https://tanda-website-posthog-test.onrender.com`.
+- Backend Render service `tanda-pro-cleaning-api-posthog-test`: `https://tanda-pro-cleaning-api-posthog-test.onrender.com`.
+- Branch: `analytics/posthog-test`.
+
+The production Render services remain `tanda-website` and `tanda-pro-cleaning-api`. The test backend has `ANALYTICS_ENABLED=true`, `ANALYTICS_ENVIRONMENT=test`, the EU ingestion/UI hosts, recording and heatmaps enabled, and a 100% performance sample. Its dedicated test project key exists only in Render. The test frontend's API base points only to `tanda-pro-cleaning-api-posthog-test`.
+
+The test backend now returns `200` for `/api/analytics-config` with the expected safe test/EU configuration. The earlier `404` came from testing the production backend, whose deployed `main` release does not yet contain that route; the path itself was correct. Production Render services and `tandaprocleaning.com.au` remain untouched.
 
 ## 20. Live Verification
 
-Not performed because no analytics release was deployed. No claim is made that PostHog events, dashboards, recordings or alerts work on the live domain.
+The isolated test frontend and backend were verified. The test project received page, section, scroll, service, quote-funnel, upload, attribution, error and Core Web Vitals events. Important event identities had no duplicates after the final funnel fix. A successful API response produced one Google Ads quote conversion, while browser validation failure and a mocked HTTP 500 response produced zero conversions.
+
+One controlled isolated backend synthetic lead was created with no mail or downstream credentials configured. Subsequent full journey replays mocked `/api/leads`; backend lead count stayed unchanged, production API requests stayed at zero, and no real email, SMS, CRM record, job or customer notification was created.
+
+No claim is made that PostHog is active on the production domain. Production dashboards and alerts have not been configured.
 
 ## 21. Required Access and Decisions
 
-Before deployment:
+Before production deployment:
 
-1. Supply/configure separate PostHog test and production project tokens and matching regional hosts in Render.
-2. Verify representative events in the test project and confirm production/test separation.
-3. Review a real masked test recording and outgoing `$snapshot`/heatmap payloads. Keep recording and heatmap flags false until this passes.
-4. Create the documented dashboards and alerts, or provide PostHog account access for their creation.
-5. Keep CRM/business outcomes dormant until backend mapping, privacy, deduplication and the exact fields are approved.
-6. Address the existing dependency audit separately with email and backend regression testing.
+1. Create or confirm a separate PostHog production project and configure its private token and EU host only in the production Render environment.
+2. Obtain explicit user approval immediately before merging or deploying to production.
+3. Keep CRM/business outcomes dormant until backend mapping, privacy, deduplication and the exact fields are approved.
+4. Create the documented production dashboards and alerts after representative live, consented traffic exists.
+5. Address the existing dependency audit separately with email and backend regression testing.
 
 Current classification:
 
-- Implemented: yes, locally.
-- Tested locally: yes, with mocked analytics and API endpoints.
-- Verified in a real PostHog test project: no.
-- Deployed: no.
-- Verified live: no.
+- Implemented: yes.
+- Tested locally: yes.
+- Deployed to isolated test services: yes.
+- Verified in a real PostHog test project: yes.
+- Production deployed: no.
+- Production live verification: no.
