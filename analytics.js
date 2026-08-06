@@ -1018,6 +1018,9 @@
       // Starting opted out can leave PostHog's first-session request queue paused after opt-in.
       opt_out_capturing_by_default: false,
       opt_out_persistence_by_default: false,
+      // Permit labelled automated QA in isolated environments while retaining
+      // PostHog's normal user-agent filtering in production.
+      opt_out_useragent_filter: config.environment === 'test' || config.environment === 'development',
       persistence: 'localStorage+cookie',
       session_recording: {
         maskAllInputs: true,
