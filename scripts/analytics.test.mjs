@@ -95,3 +95,11 @@ test('bot and service normalization cover the website service catalogue', () => 
   assert.equal(analytics.normalizeServiceId('gym-specialty-cleaning'), 'gym_specialty_cleaning');
   assert.equal(analytics.normalizeServiceId('odour-sanitising'), 'odour_sanitising');
 });
+
+test('analytics configuration retries only transient failures', () => {
+  assert.equal(analytics.shouldRetryConfigRequest({ name: 'AbortError' }), true);
+  assert.equal(analytics.shouldRetryConfigRequest({ name: 'TypeError' }), true);
+  assert.equal(analytics.shouldRetryConfigRequest({ status: 503 }), true);
+  assert.equal(analytics.shouldRetryConfigRequest({ status: 404 }), false);
+  assert.equal(analytics.shouldRetryConfigRequest(new Error('runtime failure')), false);
+});

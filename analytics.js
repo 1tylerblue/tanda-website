@@ -554,6 +554,13 @@
     return 'runtime';
   }
 
+  function shouldRetryConfigRequest(error) {
+    if (!error) return false;
+    if (error.name === 'AbortError' || error.name === 'TypeError') return true;
+    const status = Number(error.status);
+    return Number.isFinite(status) && status >= 500 && status < 600;
+  }
+
   const core = Object.freeze({
     EVENT_NAMES,
     COMMON_PROPERTY_NAMES,
@@ -576,6 +583,7 @@
     getOsFamily,
     classifyValidation,
     classifyError,
+    shouldRetryConfigRequest,
     containsSensitiveValue,
   });
 
@@ -593,6 +601,8 @@
   const QUOTE_FUNNEL_KEY = 'tac_quote_funnel_v1';
   const DEDUPE_KEY = 'tac_analytics_dedupe_v1';
   const CONFIG_ENDPOINT = 'https://tanda-pro-cleaning-api.onrender.com/api/analytics-config';
+  const CONFIG_REQUEST_TIMEOUTS_MS = [8_000, 45_000];
+  const CONFIG_RETRY_DELAY_MS = 500;
   const IDLE_TIMEOUT_MS = 30_000;
   const QUOTE_ABANDONMENT_MIN_MS = 5_000;
   const SCROLL_MILESTONES = [10, 25, 50, 75, 90, 100];
@@ -820,27 +830,49 @@
         return inline;
       }
 
-      const controller = typeof AbortController === 'function' ? new AbortController() : null;
-      const timeout = window.setTimeout(() => controller && controller.abort(), 2500);
       try {
         const endpoint = typeof window.__TANDA_ANALYTICS_CONFIG_ENDPOINT__ === 'string'
           ? window.__TANDA_ANALYTICS_CONFIG_ENDPOINT__
           : CONFIG_ENDPOINT;
-        const response = await window.fetch(endpoint, {
-          method: 'GET',
-          credentials: 'omit',
-          referrerPolicy: 'no-referrer',
-          signal: controller ? controller.signal : undefined,
-        });
-        if (!response.ok) throw new Error('analytics_config_http_error');
-        const payload = await response.json();
+        let payload = null;
+        let lastError = null;
+
+        for (let attemptIndex = 0; attemptIndex < CONFIG_REQUEST_TIMEOUTS_MS.length; attemptIndex += 1) {
+          const controller = typeof AbortController === 'function' ? new AbortController() : null;
+          const timeout = window.setTimeout(
+            () => controller && controller.abort(),
+            CONFIG_REQUEST_TIMEOUTS_MS[attemptIndex],
+          );
+          try {
+            const response = await window.fetch(endpoint, {
+              method: 'GET',
+              credentials: 'omit',
+              referrerPolicy: 'no-referrer',
+              signal: controller ? controller.signal : undefined,
+            });
+            if (!response.ok) {
+              const responseError = new Error('analytics_config_http_error');
+              responseError.status = response.status;
+              throw responseError;
+            }
+            payload = await response.json();
+            break;
+          } catch (error) {
+            lastError = error;
+            const hasAnotherAttempt = attemptIndex + 1 < CONFIG_REQUEST_TIMEOUTS_MS.length;
+            if (!hasAnotherAttempt || !core.shouldRetryConfigRequest(error)) throw error;
+            await new Promise((resolve) => window.setTimeout(resolve, CONFIG_RETRY_DELAY_MS));
+          } finally {
+            window.clearTimeout(timeout);
+          }
+        }
+
+        if (!payload) throw lastError || new Error('analytics_config_unavailable');
         state.config = core.normalizeConfig({ ...payload, release: payload.release || getScriptRelease() });
       } catch (error) {
         state.config = core.normalizeConfig({ enabled: false, environment: inferEnvironment(), release: getScriptRelease() });
         state.disabledReason = core.classifyError(error);
         reportInitializationFailure(state.disabledReason);
-      } finally {
-        window.clearTimeout(timeout);
       }
       return state.config;
     })();
