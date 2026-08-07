@@ -5,6 +5,11 @@ import fs from 'fs';
 import path from 'path';
 import { readLeads, writeLeads } from './db.js';
 import { estimateLead, generateAISummary, generateServiceScope, scoreLeadQuality } from './ai.js';
+import {
+  GIVEAWAY_MINIMUM_INC_GST,
+  GIVEAWAY_MINIMUM_PUBLIC_RULE,
+  getGiveawayEligibility,
+} from './giveaway.js';
 import { sendLeadEmail, sendReferralEmail, sendSubscriptionEmail } from './mailer.js';
 import { startDailyBackupScheduler } from './backup.js';
 import { getCachedTravelPricing, resolveTravelPricing } from './travel.js';
@@ -13,7 +18,6 @@ import { createAnalyticsLeadId, getPublicAnalyticsConfig, normalizeAnalyticsCont
 const app = express();
 
 const GIVEAWAY_THRESHOLD = 50;
-const GIVEAWAY_MIN_ESTIMATE = 495;
 const GIVEAWAY_STARTS_AT = '2026-07-20T07:30:00+10:00';
 const GIVEAWAY_ENDS_AT = '2026-08-21T20:30:00+10:00';
 const GIVEAWAY_START_MS = Date.parse(GIVEAWAY_STARTS_AT);
@@ -394,7 +398,10 @@ function isWithinGiveawayCampaign(referenceDate = new Date()) {
 
 function isGiveawayLeadInCampaign(lead) {
   const submittedAt = lead?.receivedAt || lead?.createdAt;
-  return Boolean(lead?.eligibleForGiveaway) && isWithinGiveawayCampaign(submittedAt);
+  return getGiveawayEligibility(
+    lead?.recommendedEstimateIncGst,
+    isWithinGiveawayCampaign(submittedAt)
+  ).eligible;
 }
 
 function getGiveawayState(leads, now = new Date()) {
@@ -413,6 +420,8 @@ function getGiveawayState(leads, now = new Date()) {
     giveawayUnlocked,
     giveawayActive: giveawayOpen && giveawayUnlocked,
     giveawayThreshold: GIVEAWAY_THRESHOLD,
+    minimumEligibleJobValueIncGst: GIVEAWAY_MINIMUM_INC_GST,
+    minimumEligibleJobValueRule: GIVEAWAY_MINIMUM_PUBLIC_RULE,
     giveawayStartsAt: new Date(GIVEAWAY_START_MS).toISOString(),
     giveawayEndsAt: new Date(GIVEAWAY_END_MS).toISOString(),
   };
@@ -441,6 +450,8 @@ app.get('/api/giveaway/status', (_req, res) => {
   res.json({
     entryCount: giveaway.giveawayEntries,
     entryTarget: giveaway.giveawayThreshold,
+    minimumEligibleJobValueIncGst: giveaway.minimumEligibleJobValueIncGst,
+    minimumEligibleJobValueRule: giveaway.minimumEligibleJobValueRule,
     unlocked: giveaway.giveawayUnlocked,
     campaignOpen: giveaway.giveawayOpen,
     startsAt: giveaway.giveawayStartsAt,
@@ -540,7 +551,11 @@ app.post('/api/leads', leadRateLimit, async (req, res) => {
   const customerScope = generateServiceScope(cleanLead);
   const aiSummary = generateAISummary(cleanLead, estimate);
   const leadQuality = scoreLeadQuality(cleanLead);
-  const eligibleForGiveaway = isWithinGiveawayCampaign() && estimate.recommendedEstimate >= GIVEAWAY_MIN_ESTIMATE;
+  const giveawayEligibility = getGiveawayEligibility(
+    estimate.recommendedEstimateIncGst,
+    isWithinGiveawayCampaign()
+  );
+  const eligibleForGiveaway = giveawayEligibility.eligible;
   const leadId = `${Date.now()}-${Math.floor(Math.random() * 1000)}`;
   const analyticsLeadId = createAnalyticsLeadId();
   const analyticsContext = normalizeAnalyticsContext(body.analytics);
@@ -572,11 +587,15 @@ app.post('/api/leads', leadRateLimit, async (req, res) => {
     estimateGuidance: estimate.estimateGuidance,
     accuracyLevel: estimate.accuracyLevel,
     manualReviewRequired: estimate.manualReviewRequired,
+    largeRoofInspectionRequired: Boolean(estimate.largeRoofInspectionRequired),
+    submittedRoofArea: estimate.submittedRoofArea ?? null,
+    maximumAutomatedRoofArea: estimate.maximumAutomatedRoofArea ?? null,
     photoRequired: estimate.photoRequired,
     calculationBreakdown: estimate.calculationBreakdown,
     internalCalculation: estimate.internalCalculation,
     aiSummary,
     leadQuality,
+    giveawayEligibility,
     eligibleForGiveaway,
     receivedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
@@ -618,11 +637,15 @@ app.post('/api/leads', leadRateLimit, async (req, res) => {
     estimateGuidance: estimate.estimateGuidance,
     accuracyLevel: estimate.accuracyLevel,
     manualReviewRequired: estimate.manualReviewRequired,
+    largeRoofInspectionRequired: Boolean(estimate.largeRoofInspectionRequired),
+    submittedRoofArea: estimate.submittedRoofArea ?? null,
+    maximumAutomatedRoofArea: estimate.maximumAutomatedRoofArea ?? null,
     photoRequired: estimate.photoRequired,
     calculationBreakdown: estimate.calculationBreakdown,
     customerScope,
     aiSummary,
     leadQuality,
+    giveawayEligibility,
     eligibleForGiveaway,
     deliveryStatus: {
       email: emailDispatch.sent ? `Sent to ${BUSINESS_EMAIL}` : `Queued for ${BUSINESS_EMAIL} (${emailDispatch.message})`,

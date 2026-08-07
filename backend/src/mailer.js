@@ -172,15 +172,26 @@ async function sendEmailViaWebhook({ subject, text, photoUploads, replyTo }) {
   }
 }
 
-function buildLeadText(lead) {
+export function buildLeadText(lead) {
   const addons = toList(lead?.addons);
   const reasons = toList(lead?.estimateReasons);
   const customerScope = toList(lead?.customerScope);
   const calculation = lead?.calculationBreakdown && typeof lead.calculationBreakdown === 'object' ? lead.calculationBreakdown : {};
   const pricedLines = Array.isArray(calculation.lines) ? calculation.lines : [];
   const pricedLineText = pricedLines.length
-    ? pricedLines.map((line) => `${formatStructuredValue(line.quantity)} ${toText(line.unitLabel)} - ${toText(line.label)} @ ${formatStructuredValue(line.unitRateExGst)} ex GST = ${formatStructuredValue(line.subtotalExGst)} ex GST`).join(' | ')
+    ? pricedLines.map((line) => {
+      const submittedQuantity = line.submittedQuantity ?? line.quantity;
+      if (line.pricedQuantity === null || line.subtotalExGst === null) {
+        return `${formatStructuredValue(submittedQuantity)} ${toText(line.unitLabel)} - ${toText(line.label)} - not automatically priced; inspection required`;
+      }
+      return `${formatStructuredValue(submittedQuantity)} ${toText(line.unitLabel)} - ${toText(line.label)} @ ${formatStructuredValue(line.unitRateExGst)} ex GST = ${formatStructuredValue(line.subtotalExGst)} ex GST`;
+    }).join(' | ')
     : 'None';
+  const inspectionRequired = Boolean(lead?.largeRoofInspectionRequired);
+  const totalLabel = (value) => inspectionRequired ? 'Inspection required - no partial price issued' : formatStructuredValue(value);
+  const giveawayEligibility = lead?.giveawayEligibility && typeof lead.giveawayEligibility === 'object'
+    ? lead.giveawayEligibility
+    : {};
 
   const lines = [
     'New T & A Pro Cleaning Quote Lead',
@@ -203,6 +214,8 @@ function buildLeadText(lead) {
     `- Rooms: ${toText(lead?.rooms)}`,
     `- Service area: ${toText(lead?.serviceArea)}`,
     `- Measured quantity: ${Number(lead?.scopeQuantity || 0) > 0 ? `${Number(lead.scopeQuantity)} ${toText(lead?.scopeUnit)}` : 'Not supplied'}`,
+    `- Large roof inspection required: ${boolLabel(inspectionRequired)}`,
+    `- Full submitted roof area: ${Number(lead?.submittedRoofArea || 0) > 0 ? `${Number(lead.submittedRoofArea)} m2` : 'Not applicable'}`,
     `- Surface/scope detail: ${toText(lead?.scopeDetail) || 'Not supplied'}`,
     `- Access: ${toText(lead?.accessDifficulty)}`,
     `- Condition: ${toText(lead?.conditionLevel)}`,
@@ -229,15 +242,18 @@ function buildLeadText(lead) {
     `- Recommended estimate: ${toText(lead?.recommendedEstimateLabel || lead?.estimateLabel)}`,
     `- Internal confidence band: ${toText(lead?.internalEstimateLabel)}`,
     `- Pricing method: ${toText(lead?.pricingMethod)}`,
-    `- Subtotal ex GST: ${formatStructuredValue(calculation.subtotalExGst)}`,
-    `- GST: ${formatStructuredValue(calculation.gst)}`,
-    `- Total incl. GST: ${formatStructuredValue(calculation.totalIncGst)}`,
+    `- Subtotal ex GST: ${totalLabel(calculation.subtotalExGst)}`,
+    `- GST: ${totalLabel(calculation.gst)}`,
+    `- Total incl. GST: ${totalLabel(calculation.totalIncGst)}`,
     `- Manual review required: ${boolLabel(Boolean(lead?.manualReviewRequired))}`,
     `- Photos required: ${boolLabel(Boolean(lead?.photoRequired))}`,
     `- Accuracy level: ${toText(lead?.accuracyLevel)}`,
     `- Estimated job type: ${toText(lead?.estimatedJobType)}`,
     `- Tailored quote recommended: ${boolLabel(Boolean(lead?.tailoredQuoteRecommended))}`,
     `- Lead quality: ${toText(lead?.leadQuality)}`,
+    '- Minimum eligible job value: $495 including GST, subject to review.',
+    `- Giveaway value tested in cents: ${formatStructuredValue(giveawayEligibility.totalIncludingGstCents)}`,
+    `- Giveaway minimum met: ${boolLabel(Boolean(giveawayEligibility.meetsMinimumValue))}`,
     `- Giveaway eligible: ${boolLabel(Boolean(lead?.eligibleForGiveaway))}`,
     `- AI summary: ${toText(lead?.aiSummary)}`,
     '',

@@ -25,12 +25,18 @@
   const trackedScrollMilestones = new Set();
   const GIVEAWAY_CONFIG = {
     unlockEntryTarget: 50,
-    minimumEligibleJobValueExGst: 495,
+    minimumEligibleJobValueIncGst: 495,
     campaignName: 'Monthly Client Giveaway',
     startsAt: '2026-07-20T07:30:00+10:00',
     endsAt: '2026-08-21T20:30:00+10:00',
     entryStatusFallback: 'Verified entry totals will appear when live status is connected.',
   };
+
+  function amountToCents(value) {
+    if (value === null || value === undefined || value === '') return null;
+    const amount = Number(value);
+    return Number.isFinite(amount) ? Math.round((amount + Number.EPSILON) * 100) : null;
+  }
 
   function getGiveawayCampaignPhase(referenceDate = new Date()) {
     const now = referenceDate instanceof Date ? referenceDate.getTime() : Date.parse(referenceDate);
@@ -492,7 +498,7 @@
       xl: { min: 650, max: 760 },
     },
     standardWindowCeilingExGst: 480,
-    giveawayThresholdMinExGst: GIVEAWAY_CONFIG.minimumEligibleJobValueExGst,
+    giveawayThresholdIncGst: GIVEAWAY_CONFIG.minimumEligibleJobValueIncGst,
     vagueNotesPattern: /^(na|n\/a|none|no|nil|same|ok)$/i,
   };
 
@@ -1092,7 +1098,8 @@
         ? 'This appears to be a larger or more complex project. We recommend a tailored quote. Final pricing confirmed after site inspection.'
         : 'Final pricing confirmed after site inspection.',
       accuracyLevel: rangeProfile.accuracy,
-      eligibleForGiveaway: isGiveawayCampaignOpen() && estimateMinExGst >= SMART_ESTIMATE_CONFIG.giveawayThresholdMinExGst,
+      eligibleForGiveaway: isGiveawayCampaignOpen()
+        && amountToCents(estimateMinIncGst) >= SMART_ESTIMATE_CONFIG.giveawayThresholdIncGst * 100,
     };
   }
 
@@ -1510,14 +1517,15 @@
     qualityNode.textContent = `Detail Level: ${toTitleCase(qualityRaw)}`;
 
     const giveawayPhase = getGiveawayCampaignPhase();
+    const giveawayRule = 'Minimum eligible job value: $495 including GST, subject to review.';
     if (giveawayPhase === 'upcoming') {
-      giveawayNode.textContent = `Giveaway entries open ${formatGiveawayDate(GIVEAWAY_CONFIG.startsAt)}. Requests submitted before then are not counted.`;
+      giveawayNode.textContent = `${giveawayRule} Giveaway entries open ${formatGiveawayDate(GIVEAWAY_CONFIG.startsAt)}. Requests submitted before then are not counted.`;
     } else if (giveawayPhase === 'closed') {
-      giveawayNode.textContent = `This giveaway closed ${formatGiveawayDate(GIVEAWAY_CONFIG.endsAt)}.`;
+      giveawayNode.textContent = `${giveawayRule} This giveaway closed ${formatGiveawayDate(GIVEAWAY_CONFIG.endsAt)}.`;
     } else if (result.eligibleForGiveaway) {
-      giveawayNode.textContent = 'Eligible quote requests may be reviewed for the current monthly giveaway after the team confirms scope and campaign requirements.';
+      giveawayNode.textContent = `${giveawayRule} This request meets the value threshold and remains subject to campaign and team review.`;
     } else {
-      giveawayNode.textContent = 'Eligible quote requests may be reviewed for the current monthly giveaway; giveaway participation is separate from quote approval and booking.';
+      giveawayNode.textContent = `${giveawayRule} This request is not yet confirmed as eligible.`;
     }
 
     panel.hidden = false;
@@ -1543,10 +1551,14 @@
   function renderCalculationBreakdown(container, breakdown) {
     if (!(container instanceof HTMLElement)) return;
     container.replaceChildren();
+    container.classList.remove('is-manual-review');
     if (!breakdown || !Array.isArray(breakdown.lines) || !breakdown.lines.length) return;
 
+    const manualPricingRequired = Boolean(breakdown.manualPricingRequired);
+    container.classList.toggle('is-manual-review', manualPricingRequired);
+
     const title = document.createElement('h4');
-    title.textContent = 'Price calculation';
+    title.textContent = manualPricingRequired ? 'Scope received' : 'Price calculation';
     container.appendChild(title);
 
     breakdown.lines.forEach((line) => {
@@ -1556,23 +1568,34 @@
       const name = document.createElement('strong');
       name.textContent = line.label;
       const detail = document.createElement('span');
+      const submittedQuantity = line.submittedQuantity ?? line.quantity;
       const rateText = line.unitRateExGst !== null && line.unitRateExGst !== undefined && Number.isFinite(Number(line.unitRateExGst))
         ? ` x ${window.TAPricing.money(line.unitRateExGst)} ex GST`
         : line.pricingNote ? ` - ${line.pricingNote}` : '';
-      detail.textContent = `${line.quantity} ${line.unitLabel}${rateText}`;
+      detail.textContent = `${submittedQuantity} ${line.unitLabel}${rateText}`;
       copy.append(name, detail);
       const amount = document.createElement('b');
-      amount.textContent = window.TAPricing.money(line.subtotalExGst);
+      amount.textContent = manualPricingRequired || line.subtotalExGst === null
+        ? 'Inspection required'
+        : window.TAPricing.money(line.subtotalExGst);
       row.append(copy, amount);
       container.appendChild(row);
 
-      if (Number(line.minimumExGst || 0) > 0) {
+      if (!manualPricingRequired && Number(line.minimumExGst || 0) > 0) {
         const minimum = document.createElement('p');
         minimum.className = 'estimate-calc-minimum';
         minimum.textContent = `Service minimum: ${window.TAPricing.money(line.minimumExGst)} ex GST (applied once per category)`;
         container.appendChild(minimum);
       }
     });
+
+    if (manualPricingRequired) {
+      const notice = document.createElement('p');
+      notice.className = 'estimate-calc-manual-note';
+      notice.textContent = 'No partial price has been calculated. The complete submitted scope will be reviewed before a final price is issued.';
+      container.appendChild(notice);
+      return;
+    }
 
     (Array.isArray(breakdown.adjustments) ? breakdown.adjustments : []).forEach((adjustment) => {
       const row = document.createElement('div');
@@ -1825,7 +1848,17 @@
 
   function buildCustomerScope(payload) {
     const engine = window.TAPricing;
-    if (!engine || typeof engine.buildServiceScope !== 'function') return [];
+    if (!engine || typeof engine.buildServiceScope !== 'function') {
+      const quantity = Number(payload?.scopeQuantity || 0);
+      if (normalize(payload?.service).includes('roof') && quantity > 150) {
+        return [
+          `${quantity} m2 - Roof cleaning`,
+          `Full ${quantity} m2 roof area received - inspection required before pricing`,
+          'Final access, condition and scope confirmed before booking',
+        ];
+      }
+      return [];
+    }
     return engine.buildServiceScope(payload);
   }
 
@@ -1908,7 +1941,7 @@
     const explicitEligible = typeof merged.eligibleForGiveaway === 'boolean' ? merged.eligibleForGiveaway : null;
     merged.eligibleForGiveaway = explicitEligible !== null
       ? explicitEligible
-      : merged.estimateMin >= SMART_ESTIMATE_CONFIG.giveawayThresholdMinExGst;
+      : amountToCents(merged.estimateMinIncGst) >= SMART_ESTIMATE_CONFIG.giveawayThresholdIncGst * 100;
 
     merged.estimatedJobType = toText(merged.estimatedJobType) || fallbackResult.estimatedJobType;
     merged.tailoredQuoteRecommended = typeof merged.tailoredQuoteRecommended === 'boolean'
@@ -2792,7 +2825,7 @@
     gstRate: 0.1,
     minimumExGst: 90,
     marketCalibrationVersion: 'SEQ-2026-07',
-    giveawayThresholdMinExGst: GIVEAWAY_CONFIG.minimumEligibleJobValueExGst,
+    giveawayThresholdIncGst: GIVEAWAY_CONFIG.minimumEligibleJobValueIncGst,
     vagueNotesPattern: /^(na|n\/a|none|no|nil|same|ok|need cleaning)$/i,
     discountRates: {
       none: 0,
@@ -3342,6 +3375,67 @@
       return window.TAPricing.calculateEstimate(lead);
     }
     const service = toText(lead.service);
+    const submittedQuantity = Number(lead.scopeQuantity || 0);
+    if (normalize(service).includes('roof') && submittedQuantity > 150) {
+      return {
+        estimateMin: null,
+        estimateMax: null,
+        estimateMinIncGst: null,
+        estimateMaxIncGst: null,
+        recommendedEstimate: null,
+        recommendedEstimateIncGst: null,
+        recommendedEstimateLabel: 'Large roof \u2014 inspection required',
+        estimateLabel: 'Large roof \u2014 inspection required',
+        internalEstimateLabel: 'No automated price issued - large roof inspection required',
+        pricingMethod: 'Large roof inspection',
+        estimateReasons: [
+          `Full submitted roof area retained: ${submittedQuantity} m2`,
+          'Automated roof pricing is limited to 150 m2',
+          'No partial or reduced roof price has been calculated',
+        ],
+        estimatedJobType: 'Large Roof - Inspection',
+        tailoredQuoteRecommended: true,
+        manualReviewRequired: true,
+        largeRoofInspectionRequired: true,
+        submittedRoofArea: submittedQuantity,
+        maximumAutomatedRoofArea: 150,
+        photoRequired: true,
+        estimateGuidance: `We received the full ${submittedQuantity} m2 roof area. T&A Pro Cleaning will confirm access, condition and scope before issuing the final price.`,
+        accuracyLevel: 'Manual review',
+        eligibleForGiveaway: false,
+        calculationBreakdown: {
+          manualPricingRequired: true,
+          largeRoofInspectionRequired: true,
+          lines: [{
+            code: toText(lead.pricingItemCode) || 'roof-manual-review',
+            group: 'Roof Cleaning',
+            label: 'Roof cleaning area',
+            quantity: submittedQuantity,
+            submittedQuantity,
+            pricedQuantity: null,
+            maximumAutomatedQuantity: 150,
+            unit: 'square-metres',
+            unitLabel: 'm2',
+            unitRateExGst: null,
+            minimumExGst: null,
+            subtotalExGst: null,
+            pricingNote: `Full ${submittedQuantity} m2 received - inspection required before pricing`,
+          }],
+          groups: [],
+          adjustments: [],
+          servicesSubtotalExGst: null,
+          subtotalExGst: null,
+          gst: null,
+          totalIncGst: null,
+        },
+        internalCalculation: {
+          automatedPricingBlocked: true,
+          largeRoofInspectionRequired: true,
+          submittedRoofAreas: [submittedQuantity],
+          maximumAutomatedRoofArea: 150,
+        },
+      };
+    }
     const addons = normalizeAddons(lead.addons);
     const serviceProfile = resolveServiceProfile(service);
     const normalizedLead = getNormalizedPricingLead(lead);
@@ -3413,7 +3507,8 @@
         ? 'Recommended estimate based on the details provided. Photos, access and final scope are reviewed before the price is confirmed.'
         : 'Recommended estimate based on the details provided. Your final price is confirmed before work starts.',
       accuracyLevel,
-      eligibleForGiveaway: isGiveawayCampaignOpen() && recommendedPricing.recommendedEstimate >= REALISTIC_ESTIMATE_CONFIG.giveawayThresholdMinExGst,
+      eligibleForGiveaway: isGiveawayCampaignOpen()
+        && amountToCents(recommendedPricing.recommendedEstimateIncGst) >= REALISTIC_ESTIMATE_CONFIG.giveawayThresholdIncGst * 100,
     };
   }
 
@@ -3480,20 +3575,17 @@
       ...(apiResult && typeof apiResult === 'object' ? apiResult : {}),
     };
 
-    merged.estimateMin = Number.isFinite(Number(merged.estimateMin)) ? Number(merged.estimateMin) : fallbackResult.estimateMin;
-    merged.estimateMax = Number.isFinite(Number(merged.estimateMax)) ? Number(merged.estimateMax) : fallbackResult.estimateMax;
-    merged.estimateMinIncGst = Number.isFinite(Number(merged.estimateMinIncGst))
-      ? Number(merged.estimateMinIncGst)
-      : fallbackResult.estimateMinIncGst;
-    merged.estimateMaxIncGst = Number.isFinite(Number(merged.estimateMaxIncGst))
-      ? Number(merged.estimateMaxIncGst)
-      : fallbackResult.estimateMaxIncGst;
-    merged.recommendedEstimate = Number.isFinite(Number(merged.recommendedEstimate))
-      ? Number(merged.recommendedEstimate)
-      : fallbackResult.recommendedEstimate;
-    merged.recommendedEstimateIncGst = Number.isFinite(Number(merged.recommendedEstimateIncGst))
-      ? Number(merged.recommendedEstimateIncGst)
-      : fallbackResult.recommendedEstimateIncGst;
+    const resolveNumber = (value, fallback) => {
+      if (value === null) return null;
+      if (value === undefined || value === '') return fallback;
+      return Number.isFinite(Number(value)) ? Number(value) : fallback;
+    };
+    merged.estimateMin = resolveNumber(merged.estimateMin, fallbackResult.estimateMin);
+    merged.estimateMax = resolveNumber(merged.estimateMax, fallbackResult.estimateMax);
+    merged.estimateMinIncGst = resolveNumber(merged.estimateMinIncGst, fallbackResult.estimateMinIncGst);
+    merged.estimateMaxIncGst = resolveNumber(merged.estimateMaxIncGst, fallbackResult.estimateMaxIncGst);
+    merged.recommendedEstimate = resolveNumber(merged.recommendedEstimate, fallbackResult.recommendedEstimate);
+    merged.recommendedEstimateIncGst = resolveNumber(merged.recommendedEstimateIncGst, fallbackResult.recommendedEstimateIncGst);
     merged.recommendedEstimateLabel = toText(merged.recommendedEstimateLabel) || fallbackResult.recommendedEstimateLabel;
     merged.internalEstimateLabel = toText(merged.internalEstimateLabel) || fallbackResult.internalEstimateLabel;
     merged.pricingMethod = toText(merged.pricingMethod) || fallbackResult.pricingMethod;
@@ -3503,6 +3595,10 @@
     merged.manualReviewRequired = typeof merged.manualReviewRequired === 'boolean'
       ? merged.manualReviewRequired
       : Boolean(fallbackResult.manualReviewRequired);
+    merged.largeRoofInspectionRequired = typeof merged.largeRoofInspectionRequired === 'boolean'
+      ? merged.largeRoofInspectionRequired
+      : Boolean(fallbackResult.largeRoofInspectionRequired);
+    merged.submittedRoofArea = resolveNumber(merged.submittedRoofArea, fallbackResult.submittedRoofArea ?? null);
     merged.photoRequired = typeof merged.photoRequired === 'boolean'
       ? merged.photoRequired
       : Boolean(fallbackResult.photoRequired);

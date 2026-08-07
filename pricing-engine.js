@@ -81,10 +81,10 @@
       },
       {
         id: 'roof-cleaning', label: 'Roof Cleaning', items: [
-          item('roof_concrete_single', 'Concrete-tile roof, single storey', 'square-metres', 10.5, 1050, { requiresPhotos: true }),
-          item('roof_terracotta_single', 'Terracotta roof, single storey', 'square-metres', 12.8, 1280, { requiresPhotos: true }),
-          item('roof_metal_single', 'Metal roof, single storey', 'square-metres', 8.5, 850, { requiresPhotos: true }),
-          item('roof_treatment_only', 'Roof treatment only', 'square-metres', 6.5, 650, { requiresPhotos: true }),
+          item('roof_concrete_single', 'Concrete-tile roof, single storey', 'square-metres', 10.5, 1050, { requiresPhotos: true, maximumAutomatedQuantity: 150 }),
+          item('roof_terracotta_single', 'Terracotta roof, single storey', 'square-metres', 12.8, 1280, { requiresPhotos: true, maximumAutomatedQuantity: 150 }),
+          item('roof_metal_single', 'Metal roof, single storey', 'square-metres', 8.5, 850, { requiresPhotos: true, maximumAutomatedQuantity: 150 }),
+          item('roof_treatment_only', 'Roof treatment only', 'square-metres', 6.5, 650, { requiresPhotos: true, maximumAutomatedQuantity: 150 }),
           fixed('roof_access_double', 'Double-storey roof access allowance', 250, { addonOnly: true, accessAllowance: true }),
           fixed('roof_access_steep', 'Steep or complex roof allowance', 350, { addonOnly: true, accessAllowance: true, manual: true, requiresPhotos: true }),
           item('roof_solar_setup', 'Solar-panel protection and setup', 'arrays', 75, 0, { addonOnly: true }),
@@ -332,6 +332,10 @@
     return Math.round((number(value) + Number.EPSILON) * 100) / 100;
   }
 
+  function moneyToCents(value) {
+    return Math.round((number(value) + Number.EPSILON) * 100);
+  }
+
   function unitLabel(unit, quantity = 2) {
     const labels = UNIT_LABELS[unit] || ['unit', 'units'];
     return number(quantity) === 1 ? labels[0] : labels[1];
@@ -389,10 +393,23 @@
       }
       if (entry.manual) manualReviewRequired = true;
       if (entry.requiresPhotos) photoRequired = true;
-      const rawResult = calculateRaw(entry, quantity);
+      const maximumAutomatedQuantity = Math.max(0, number(entry.maximumAutomatedQuantity));
+      const exceedsAutomatedRange = maximumAutomatedQuantity > 0 && quantity > maximumAutomatedQuantity;
+      if (exceedsAutomatedRange) {
+        manualReviewRequired = true;
+        photoRequired = true;
+        issues.push(`Full ${quantity} ${unitLabel(entry.unit, quantity)} received for ${entry.label}; automated roof pricing supports up to ${maximumAutomatedQuantity} m2.`);
+      }
+      const rawResult = exceedsAutomatedRange
+        ? { raw: 0, unitRate: null, pricingNote: 'Inspection required - full submitted area retained' }
+        : calculateRaw(entry, quantity);
       resolvedLines.push({
         ...entry,
         quantity,
+        submittedQuantity: quantity,
+        pricedQuantity: exceedsAutomatedRange ? null : quantity,
+        maximumAutomatedQuantity: maximumAutomatedQuantity || null,
+        exceedsAutomatedRange,
         unitRate: rawResult.unitRate,
         rawSubtotalExGst: roundMoney(rawResult.raw),
         pricingNote: rawResult.pricingNote || '',
@@ -402,6 +419,80 @@
     if (!resolvedLines.length) {
       manualReviewRequired = true;
       issues.push('Choose a precise service item and quantity to calculate a price.');
+    }
+
+    const largeRoofLines = resolvedLines.filter((line) => line.groupId === 'roof-cleaning' && line.exceedsAutomatedRange);
+    if (largeRoofLines.length) {
+      const submittedAreas = largeRoofLines.map((line) => line.submittedQuantity);
+      const largestSubmittedArea = Math.max(...submittedAreas);
+      const automatedLimit = Math.max(...largeRoofLines.map((line) => line.maximumAutomatedQuantity));
+      const calculationBreakdown = {
+        manualPricingRequired: true,
+        largeRoofInspectionRequired: true,
+        lines: resolvedLines.map((line) => ({
+          code: line.code,
+          group: line.groupLabel,
+          label: line.label,
+          quantity: line.submittedQuantity,
+          submittedQuantity: line.submittedQuantity,
+          pricedQuantity: null,
+          maximumAutomatedQuantity: line.maximumAutomatedQuantity,
+          unit: line.unit,
+          unitLabel: unitLabel(line.unit, line.submittedQuantity),
+          unitRateExGst: null,
+          minimumExGst: null,
+          subtotalExGst: null,
+          pricingNote: line.exceedsAutomatedRange
+            ? `Full ${line.submittedQuantity} ${unitLabel(line.unit, line.submittedQuantity)} received - inspection required before pricing`
+            : 'Included in the submitted scope - combined pricing follows the roof inspection',
+          exceedsAutomatedRange: line.exceedsAutomatedRange,
+        })),
+        groups: [],
+        adjustments: [],
+        servicesSubtotalExGst: null,
+        subtotalExGst: null,
+        gst: null,
+        totalIncGst: null,
+      };
+
+      return {
+        estimateMin: null,
+        estimateMax: null,
+        estimateMinIncGst: null,
+        estimateMaxIncGst: null,
+        recommendedEstimate: null,
+        recommendedEstimateIncGst: null,
+        recommendedEstimateLabel: 'Large roof \u2014 inspection required',
+        estimateLabel: 'Large roof \u2014 inspection required',
+        internalEstimateLabel: 'No automated price issued - large roof inspection required',
+        pricingMethod: 'Large roof inspection',
+        estimateReasons: [
+          `${PRICING_CONFIG.version} rates used`,
+          `Full submitted roof area retained: ${largestSubmittedArea} m2`,
+          `Automated roof pricing is limited to ${automatedLimit} m2`,
+          'No partial or reduced roof price has been calculated',
+          'Access, condition, photographs and complete scope require team review',
+          ...issues,
+        ],
+        estimatedJobType: 'Large Roof - Inspection',
+        tailoredQuoteRecommended: true,
+        manualReviewRequired: true,
+        largeRoofInspectionRequired: true,
+        submittedRoofArea: largestSubmittedArea,
+        maximumAutomatedRoofArea: automatedLimit,
+        photoRequired: true,
+        estimateGuidance: `We received the full ${largestSubmittedArea} m2 roof area. T&A Pro Cleaning will confirm access, condition and scope before issuing the final price.`,
+        accuracyLevel: 'Manual review',
+        eligibleForGiveaway: false,
+        calculationBreakdown,
+        internalCalculation: {
+          pricingVersion: PRICING_CONFIG.version,
+          automatedPricingBlocked: true,
+          largeRoofInspectionRequired: true,
+          submittedRoofAreas: submittedAreas,
+          maximumAutomatedRoofArea: automatedLimit,
+        },
+      };
     }
 
     const grouped = new Map();
@@ -532,7 +623,7 @@
         ? 'This is a starting estimate only. Photographs or inspection and team confirmation are required.'
         : 'Calculated from the selected service, quantity and master price list. Final scope is confirmed before work starts.',
       accuracyLevel: manualReviewRequired ? 'Low' : photoRequired ? 'Medium' : 'High',
-      eligibleForGiveaway: subtotalExGst >= 495,
+      eligibleForGiveaway: moneyToCents(totalIncGst) >= 49500,
       calculationBreakdown,
       internalCalculation: {
         pricingVersion: PRICING_CONFIG.version,
@@ -548,6 +639,9 @@
 
   function generateSummary(input, estimate) {
     const lineText = estimate.calculationBreakdown.lines.map((line) => `${line.quantity} ${line.unitLabel} of ${line.label}`).join(', ');
+    if (estimate.largeRoofInspectionRequired) {
+      return `The full submitted roof area of ${estimate.submittedRoofArea} m2 has been received. No partial price has been issued. T&A Pro Cleaning will confirm access, condition, photographs and the complete scope before issuing the final price.`;
+    }
     return `This estimate uses the T&A Pro Cleaning master price list for ${lineText || 'the selected cleaning scope'}. Service minimums are applied once per category and 10% GST is added once at the end.${estimate.manualReviewRequired ? ' Photographs or inspection and team confirmation are required.' : ' Final scope is confirmed before work starts.'}`;
   }
 
@@ -579,6 +673,9 @@
     resolvedLines.forEach((line) => {
       const quantity = line.quantity || 1;
       scope.push(`${quantity} ${unitLabel(line.unit, quantity)} - ${line.label}`);
+      if (line.groupId === 'roof-cleaning' && Number(line.maximumAutomatedQuantity || 0) > 0 && quantity > Number(line.maximumAutomatedQuantity)) {
+        scope.push(`Full ${quantity} m2 roof area received - inspection required before pricing`);
+      }
     });
 
     const windowLines = resolvedLines.filter((line) => line.groupId === 'window-cleaning');
@@ -614,5 +711,6 @@
     getItem: (code) => itemByCode.get(code) || null,
     unitLabel,
     money,
+    moneyToCents,
   };
 });

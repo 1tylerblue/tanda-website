@@ -38,7 +38,7 @@ function escapeCsv(value) {
 function toCsv(leads) {
   const rows = Array.isArray(leads) ? leads : [];
   if (!rows.length) {
-    return 'id,createdAt,firstName,phone,address,service,propertyType,storeys,rooms,serviceArea,estimateLabel,leadQuality,eligibleForGiveaway';
+    return 'id,createdAt,firstName,phone,address,service,propertyType,storeys,rooms,serviceArea,scopeQuantity,scopeUnit,estimateLabel,recommendedEstimateIncGst,manualReviewRequired,largeRoofInspectionRequired,submittedRoofArea,leadQuality,eligibleForGiveaway';
   }
 
   const headers = [
@@ -52,7 +52,13 @@ function toCsv(leads) {
     'storeys',
     'rooms',
     'serviceArea',
+    'scopeQuantity',
+    'scopeUnit',
     'estimateLabel',
+    'recommendedEstimateIncGst',
+    'manualReviewRequired',
+    'largeRoofInspectionRequired',
+    'submittedRoofArea',
     'leadQuality',
     'eligibleForGiveaway',
     'addons',

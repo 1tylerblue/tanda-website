@@ -3164,6 +3164,20 @@ body {
   color: #2f4a68;
 }
 
+.estimate-calculation.is-manual-review {
+  border-color: rgba(0, 132, 240, 0.28);
+  background: rgba(238, 248, 255, 0.86);
+}
+
+.estimate-calc-manual-note {
+  margin: 12px 0 0;
+  padding: 12px 14px;
+  border-left: 3px solid #0084f0;
+  color: #183b5d;
+  font-weight: 700;
+  line-height: 1.55;
+}
+
 .estimate-job-type,
 .result-job-type {
   width: fit-content;
