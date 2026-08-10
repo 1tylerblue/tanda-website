@@ -16,6 +16,7 @@
   const GOOGLE_ADS_QUOTE_SEND_TO = 'AW-11132030271/8PYfCNyuw9QcEL-albwp';
   const GOOGLE_ADS_PHONE_CLICK_SEND_TO = 'AW-11132030271/RBdMCMS3w9QcEL-albwp';
   const GOOGLE_TAG_SCRIPT_ATTRIBUTE = 'data-tac-google-tag';
+  const GOOGLE_ADS_PRODUCTION_HOSTS = new Set(['tandaprocleaning.com.au', 'www.tandaprocleaning.com.au']);
   let gaScriptRequested = false;
   let googleTagConfigured = false;
   let quoteConversionTracked = false;
@@ -116,6 +117,10 @@
   }
 
   function loadGoogleAdsTag() {
+    if (!canUseGoogleAdsTracking()) {
+      return false;
+    }
+
     applyDefaultConsent();
     ensureGtagFunction();
     ensureGoogleTagScript(GOOGLE_ADS_CONVERSION_ID);
@@ -125,6 +130,8 @@
       window.gtag('config', GOOGLE_ADS_CONVERSION_ID);
       googleTagConfigured = true;
     }
+
+    return true;
   }
 
   function loadAnalyticsScript() {
@@ -339,7 +346,7 @@
   }
 
   function trackGoogleAdsConversion(sendTo, options = {}) {
-    if (!sendTo) {
+    if (!sendTo || !canUseGoogleAdsTracking()) {
       return false;
     }
 
@@ -374,6 +381,14 @@
     quoteConversionTracked = true;
     trackGoogleAdsConversion(GOOGLE_ADS_QUOTE_SEND_TO);
   }
+
+  function canUseGoogleAdsTracking() {
+    return GOOGLE_ADS_PRODUCTION_HOSTS.has(window.location.hostname);
+  }
+
+  window.TandaGoogleAds = Object.freeze({
+    trackQuoteSubmittedConversion,
+  });
 
   function setupPhoneClickConversionTracking() {
     document.addEventListener('click', (event) => {

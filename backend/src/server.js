@@ -14,6 +14,11 @@ import { sendLeadEmail, sendReferralEmail, sendSubscriptionEmail } from './maile
 import { startDailyBackupScheduler } from './backup.js';
 import { getCachedTravelPricing, resolveTravelPricing } from './travel.js';
 import { createAnalyticsLeadId, getPublicAnalyticsConfig, normalizeAnalyticsContext } from './analytics.js';
+import {
+  buildCompactQuoteDetails,
+  getCompactService,
+  isCompactServiceQuote,
+} from './compact-lead.js';
 
 const app = express();
 
@@ -42,6 +47,8 @@ const LOCAL_ORIGINS = [
   'http://127.0.0.1:4173',
   'http://localhost:4174',
   'http://127.0.0.1:4174',
+  'http://localhost:4175',
+  'http://127.0.0.1:4175',
 ];
 const PROD_ORIGINS = [
   'https://www.tandaprocleaning.com.au',
@@ -61,6 +68,9 @@ const REQUIRED_FIELDS = [
   'scopeQuantity',
   'agree',
 ];
+const COMPACT_REQUIRED_FIELDS = ['firstName', 'phone', 'address', 'service', 'agree'];
+const ALLOWED_UPLOAD_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
 
 function readAllowedOrigins() {
   const envOrigins = String(process.env.ALLOWED_ORIGINS || '')
@@ -222,13 +232,54 @@ function normalizePhotoUploads(value) {
 
   return value
     .map((item) => ({
-      name: toSafeString(item?.name),
-      type: toSafeString(item?.type) || 'image/jpeg',
+      name: toSafeString(item?.name).slice(0, 180),
+      type: toSafeString(item?.type).toLowerCase(),
       size: Number(item?.size) || 0,
       dataUrl: toSafeString(item?.dataUrl),
     }))
-    .filter((item) => item.name && item.dataUrl && item.type.startsWith('image/') && item.size > 0)
+    .filter((item) => isSafePhotoUpload(item))
     .slice(0, 5);
+}
+
+function hasAllowedImageSignature(buffer, mimeType) {
+  if (!Buffer.isBuffer(buffer) || buffer.length < 12) return false;
+  if (mimeType === 'image/jpeg') return buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
+  if (mimeType === 'image/png') return buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+  return mimeType === 'image/webp'
+    && buffer.subarray(0, 4).toString('ascii') === 'RIFF'
+    && buffer.subarray(8, 12).toString('ascii') === 'WEBP';
+}
+
+function isSafePhotoUpload(item) {
+  if (!item.name || !ALLOWED_UPLOAD_TYPES.has(item.type) || item.size <= 0 || item.size > MAX_UPLOAD_BYTES) return false;
+  const match = item.dataUrl.match(/^data:(image\/(?:jpeg|png|webp));base64,([a-zA-Z0-9+/=]+)$/);
+  if (!match || match[1].toLowerCase() !== item.type) return false;
+  try {
+    return hasAllowedImageSignature(Buffer.from(match[2], 'base64'), item.type);
+  } catch {
+    return false;
+  }
+}
+
+function normalizeMarketingAttribution(value) {
+  const input = value && typeof value === 'object' ? value : {};
+  const cleanValue = (key, maxLength = 120) => toSafeString(input[key]).slice(0, maxLength);
+  const clickId = (key) => {
+    const value = cleanValue(key, 256);
+    return /^[A-Za-z0-9._~-]*$/.test(value) ? value : '';
+  };
+  return {
+    source: cleanValue('source', 40).toLowerCase(),
+    landingPagePath: cleanValue('landingPagePath', 180).replace(/[?#].*$/, ''),
+    utmSource: cleanValue('utmSource'),
+    utmMedium: cleanValue('utmMedium'),
+    utmCampaign: cleanValue('utmCampaign'),
+    utmContent: cleanValue('utmContent'),
+    utmTerm: cleanValue('utmTerm'),
+    gclid: clickId('gclid'),
+    gbraid: clickId('gbraid'),
+    wbraid: clickId('wbraid'),
+  };
 }
 
 function parsePayload(body) {
@@ -287,7 +338,7 @@ function savePhotoUploads(leadId, photoUploads) {
     return [];
   }
 
-  const uploadDir = path.resolve(process.cwd(), 'data', 'uploads', leadId);
+  const uploadDir = path.resolve(process.env.DATA_DIR || path.join(process.cwd(), 'data'), 'uploads', leadId);
   if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
   }
@@ -320,7 +371,7 @@ function savePhotoUploads(leadId, photoUploads) {
 }
 
 function queueEmailPayload(payload) {
-  const queuePath = path.resolve(process.cwd(), 'data', 'email-outbox.json');
+  const queuePath = path.resolve(process.env.DATA_DIR || path.join(process.cwd(), 'data'), 'email-outbox.json');
   const queue = readJsonFile(queuePath, []);
   queue.push(payload);
   writeJsonFile(queuePath, queue);
@@ -482,13 +533,24 @@ app.post('/api/leads', leadRateLimit, async (req, res) => {
   const body = req.body || {};
   const photoUploads = normalizePhotoUploads(body.photoUploads);
   const verifiedTravel = getCachedTravelPricing(body.address);
+  const compactServiceQuote = isCompactServiceQuote(body.formVariant);
+  const compactService = compactServiceQuote ? getCompactService(body.serviceId) : null;
+
+  if (compactServiceQuote && !compactService) {
+    return res.status(400).json({ error: 'Please choose a supported service before submitting.' });
+  }
+  if (Array.isArray(body.photoUploads) && photoUploads.length !== body.photoUploads.length) {
+    return res.status(400).json({ error: 'Photos must be JPG, PNG or WebP and no larger than 4 MB each.' });
+  }
 
   const cleanLead = {
     firstName: toSafeString(body.firstName),
     phone: toSafeString(body.phone),
     email: toSafeString(body.email),
     address: toSafeString(body.address),
-    service: toSafeString(body.service),
+    service: compactService?.label || toSafeString(body.service),
+    serviceId: compactService ? toSafeString(body.serviceId) : toSafeString(body.serviceId),
+    formVariant: compactServiceQuote ? 'service_landing_compact' : 'full_quote',
     serviceGroup: toSafeString(body.serviceGroup),
     pricingItemCode: toSafeString(body.pricingItemCode),
     lineItems: normalizeLineItems(body.lineItems),
@@ -512,7 +574,7 @@ app.post('/api/leads', leadRateLimit, async (req, res) => {
     preferredDate: toSafeString(body.preferredDate),
     preferredTime: toSafeString(body.preferredTime),
     paymentPreference: toSafeString(body.paymentPreference),
-    notes: toSafeString(body.notes),
+    notes: toSafeString(body.notes).slice(0, 2000),
     website: toSafeString(body.website),
     addons: normalizeAddons(body.addons),
     subscriptionPackage: toSafeString(body.subscriptionPackage),
@@ -520,20 +582,21 @@ app.post('/api/leads', leadRateLimit, async (req, res) => {
     agree: Boolean(body.agree),
     formElapsedMs: Number(body.formElapsedMs) || 0,
     clientSubmittedAt: toSafeString(body.clientSubmittedAt),
+    marketingAttribution: normalizeMarketingAttribution(body.marketingAttribution),
     deliveryTargets: {
       email: BUSINESS_EMAIL,
       commandCentre: COMMAND_CENTRE_NAME,
     },
   };
 
-  const missingField = REQUIRED_FIELDS.find((field) => !cleanLead[field]);
+  const missingField = (compactServiceQuote ? COMPACT_REQUIRED_FIELDS : REQUIRED_FIELDS).find((field) => !cleanLead[field]);
   if (missingField) {
     return res.status(400).json({
       error: `Please complete the required field: ${missingField}.`,
     });
   }
 
-  if (!isValidEmail(cleanLead.email)) {
+  if (cleanLead.email && !isValidEmail(cleanLead.email)) {
     return res.status(400).json({
       error: 'Please enter a valid email address.',
     });
@@ -547,9 +610,10 @@ app.post('/api/leads', leadRateLimit, async (req, res) => {
     });
   }
 
-  const estimate = estimateLead(cleanLead);
-  const customerScope = generateServiceScope(cleanLead);
-  const aiSummary = generateAISummary(cleanLead, estimate);
+  const compactDetails = compactServiceQuote ? buildCompactQuoteDetails(compactService) : null;
+  const estimate = compactDetails?.estimate || estimateLead(cleanLead);
+  const customerScope = compactDetails?.customerScope || generateServiceScope(cleanLead);
+  const aiSummary = compactDetails?.aiSummary || generateAISummary(cleanLead, estimate);
   const leadQuality = scoreLeadQuality(cleanLead);
   const giveawayEligibility = getGiveawayEligibility(
     estimate.recommendedEstimateIncGst,
@@ -811,8 +875,12 @@ app.post('/api/subscriptions', leadRateLimit, async (req, res) => {
   });
 });
 
-const port = Number(process.env.PORT || 3000);
-app.listen(port, () => {
-  startDailyBackupScheduler(readLeads);
-  console.log(`Backend running on http://localhost:${port}`);
-});
+export { app };
+
+if (process.env.NODE_ENV !== 'test') {
+  const port = Number(process.env.PORT || 3000);
+  app.listen(port, () => {
+    startDailyBackupScheduler(readLeads);
+    console.log(`Backend running on http://localhost:${port}`);
+  });
+}

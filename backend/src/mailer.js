@@ -8,6 +8,10 @@ const EMAIL_SOCKET_TIMEOUT_MS = 12_000;
 const EMAIL_SEND_TIMEOUT_MS = 15_000;
 const MAX_WEBHOOK_ATTACHMENT_BYTES = 15 * 1024 * 1024;
 
+function isDeliveryDisabled() {
+  return String(process.env.LEAD_DELIVERY_MODE || '').toLowerCase() === 'disabled' || process.env.NODE_ENV === 'test';
+}
+
 function toText(value) {
   return String(value ?? '').trim();
 }
@@ -206,7 +210,9 @@ export function buildLeadText(lead) {
     `- Address/Suburb: ${toText(lead?.address)}`,
     '',
     'Quote Inputs',
+    `- Form variant: ${toText(lead?.formVariant) || 'full_quote'}`,
     `- Service: ${toText(lead?.service)}`,
+    `- Canonical service ID: ${toText(lead?.serviceId) || 'Not supplied'}`,
     `- Pricing item code: ${toText(lead?.pricingItemCode)}`,
     `- Priced line items: ${pricedLineText}`,
     `- Property type: ${toText(lead?.propertyType)}`,
@@ -231,6 +237,12 @@ export function buildLeadText(lead) {
     `- Preferred time: ${toText(lead?.preferredTime)}`,
     `- Subscription package: ${toText(lead?.subscriptionPackage)}`,
     `- Terms accepted: ${boolLabel(Boolean(lead?.agree))}`,
+    `- Lead source: ${toText(lead?.marketingAttribution?.source) || 'direct'}`,
+    `- Landing page: ${toText(lead?.marketingAttribution?.landingPagePath) || 'Not supplied'}`,
+    `- UTM source: ${toText(lead?.marketingAttribution?.utmSource) || 'Not supplied'}`,
+    `- UTM medium: ${toText(lead?.marketingAttribution?.utmMedium) || 'Not supplied'}`,
+    `- UTM campaign: ${toText(lead?.marketingAttribution?.utmCampaign) || 'Not supplied'}`,
+    `- Google click IDs present: gclid=${boolLabel(Boolean(lead?.marketingAttribution?.gclid))}, gbraid=${boolLabel(Boolean(lead?.marketingAttribution?.gbraid))}, wbraid=${boolLabel(Boolean(lead?.marketingAttribution?.wbraid))}`,
     '',
     `Add-ons: ${addons.length ? addons.join(', ') : 'None'}`,
     `Customer notes: ${toText(lead?.notes) || 'None'}`,
@@ -381,6 +393,13 @@ async function sendStructuredSubmissionEmail({ title, subject, submission, photo
 }
 
 export async function sendLeadEmail(lead) {
+  if (isDeliveryDisabled()) {
+    return {
+      sent: false,
+      message: 'Delivery disabled for isolated test environment.',
+    };
+  }
+
   const subject = `New Quote Lead - ${toText(lead?.firstName) || 'Customer'} - ${toText(lead?.service) || 'Service'}`;
   const text = buildLeadText(lead);
   const webhookResult = await sendEmailViaWebhook({

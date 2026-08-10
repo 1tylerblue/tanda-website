@@ -700,7 +700,7 @@
               ${avatarMarkup(review, "review-avatar-mini")}
               <span><strong>${escapeHtml(review.name)}</strong><small>${escapeHtml(review.source)} review${usedFallback ? " | related proof" : ""}</small></span>
             </div>
-            <a class="btn-primary" href="../index.html#quote">Get Quote</a>
+            <a class="btn-primary" href="#service-quote">Get Quote</a>
           </div>
           <div class="service-case-media">
             ${photos.map((photo) => `

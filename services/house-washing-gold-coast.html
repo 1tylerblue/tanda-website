@@ -71,7 +71,7 @@
         <a class="nav-referrals" href="../referrals.html">Get Paid</a>
         <a href="../index.html#about">About</a>
         <a href="../index.html#contact">Contact</a>
-        <a href="../index.html#quote">Quote</a>
+        <a href="#service-quote" data-service-quote-link data-service-id="house_washing">Quote</a>
         <a class="btn btn-outline" href="tel:0466224927">Call Now</a>
       </nav>
     </div>
@@ -80,6 +80,7 @@
   <main id="main-content">
     <section class="inner-hero service-page-hero">
       <div class="container">
+        <div class="service-page-hero-copy">
         <p class="breadcrumb"><a href="../index.html">Home</a> / <a href="../areas/gold-coast.html">Gold Coast</a> / House Washing</p>
         <h1>House Washing in Gold Coast</h1>
         <p>House washing for exterior walls, facades, eaves, entry areas and presentation cleaning where a gentler approach is required.</p>
@@ -88,6 +89,15 @@
           <span class="inner-meta-pill">Fully insured and ABN registered local team</span>
           <span class="inner-meta-pill">Quote scope confirmed before booking</span>
         </div>
+        </div>
+        <div class="service-quote-panel" id="service-quote" data-service-quote-panel>
+          <form class="service-quote-form" data-service-quote-form data-service-id="house_washing" novalidate>
+            <p class="eyebrow">Fast local quote</p><h2>Get a House-Washing Quote</h2><p class="service-quote-selected">Service selected: <strong data-selected-service>House Washing / Soft Washing</strong></p>
+            <div class="service-quote-fields"><label>First name<input name="firstName" type="text" autocomplete="given-name" required /></label><label>Mobile number<input name="phone" type="tel" inputmode="tel" autocomplete="tel" required /></label><label class="service-quote-full">Suburb or postcode<input name="address" type="text" autocomplete="postal-code" required /></label><label class="service-quote-full">Email <span>(optional)</span><input name="email" type="email" inputmode="email" autocomplete="email" /></label><label class="service-quote-full">Anything we should know? <span>(optional)</span><textarea name="notes" rows="2" maxlength="2000"></textarea></label><label class="service-quote-full service-quote-upload">Photos <span>(optional)</span><input name="photoUpload" type="file" accept="image/jpeg,image/png,image/webp" multiple /></label></div>
+            <input class="service-quote-honeypot" name="website" type="text" tabindex="-1" autocomplete="off" aria-hidden="true" /><label class="service-quote-consent"><input name="agree" type="checkbox" required /> I agree to the <a href="../terms.html">Terms</a> and <a href="../privacy.html">Privacy Policy</a>.</label><button class="btn btn-primary service-quote-submit" type="submit">Get a Fast Quote</button>
+          </form><p class="service-quote-status" data-service-quote-status role="status" aria-live="polite" hidden></p>
+        </div>
+<button class="service-quote-sticky" type="button" data-service-quote-scroll hidden>Get a Fast Quote</button>
       </div>
     </section>
 
@@ -179,7 +189,7 @@
             <p>Send through the scope and the team will confirm the best booking path for your property.</p>
           </div>
           <div class="service-conversion-actions">
-            <a class="btn btn-primary" href="../index.html#quote">Get Free Quote</a>
+            <a class="btn btn-primary" href="#service-quote" data-service-quote-link data-service-id="house_washing">Get Free Quote</a>
             <a class="btn btn-outline" href="tel:0466224927">Call Now</a>
           </div>
         </div>
@@ -231,8 +241,12 @@
       <button type="button" id="cookie-decline" class="btn-primary">Deny Analytics</button>
     </div>
   </div>
+<script>
+  if (!['localhost', '127.0.0.1'].includes(window.location.hostname)) window.__API_BASE__ = 'https://tanda-pro-cleaning-api.onrender.com';
+</script>
 <script defer src="../analytics.js?v=20260807-funnel-transport"></script>
   <script defer src="../app.js?v=20260723-conversion-tracking-2"></script>
+  <script type="module" src="../service-quote.js?v=20260810-service-landing"></script>
   <script defer src="../reviews.js"></script>
 </body>
 </html>
