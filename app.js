@@ -26,9 +26,13 @@
   const GIVEAWAY_CONFIG = {
     unlockEntryTarget: 50,
     minimumEligibleJobValueExGst: 495,
-    campaignName: 'Monthly Client Giveaway',
-    startsAt: '2026-07-20T07:30:00+10:00',
-    endsAt: '2026-08-21T20:30:00+10:00',
+    campaignName: 'T&A PRO Cleaning Giveaway Campaign',
+    startsAt: '2026-08-24T00:00:00+10:00',
+    endsAt: '2026-10-23T20:00:00+10:00',
+    startsLabel: '24 August 2026',
+    endsLabel: '23 October 2026 at 8:00 PM AEST',
+    campaignPeriodLabel: '24 August 2026 - 23 October 2026',
+    entriesCloseLabel: 'Entries close 23 October 2026 at 8:00 PM AEST.',
     entryStatusFallback: 'Verified entry totals will appear when live status is connected.',
   };
 
@@ -39,7 +43,7 @@
 
     if (![now, start, end].every(Number.isFinite) || start >= end) return 'unconfigured';
     if (now < start) return 'upcoming';
-    if (now <= end) return 'active';
+    if (now < end) return 'active';
     return 'closed';
   }
 
@@ -1510,13 +1514,13 @@
 
     const giveawayPhase = getGiveawayCampaignPhase();
     if (giveawayPhase === 'upcoming') {
-      giveawayNode.textContent = `Giveaway entries open ${formatGiveawayDate(GIVEAWAY_CONFIG.startsAt)}. Requests submitted before then are not counted.`;
+      giveawayNode.textContent = `Giveaway entries open ${GIVEAWAY_CONFIG.startsLabel}. Requests submitted before then are not counted.`;
     } else if (giveawayPhase === 'closed') {
-      giveawayNode.textContent = `This giveaway closed ${formatGiveawayDate(GIVEAWAY_CONFIG.endsAt)}.`;
+      giveawayNode.textContent = `This giveaway closed ${GIVEAWAY_CONFIG.endsLabel}.`;
     } else if (result.eligibleForGiveaway) {
-      giveawayNode.textContent = 'Eligible quote requests may be reviewed for the current monthly giveaway after the team confirms scope and campaign requirements.';
+      giveawayNode.textContent = 'Eligible quote requests may be reviewed for the T&A PRO Cleaning Giveaway Campaign after the team confirms scope and campaign requirements.';
     } else {
-      giveawayNode.textContent = 'Eligible quote requests may be reviewed for the current monthly giveaway; giveaway participation is separate from quote approval and booking.';
+      giveawayNode.textContent = 'Eligible quote requests may be reviewed for the T&A PRO Cleaning Giveaway Campaign; giveaway participation is separate from quote approval and booking.';
     }
 
     panel.hidden = false;
@@ -3515,6 +3519,7 @@
       const pending = countdown.querySelector('[data-countdown-pending]');
       const dateLabel = countdown.querySelector('[data-countdown-date]');
       const title = countdown.querySelector('[data-countdown-title]');
+      const statusLabel = countdown.querySelector('[data-countdown-status]');
 
       if (!Number.isFinite(startTimestamp) || !Number.isFinite(endTimestamp) || startTimestamp >= endTimestamp) {
         countdown.dataset.state = 'unconfigured';
@@ -3526,7 +3531,7 @@
       if (live instanceof HTMLElement) live.hidden = false;
       if (pending instanceof HTMLElement) pending.hidden = true;
       if (dateLabel instanceof HTMLElement) {
-        dateLabel.textContent = `${formatGiveawayDate(startTimestamp)} - ${formatGiveawayDate(endTimestamp)}`;
+        dateLabel.textContent = `${GIVEAWAY_CONFIG.campaignPeriodLabel}. ${GIVEAWAY_CONFIG.entriesCloseLabel}`;
       }
 
       const updateUnit = (selector, value) => {
@@ -3554,25 +3559,41 @@
 
         if (phase === 'upcoming') {
           countdown.dataset.state = 'upcoming';
+          if (statusLabel instanceof HTMLElement) statusLabel.textContent = 'Giveaway Not Yet Open';
           if (title instanceof HTMLElement) title.textContent = 'Campaign Opens In';
           if (live instanceof HTMLElement) live.setAttribute('aria-label', 'Time remaining until giveaway entries open');
         } else if (phase === 'active') {
           countdown.dataset.state = 'active';
+          if (statusLabel instanceof HTMLElement) statusLabel.textContent = 'Giveaway Open';
           if (title instanceof HTMLElement) title.textContent = 'Campaign Closes In';
           if (live instanceof HTMLElement) live.setAttribute('aria-label', 'Time remaining until giveaway entries close');
         } else if (phase === 'closed') {
           countdown.dataset.state = 'complete';
+          if (statusLabel instanceof HTMLElement) statusLabel.textContent = 'Giveaway Closed';
           if (title instanceof HTMLElement) title.textContent = 'Campaign Closed';
           if (live instanceof HTMLElement) live.hidden = true;
           if (pending instanceof HTMLElement) {
             pending.hidden = false;
-            pending.textContent = `Entries closed ${formatGiveawayDate(endTimestamp)}.`;
+            pending.textContent = `Entries closed ${GIVEAWAY_CONFIG.endsLabel}.`;
           }
         }
       };
 
       updateCountdown();
       window.setInterval(updateCountdown, 1000);
+    });
+  }
+
+  function syncGiveawayCampaignState() {
+    const phase = getGiveawayCampaignPhase();
+    const entryCtas = document.querySelectorAll('[data-giveaway-entry-cta]');
+
+    entryCtas.forEach((cta) => {
+      if (!(cta instanceof HTMLElement)) return;
+      if (phase === 'closed') {
+        cta.textContent = 'Get a Free Quote';
+        cta.setAttribute('aria-label', 'Get a free quote from T&A Pro Cleaning');
+      }
     });
   }
 
@@ -3617,7 +3638,7 @@
         return;
       }
       if (campaignPhase === 'closed') {
-        node.textContent = `Entries closed ${formatGiveawayDate(GIVEAWAY_CONFIG.endsAt)}.`;
+        node.textContent = `Entries closed ${GIVEAWAY_CONFIG.endsLabel}.`;
         return;
       }
       if (isUnavailable) {
@@ -3628,7 +3649,7 @@
         node.textContent = 'Giveaway unlock target reached. Eligible entries are being reviewed for the current campaign.';
         return;
       }
-      node.textContent = `${remaining} more eligible entr${remaining === 1 ? 'y' : 'ies'} needed before the monthly giveaway unlocks.`;
+      node.textContent = `${remaining} more eligible entr${remaining === 1 ? 'y' : 'ies'} needed before the campaign unlock target is reached.`;
     });
 
     progressNodes.forEach((node) => {
@@ -3645,7 +3666,7 @@
       if (isUnavailable) {
         node.textContent = 'Live verified progress is temporarily unavailable';
       } else if (campaignPhase === 'upcoming') {
-        node.textContent = 'Entry counting begins 20 July 2026 at 7:30 am AEST';
+        node.textContent = `Entry counting begins ${GIVEAWAY_CONFIG.startsLabel}`;
       } else if (campaignPhase === 'closed') {
         node.textContent = `Final verified campaign total: ${entries}`;
       } else {
@@ -3749,6 +3770,7 @@
     setupMobileNav();
     setupRevealAnimations();
     setupHeroAmbientMotion();
+    syncGiveawayCampaignState();
     setupGiveawayCountdown();
     initCookieConsent();
     setupFunnelTracking();

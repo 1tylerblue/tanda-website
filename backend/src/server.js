@@ -13,8 +13,8 @@ const app = express();
 
 const GIVEAWAY_THRESHOLD = 50;
 const GIVEAWAY_MIN_ESTIMATE = 495;
-const GIVEAWAY_STARTS_AT = '2026-07-20T07:30:00+10:00';
-const GIVEAWAY_ENDS_AT = '2026-08-21T20:30:00+10:00';
+const GIVEAWAY_STARTS_AT = '2026-08-24T00:00:00+10:00';
+const GIVEAWAY_ENDS_AT = '2026-10-23T20:00:00+10:00';
 const GIVEAWAY_START_MS = Date.parse(GIVEAWAY_STARTS_AT);
 const GIVEAWAY_END_MS = Date.parse(GIVEAWAY_ENDS_AT);
 const BUSINESS_EMAIL = 'tandaprocleaning@gmail.com';
@@ -388,7 +388,7 @@ function validateSubscriptionSubmission(subscription) {
 
 function isWithinGiveawayCampaign(referenceDate = new Date()) {
   const timestamp = referenceDate instanceof Date ? referenceDate.getTime() : Date.parse(referenceDate);
-  return Number.isFinite(timestamp) && timestamp >= GIVEAWAY_START_MS && timestamp <= GIVEAWAY_END_MS;
+  return Number.isFinite(timestamp) && timestamp >= GIVEAWAY_START_MS && timestamp < GIVEAWAY_END_MS;
 }
 
 function isGiveawayLeadInCampaign(lead) {
@@ -400,7 +400,7 @@ function getGiveawayState(leads, now = new Date()) {
   const nowTimestamp = now instanceof Date ? now.getTime() : Date.parse(now);
   const giveawayEntries = leads.filter(isGiveawayLeadInCampaign).length;
   const giveawayStarted = Number.isFinite(nowTimestamp) && nowTimestamp >= GIVEAWAY_START_MS;
-  const giveawayEnded = Number.isFinite(nowTimestamp) && nowTimestamp > GIVEAWAY_END_MS;
+  const giveawayEnded = Number.isFinite(nowTimestamp) && nowTimestamp >= GIVEAWAY_END_MS;
   const giveawayOpen = giveawayStarted && !giveawayEnded;
   const giveawayUnlocked = giveawayEntries >= GIVEAWAY_THRESHOLD;
 
