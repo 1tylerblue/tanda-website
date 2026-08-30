@@ -5,3 +5,5 @@ node_modules/
 backend/data/
 backend/backups/
 npm-debug.log*
+.playwright-cli/
+output/
