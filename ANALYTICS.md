@@ -67,6 +67,7 @@ Never allowed: names, phone numbers, emails, addresses, precise location, notes,
 | `service_clicked` | Service card/link action | service, section, element type/position, safe destination | interaction UUID | Service interest |
 | `cta_clicked` | Known CTA action | CTA ID/label, placement, destination, service, scroll/estimate state | interaction UUID | Behaviour/conversion |
 | `contact_clicked` | Phone, email or SMS link | contact type, placement, section, service | interaction UUID | Conversion |
+| `messenger_button_clicked` | Floating Messenger contact button opens | CTA/contact type, placement, safe destination, page/device category | interaction UUID | Conversion |
 | `quote_form_viewed` | Quote form reaches 20% visibility | form ID/location, trigger | page view | Quote funnel |
 | `quote_form_started` | First meaningful form interaction | form, safe step | anonymous journey | Quote funnel |
 | `quote_step_viewed` | First view of a safe funnel step | step, previous step, trigger | page + step | Quote funnel |

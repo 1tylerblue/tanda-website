@@ -71,6 +71,31 @@ test('custom events allow safe schema properties and remove personal information
   assert.equal(analytics.sanitizeEvent('made_up_event', {}), null);
 });
 
+test('messenger button click keeps only privacy-safe contact properties', () => {
+  const event = analytics.sanitizeEvent('messenger_button_clicked', {
+    cta_id: 'messenger_bottom_right',
+    cta_label: 'message_us',
+    placement: 'floating_contact',
+    destination_type: 'social',
+    contact_type: 'messenger',
+    page_path: '/services/window-cleaning-gold-coast.html?name=private',
+    message: 'private customer message',
+    phone: '0400 000 000',
+  });
+
+  assert.deepEqual(event, {
+    event: 'messenger_button_clicked',
+    properties: {
+      cta_id: 'messenger_bottom_right',
+      cta_label: 'message_us',
+      placement: 'floating_contact',
+      destination_type: 'social',
+      contact_type: 'messenger',
+      page_path: '/services/window-cleaning-gold-coast.html',
+    },
+  });
+});
+
 test('autocapture envelopes keep heatmap geometry but remove text and attributes', () => {
   const event = analytics.sanitizePostHogEnvelope({
     event: '$autocapture',

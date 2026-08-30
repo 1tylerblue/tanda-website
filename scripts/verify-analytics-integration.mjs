@@ -34,12 +34,16 @@ for (const file of htmlFiles) {
   const relative = path.relative(root, file).replaceAll('\\', '/');
   const isRedirect = relative === 'reviews.html';
   const analyticsMatches = html.match(/<script\b[^>]*\bsrc=["'][^"']*analytics\.js(?:\?[^"']*)?["'][^>]*><\/script>/gi) || [];
+  const messengerMatches = html.match(/<script\b[^>]*\bsrc=["'][^"']*messenger-button\.js(?:\?[^"']*)?["'][^>]*><\/script>/gi) || [];
   assert.equal(analyticsMatches.length, isRedirect ? 0 : 1, `${relative} must load analytics exactly once`);
+  assert.equal(messengerMatches.length, isRedirect ? 0 : 1, `${relative} must load the Messenger button exactly once`);
 
   if (!isRedirect) {
     const analyticsIndex = html.search(/analytics\.js/i);
+    const messengerIndex = html.search(/messenger-button\.js/i);
     const dependentIndex = html.search(/(?:app|subscription-builder|gallery|reviews)\.js/i);
     if (dependentIndex >= 0) assert.ok(analyticsIndex >= 0 && analyticsIndex < dependentIndex, `${relative} must load analytics before page scripts`);
+    assert.ok(analyticsIndex >= 0 && messengerIndex > analyticsIndex, `${relative} must load Messenger after analytics`);
   }
 
   for (const match of html.matchAll(/\b(?:href|src)=["']([^"']+)["']/gi)) {
@@ -52,6 +56,7 @@ assert.deepEqual(missing, [], `Missing local links/assets:\n${missing.join('\n')
 
 const appSource = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
 const analyticsSource = fs.readFileSync(path.join(root, 'analytics.js'), 'utf8');
+const messengerSource = fs.readFileSync(path.join(root, 'messenger-button.js'), 'utf8');
 const subscriptionSource = fs.readFileSync(path.join(root, 'subscription-builder.js'), 'utf8');
 const productionSources = walk(root)
   .filter((file) => /\.(?:html|js|mjs)$/i.test(file) && !file.includes(`${path.sep}test${path.sep}`) && !file.includes(`${path.sep}scripts${path.sep}`))
@@ -63,6 +68,9 @@ assert.match(appSource, /quote_submit_success/, 'Existing GA4 successful quote e
 assert.doesNotMatch(productionSources, /G-XXXXXXXXXX/, 'Fake GA4 placeholders must not exist');
 assert.doesNotMatch(analyticsSource, /identify\s*\(/, 'Anonymous visitors must never be identified');
 assert.doesNotMatch(analyticsSource, /phc_[A-Za-z0-9]{8,}/, 'No PostHog project key may be hard-coded');
+assert.match(analyticsSource, /messenger_button_clicked/, 'Messenger click event must remain allowlisted');
+assert.match(messengerSource, /https:\/\/m\.me\/tandaprocleaningservices/, 'Messenger button must use the approved m.me destination');
+assert.doesNotMatch(messengerSource, /connect\.facebook\.net|customerchat|FB\.init/i, 'Messenger contact must not use obsolete Facebook SDK or Customer Chat Plugin');
 assert.match(analyticsSource, /maskAllInputs:\s*true/, 'Session recording must mask every input');
 assert.match(analyticsSource, /blockSelector:\s*privacySelector/, 'Sensitive containers must be blocked');
 assert.match(analyticsSource, /enable_recording_console_log:\s*false/, 'Console recording must stay disabled');
@@ -79,4 +87,4 @@ assert.match(analyticsSource, /else if \(previousStep && previousStep !== stepId
 assert.match(appSource, /TandaAnalytics\?\.quoteSubmitted/, 'Quote success must connect to the central utility');
 assert.match(subscriptionSource, /TandaAnalytics\?\.subscriptionCompleted/, 'Subscription success must connect to the central utility');
 
-console.log(`Verified ${htmlFiles.length} HTML pages, 23 analytics loaders, zero missing local files, privacy guards, and preserved Google tracking.`);
+console.log(`Verified ${htmlFiles.length} HTML pages, 23 analytics loaders, 23 Messenger loaders, zero missing local files, privacy guards, and preserved Google tracking.`);

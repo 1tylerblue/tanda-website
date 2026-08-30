@@ -21,6 +21,7 @@
     'service_clicked',
     'cta_clicked',
     'contact_clicked',
+    'messenger_button_clicked',
     'quote_form_viewed',
     'quote_form_started',
     'quote_step_viewed',
