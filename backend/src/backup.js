@@ -99,6 +99,10 @@ export function writeDailyLeadBackup(leads, options = {}) {
 
   fs.writeFileSync(jsonPath, JSON.stringify(safeLeads, null, 2));
   fs.writeFileSync(csvPath, toCsv(safeLeads));
+  for (const name of ['subscriptions', 'giveaway-payments']) {
+    const source = path.resolve(process.cwd(), 'data', `${name}.json`);
+    if (fs.existsSync(source)) fs.copyFileSync(source, path.join(backupDir, `${name}-${stamp}.json`));
+  }
   cleanupOldBackups(backupDir, 60);
 
   return {

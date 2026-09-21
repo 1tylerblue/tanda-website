@@ -1,3 +1,7 @@
+import pricingEngine from '../../pricing-engine.js';
+import subscriptionPricing from '../../subscription-pricing.js';
+import giveawayPolicy from '../../giveaway-policy.js';
+import { createHash } from 'node:crypto';
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
@@ -12,7 +16,6 @@ import { getCachedTravelPricing, resolveTravelPricing } from './travel.js';
 const app = express();
 
 const GIVEAWAY_THRESHOLD = 50;
-const GIVEAWAY_MIN_ESTIMATE = 495;
 const GIVEAWAY_STARTS_AT = '2026-08-24T00:00:00+10:00';
 const GIVEAWAY_ENDS_AT = '2026-10-23T20:00:00+10:00';
 const GIVEAWAY_START_MS = Date.parse(GIVEAWAY_STARTS_AT);
@@ -52,7 +55,6 @@ const REQUIRED_FIELDS = [
   'pricingItemCode',
   'propertyType',
   'storeys',
-  'serviceArea',
   'scopeQuantity',
   'agree',
 ];
@@ -204,7 +206,7 @@ function normalizeLineItems(value) {
   return value
     .map((line) => ({
       code: toSafeString(line?.code),
-      quantity: Math.max(0, Number(line?.quantity) || 0),
+      quantity: Number(line?.quantity),
     }))
     .filter((line) => line.code)
     .slice(0, 12);
@@ -361,6 +363,7 @@ function validateReferralSubmission(referral) {
 }
 
 function validateSubscriptionSubmission(subscription) {
+  if (!isValidEmail(subscription?.customer?.email)) return 'Please enter a valid email address.';
   const checks = [
     [subscription?.customer?.fullName, 'Please enter your full name.'],
     [subscription?.customer?.phone, 'Please enter your phone number.'],
@@ -392,13 +395,29 @@ function isWithinGiveawayCampaign(referenceDate = new Date()) {
 }
 
 function isGiveawayLeadInCampaign(lead) {
-  const submittedAt = lead?.receivedAt || lead?.createdAt;
-  return Boolean(lead?.eligibleForGiveaway) && isWithinGiveawayCampaign(submittedAt);
+  return giveawayPolicy.qualifies(lead);
+}
+
+function submissionIdentity(body) {
+  const key = toSafeString(body.idempotencyKey);
+  if (key && !/^[a-zA-Z0-9-]{16,80}$/.test(key)) throw new Error('Invalid submission key.');
+  const clean = { ...body };
+  delete clean.idempotencyKey; delete clean.formElapsedMs; delete clean.clientSubmittedAt;
+  if (clean.meta) { clean.meta = { ...clean.meta }; delete clean.meta.submittedAt; }
+  return { idempotencyKey: key, submissionHash: createHash('sha256').update(JSON.stringify(clean)).digest('hex') };
+}
+function previousSubmission(records, identity, res, kind) {
+  if (!identity.idempotencyKey) return false;
+  const previous = records.find(record => record.idempotencyKey === identity.idempotencyKey);
+  if (!previous) return false;
+  if (previous.submissionHash !== identity.submissionHash) res.status(409).json({ error: 'This request changed. Refresh the form and retry with the updated details.' });
+  else res.status(200).json({ ...previous, [kind]: previous, duplicate: true, deliveryStatus: { email: 'Previously saved; team delivery queued', commandCentre: 'Saved to T & A Command Centre' } });
+  return true;
 }
 
 function getGiveawayState(leads, now = new Date()) {
   const nowTimestamp = now instanceof Date ? now.getTime() : Date.parse(now);
-  const giveawayEntries = leads.filter(isGiveawayLeadInCampaign).length;
+  const giveawayEntries = readSubmissions('giveaway-payments.json').filter(isGiveawayLeadInCampaign).length;
   const giveawayStarted = Number.isFinite(nowTimestamp) && nowTimestamp >= GIVEAWAY_START_MS;
   const giveawayEnded = Number.isFinite(nowTimestamp) && nowTimestamp >= GIVEAWAY_END_MS;
   const giveawayOpen = giveawayStarted && !giveawayEnded;
@@ -416,6 +435,8 @@ function getGiveawayState(leads, now = new Date()) {
     giveawayEndsAt: new Date(GIVEAWAY_END_MS).toISOString(),
   };
 }
+
+app.get('/api/health', (_req, res) => res.json({ ok: true, pricingVersion: pricingEngine.PRICING_CONFIG.version }));
 
 app.get('/api/stats', (_req, res) => {
   const leads = readLeads();
@@ -462,6 +483,8 @@ app.get('/api/travel-distance', travelRateLimit, async (req, res) => {
 
 app.post('/api/leads', leadRateLimit, async (req, res) => {
   const body = req.body || {};
+  let identity;
+  try { identity = submissionIdentity(body); } catch (error) { return res.status(400).json({ error: error.message }); }
   const photoUploads = normalizePhotoUploads(body.photoUploads);
   const verifiedTravel = getCachedTravelPricing(body.address);
 
@@ -478,7 +501,7 @@ app.post('/api/leads', leadRateLimit, async (req, res) => {
     storeys: toSafeString(body.storeys),
     rooms: toSafeString(body.rooms),
     serviceArea: toSafeString(body.serviceArea),
-    scopeQuantity: Math.max(0, Number(body.scopeQuantity) || 0),
+    scopeQuantity: Number(body.scopeQuantity),
     scopeUnit: toSafeString(body.scopeUnit),
     scopeDetail: toSafeString(body.scopeDetail),
     accessDifficulty: toSafeString(body.accessDifficulty),
@@ -522,6 +545,9 @@ app.post('/api/leads', leadRateLimit, async (req, res) => {
   }
 
   const leads = readLeads();
+  if (previousSubmission(leads, identity, res, 'lead')) return;
+  const pricingErrors = pricingEngine.validateInput(body);
+  if (pricingErrors.length) return res.status(400).json({ error: pricingErrors.join(' ') });
   const spamError = validateAntiSpam(body, cleanLead, leads);
   if (spamError) {
     return res.status(400).json({
@@ -533,13 +559,16 @@ app.post('/api/leads', leadRateLimit, async (req, res) => {
   const customerScope = generateServiceScope(cleanLead);
   const aiSummary = generateAISummary(cleanLead, estimate);
   const leadQuality = scoreLeadQuality(cleanLead);
-  const eligibleForGiveaway = isWithinGiveawayCampaign() && estimate.recommendedEstimate >= GIVEAWAY_MIN_ESTIMATE;
+  const eligibleForGiveaway = isWithinGiveawayCampaign() && estimate.eligibleForGiveaway;
   const leadId = `${Date.now()}-${Math.floor(Math.random() * 1000)}`;
   const savedPhotos = savePhotoUploads(leadId, photoUploads);
 
   const lead = {
     id: leadId,
+    ...identity,
     ...cleanLead,
+    paymentStatus: 'unpaid',
+    giveawayEntryConfirmed: false,
     customerScope,
     photoUploads: savedPhotos,
     photoUploadCount: savedPhotos.length,
@@ -559,6 +588,7 @@ app.post('/api/leads', leadRateLimit, async (req, res) => {
     estimateGuidance: estimate.estimateGuidance,
     accuracyLevel: estimate.accuracyLevel,
     manualReviewRequired: estimate.manualReviewRequired,
+    automaticPricingUnavailable: Boolean(estimate.automaticPricingUnavailable),
     photoRequired: estimate.photoRequired,
     calculationBreakdown: estimate.calculationBreakdown,
     internalCalculation: estimate.internalCalculation,
@@ -604,6 +634,7 @@ app.post('/api/leads', leadRateLimit, async (req, res) => {
     estimateGuidance: estimate.estimateGuidance,
     accuracyLevel: estimate.accuracyLevel,
     manualReviewRequired: estimate.manualReviewRequired,
+    automaticPricingUnavailable: Boolean(estimate.automaticPricingUnavailable),
     photoRequired: estimate.photoRequired,
     calculationBreakdown: estimate.calculationBreakdown,
     customerScope,
@@ -707,21 +738,29 @@ app.post('/api/referrals', leadRateLimit, async (req, res) => {
 
 app.post('/api/subscriptions', leadRateLimit, async (req, res) => {
   const body = parsePayload(req.body || {});
+  let calculated, identity;
+  try { calculated = subscriptionPricing.calculatePricing(body.pricingInput); identity = submissionIdentity(body); }
+  catch (error) { return res.status(400).json({ error: error.message }); }
+  const subscriptions = readSubmissions('subscriptions.json');
+  if (previousSubmission(subscriptions, identity, res, 'subscription')) return;
   const photoUploads = normalizePhotoUploads(body.photoUploads);
 
   const subscription = {
     id: makeSubmissionId('subscription'),
     type: 'subscription_builder',
-    plan: body.plan && typeof body.plan === 'object' ? body.plan : {},
+    ...identity,
+    pricingInput: body.pricingInput,
+    pricing: calculated,
+    plan: { selectedPlan: calculated.plan.label, firstCleanPrice: calculated.firstClean, recurringMonthlyPrice: calculated.recurring, annualRecurringPrice: calculated.annualRecurring, workers: calculated.worker.workerText, visits: calculated.worker.visits, gstNote: calculated.gstNote, firstBreakdown: calculated.firstBreakdown, recurringBreakdown: calculated.recurringBreakdown },
     customer: body.customer && typeof body.customer === 'object' ? body.customer : {},
     property: body.property && typeof body.property === 'object' ? body.property : {},
     access: body.access && typeof body.access === 'object' ? body.access : {},
-    services: Array.isArray(body.services) ? body.services : [],
+    services: calculated.services,
     addOns: body.addOns && typeof body.addOns === 'object' ? body.addOns : {},
     apartmentBalcony: body.apartmentBalcony && typeof body.apartmentBalcony === 'object' ? body.apartmentBalcony : {},
     scheduling: body.scheduling && typeof body.scheduling === 'object' ? body.scheduling : {},
     billing: body.billing && typeof body.billing === 'object' ? body.billing : {},
-    giveaway: body.giveaway && typeof body.giveaway === 'object' ? body.giveaway : {},
+    giveaway: { wantsGiveawayConsideration: Boolean(body.giveaway?.wantsGiveawayConsideration), eligibilityStatus: 'pending_payment_and_review' },
     notes: toSafeString(body.notes),
     photos: Array.isArray(body.photos) ? body.photos.map((item) => toSafeString(item)).filter(Boolean) : [],
     meta: body.meta && typeof body.meta === 'object' ? body.meta : {},
@@ -740,7 +779,6 @@ app.post('/api/subscriptions', leadRateLimit, async (req, res) => {
   subscription.photoUploads = savePhotoUploads(subscription.id, photoUploads);
   subscription.photoUploadCount = subscription.photoUploads.length;
 
-  const subscriptions = readSubmissions('subscriptions.json');
   subscriptions.push(subscription);
   writeSubmissions('subscriptions.json', subscriptions);
 

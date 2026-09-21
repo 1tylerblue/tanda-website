@@ -1,8 +1,8 @@
 (function initTAPricing(root, factory) {
-  const api = factory();
+  const api = factory(typeof module === 'object' && module.exports ? require('./money.js') : root.TAMoney);
   if (typeof module === 'object' && module.exports) module.exports = api;
   if (root) root.TAPricing = api;
-})(typeof globalThis !== 'undefined' ? globalThis : this, function createTAPricing() {
+})(typeof globalThis !== 'undefined' ? globalThis : this, function createTAPricing(Money) {
   'use strict';
 
   const item = (code, label, unit, rate, minimum = 0, options = {}) => ({
@@ -18,14 +18,16 @@
   const fixed = (code, label, rate, options = {}) => item(code, label, 'properties', rate, 0, { mode: 'fixed', ...options });
 
   const PRICING_CONFIG = {
-    version: 'T&A-MASTER-2026-07-11',
+    version: 'T&A-PROMOTIONS-2026-09-21',
     gstRate: 0.1,
     currency: 'AUD',
+    giveawayMinimumIncGstCents: 49500,
+    maximumAutomaticRoofArea: 150,
     groups: [
       {
         id: 'window-cleaning', label: 'Window Cleaning', items: [
           fixed('window_package_single', 'Single-storey complete window package', 450),
-          fixed('window_package_double', 'Double-storey complete window package', 650),
+          fixed('window_package_double', 'Double-storey complete window package', 650, { includedAccessTier: 'double' }),
           fixed('window_package_complex', 'Three-storey or complex property', 0, { manual: true, requiresPhotos: true }),
           item('window_standard_exterior', 'Standard window exterior', 'windows', 11, 180),
           item('window_standard_interior', 'Standard window interior', 'windows', 11, 180),
@@ -70,7 +72,8 @@
       {
         id: 'house-building-washing', label: 'House and Building Washing', items: [
           fixed('house_wash_single', 'Single-storey house wash', 550),
-          fixed('house_wash_double', 'Double-storey house wash', 880),
+          fixed('house_wash_double', 'Double-storey house wash', 880, { includedAccessTier: 'double' }),
+          fixed('house_mould_treatment', 'Mould treatment add-on', 250, { addonOnly: true, requiresPhotos: true }),
           fixed('house_wash_three', 'Three-storey house wash', 1250, { manual: true, fromPrice: true, requiresPhotos: true }),
           item('building_walls_single', 'Ground/single-storey exterior walls', 'square-metres', 6.5, 450),
           item('building_walls_double', 'Double-storey exterior walls', 'square-metres', 8.5, 650),
@@ -85,15 +88,15 @@
           item('roof_terracotta_single', 'Terracotta roof, single storey', 'square-metres', 12.8, 1280, { requiresPhotos: true }),
           item('roof_metal_single', 'Metal roof, single storey', 'square-metres', 8.5, 850, { requiresPhotos: true }),
           item('roof_treatment_only', 'Roof treatment only', 'square-metres', 6.5, 650, { requiresPhotos: true }),
-          fixed('roof_access_double', 'Double-storey roof access allowance', 250, { addonOnly: true, accessAllowance: true }),
-          fixed('roof_access_steep', 'Steep or complex roof allowance', 350, { addonOnly: true, accessAllowance: true, manual: true, requiresPhotos: true }),
+          fixed('roof_access_double', 'Double-storey roof access allowance', 250, { addonOnly: true, accessAllowance: true, includedAccessTier: 'double' }),
+          fixed('roof_access_steep', 'Steep or complex roof allowance', 350, { addonOnly: true, accessAllowance: true, includedAccessTier: 'harness', manual: true, requiresPhotos: true }),
           item('roof_solar_setup', 'Solar-panel protection and setup', 'arrays', 75, 0, { addonOnly: true }),
         ],
       },
       {
         id: 'gutter-cleaning', label: 'Gutter Cleaning', items: [
-          fixed('gutter_package_single', 'Standard single-storey home', 350),
-          fixed('gutter_package_double', 'Standard double-storey home', 495),
+          fixed('gutter_package_single', 'Single-storey gutter clean including patio roof', 300),
+          fixed('gutter_package_double', 'Standard double-storey home', 495, { includedAccessTier: 'double' }),
           item('gutter_single', 'Single-storey gutters', 'linear-metres', 9, 300),
           item('gutter_double', 'Double-storey gutters', 'linear-metres', 12.5, 450),
           item('gutter_guard', 'Gutter-guard cleaning allowance', 'linear-metres', 8, 150, { addonOnly: true }),
@@ -111,7 +114,7 @@
       },
       {
         id: 'carpet-cleaning', label: 'Carpet Cleaning', items: [
-          item('carpet_standard_bedroom', 'Standard bedroom up to 14 m2', 'rooms', 35, 120),
+          item('carpet_standard_bedroom', 'Standard bedroom up to 14 m2', 'rooms', 35, 0, { mode: 'carpet-rooms' }),
           item('carpet_large_room', 'Large bedroom or office, 15-25 m2', 'rooms', 55, 120),
           item('carpet_lounge', 'Lounge/living room up to 30 m2', 'rooms', 70, 120),
           item('carpet_extra_area', 'Area above room allowance', 'square-metres', 4, 0, { addonOnly: true }),
@@ -325,11 +328,15 @@
   }
 
   function money(value) {
-    return `$${number(value).toLocaleString('en-AU', { minimumFractionDigits: Number.isInteger(number(value)) ? 0 : 2, maximumFractionDigits: 2 })}`;
+    return `${number(value) < 0 ? '-' : ''}$${Math.abs(number(value)).toLocaleString('en-AU', { minimumFractionDigits: Number.isInteger(number(value)) ? 0 : 2, maximumFractionDigits: 2 })}`;
   }
 
   function roundMoney(value) {
-    return Math.round((number(value) + Number.EPSILON) * 100) / 100;
+    return Money.toCents(value) / 100;
+  }
+
+  function isGiveawayValueEligible(totalIncGst) {
+    return Number.isFinite(Number(totalIncGst)) && Math.round(Number(totalIncGst) * 100) >= PRICING_CONFIG.giveawayMinimumIncGstCents;
   }
 
   function unitLabel(unit, quantity = 2) {
@@ -339,11 +346,12 @@
 
   function calculateRaw(entry, quantity) {
     const qty = Math.max(0, number(quantity));
+    if (entry.mode === 'carpet-rooms') return { raw: qty < 3 ? 120 : qty === 3 ? 90 : qty === 4 ? 110 : 120 + (qty - 5) * 35, unitRate: null, pricingNote: '1–2 rooms retain the catalogue $120 minimum; 3 rooms $90; 4 rooms $110; 5 rooms $120; extra rooms $35 ex GST' };
     if (entry.mode === 'manual') return { raw: 0, unitRate: 0 };
     if (entry.mode === 'fixed') return { raw: number(entry.rate) * Math.max(1, qty || 1), unitRate: number(entry.rate) };
     if (entry.mode === 'tiered-rate') {
       const tier = entry.tiers.find((candidate) => candidate.max === null || qty <= candidate.max) || entry.tiers.at(-1);
-      return { raw: qty * number(tier.rate), unitRate: number(tier.rate) };
+      return { raw: Money.scaleCents(Money.toCents(tier.rate), qty) / 100, unitRate: number(tier.rate) };
     }
     if (entry.mode === 'solar-tier') {
       if (qty <= 12) return { raw: 150, unitRate: null, pricingNote: 'Up to 12 panels' };
@@ -355,20 +363,47 @@
       if (qty <= 0) return { raw: 0, unitRate: number(entry.rate) };
       return { raw: number(entry.rate) + Math.max(0, qty - 1) * number(entry.additionalRate), unitRate: number(entry.rate), pricingNote: `${money(entry.rate)} first bin, ${money(entry.additionalRate)} each additional bin` };
     }
-    return { raw: qty * number(entry.rate), unitRate: number(entry.rate) };
+    return { raw: Money.scaleCents(Money.toCents(entry.rate), qty) / 100, unitRate: number(entry.rate) };
   }
 
   function normalizeLineItems(input) {
     if (Array.isArray(input.lineItems) && input.lineItems.length) return input.lineItems;
-    if (input.pricingItemCode) return [{ code: input.pricingItemCode, quantity: input.scopeQuantity || 1 }];
+    if (input.pricingItemCode) return [{ code: input.pricingItemCode, quantity: input.scopeQuantity ?? 1 }];
     return [];
   }
 
+  function validateInput(input = {}) {
+    const errors = [];
+    if (input.promoCode || input.couponCode) errors.push('Promotional codes cannot be combined with this campaign.');
+    const lines = normalizeLineItems(input);
+    if (!lines.length || lines.length > 12) errors.push('Choose between 1 and 12 service items.');
+    const seen = new Set();
+    for (const line of lines) {
+      const entry = itemByCode.get(String(line.code || ''));
+      if (!entry) { errors.push('Unknown service item.'); continue; }
+      if (seen.has(entry.code)) errors.push('Combine quantities for the same service item.');
+      seen.add(entry.code);
+      const quantity = Number(line.quantity);
+      const whole = !['square-metres', 'linear-metres', 'labour-hours'].includes(entry.unit);
+      if (line.quantity === '' || line.quantity == null || !Number.isFinite(quantity) || quantity <= 0 || quantity > 10000 || (whole && !Number.isInteger(quantity)) || (entry.mode === 'fixed' && quantity !== 1)) {
+        errors.push(`Enter ${entry.mode === 'fixed' ? 'one package' : whole ? 'a whole quantity from 1 to 10000' : 'a quantity greater than zero and at most 10000'} for ${entry.label}.`);
+      }
+    }
+    return errors;
+  }
+
   function adjustmentAmount(base, multiplier) {
-    return roundMoney(base * (number(multiplier, 1) - 1));
+    return (Money.scaleCents(Money.toCents(base), number(multiplier, 1)) - Money.toCents(base)) / 100;
   }
 
   function calculateEstimate(input = {}) {
+    const validationErrors = validateInput(input);
+    if (validationErrors.length) return {
+      validationErrors, estimateMin: null, estimateMax: null, estimateMinIncGst: null, estimateMaxIncGst: null,
+      recommendedEstimate: null, recommendedEstimateIncGst: null, estimateLabel: validationErrors[0], recommendedEstimateLabel: validationErrors[0],
+      automaticPricingUnavailable: true, manualReviewRequired: true, eligibleForGiveaway: false,
+      calculationBreakdown: { lines: [], automaticPricingUnavailable: true }, estimateReasons: validationErrors,
+    };
     const requestedLines = normalizeLineItems(input);
     const resolvedLines = [];
     const issues = [];
@@ -404,12 +439,49 @@
       issues.push('Choose a precise service item and quantity to calculate a price.');
     }
 
+    if (resolvedLines.some((line) => line.groupId === 'roof-cleaning' && line.unit === 'square-metres' && line.quantity > PRICING_CONFIG.maximumAutomaticRoofArea)) {
+      const inspectionLabel = 'Large roof — inspection required';
+      return {
+        estimateMin: null,
+        estimateMax: null,
+        estimateMinIncGst: null,
+        estimateMaxIncGst: null,
+        recommendedEstimate: null,
+        recommendedEstimateIncGst: null,
+        recommendedEstimateLabel: inspectionLabel,
+        estimateLabel: inspectionLabel,
+        internalEstimateLabel: inspectionLabel,
+        pricingMethod: PRICING_CONFIG.version,
+        estimateReasons: [inspectionLabel, 'Roof areas above 150 m² require inspection before pricing.'],
+        estimatedJobType: 'Manual Review',
+        tailoredQuoteRecommended: true,
+        manualReviewRequired: true,
+        automaticPricingUnavailable: true,
+        photoRequired: true,
+        estimateGuidance: 'The complete entered area has been retained. Photographs or inspection and team review are required before a price can be confirmed.',
+        accuracyLevel: 'Low',
+        eligibleForGiveaway: false,
+        calculationBreakdown: {
+          automaticPricingUnavailable: true,
+          lines: resolvedLines.map((line) => ({
+            code: line.code, group: line.groupLabel, label: line.label,
+            quantity: line.quantity, unit: line.unit, unitLabel: unitLabel(line.unit, line.quantity),
+            unitRateExGst: null, minimumExGst: null, subtotalExGst: null,
+            pricingNote: 'Inspection required',
+          })),
+          groups: [], adjustments: [], servicesSubtotalExGst: null,
+          subtotalExGst: null, gst: null, totalIncGst: null,
+        },
+        internalCalculation: { pricingVersion: PRICING_CONFIG.version, automaticPricingUnavailable: true },
+      };
+    }
+
     const grouped = new Map();
     resolvedLines.forEach((line) => {
       if (!grouped.has(line.groupId)) grouped.set(line.groupId, { groupId: line.groupId, groupLabel: line.groupLabel, lines: [], raw: 0, minimum: 0, hasMain: false });
       const group = grouped.get(line.groupId);
       group.lines.push(line);
-      group.raw += line.rawSubtotalExGst;
+      group.raw = (Money.toCents(group.raw) + Money.toCents(line.rawSubtotalExGst)) / 100;
       group.minimum = Math.max(group.minimum, number(line.minimum));
       if (!line.addonOnly) group.hasMain = true;
     });
@@ -426,7 +498,7 @@
       }
       const appliedSubtotal = Math.max(0, group.minimum, roundMoney(group.raw));
       const minimumAdjustment = roundMoney(Math.max(0, appliedSubtotal - group.raw));
-      servicesBase += appliedSubtotal;
+      servicesBase = (Money.toCents(servicesBase) + Money.toCents(appliedSubtotal)) / 100;
       groupSummaries.push({ ...group, rawSubtotalExGst: roundMoney(group.raw), appliedMinimumExGst: group.minimum, minimumAdjustmentExGst: minimumAdjustment, subtotalExGst: appliedSubtotal });
     });
     servicesBase = roundMoney(servicesBase);
@@ -443,20 +515,24 @@
     });
 
     const conditionAmount = adjustmentAmount(servicesBase, condition.multiplier);
-    const afterCondition = roundMoney(servicesBase + conditionAmount);
-    const accessAmount = adjustmentAmount(afterCondition, access.multiplier);
-    const afterAccess = roundMoney(afterCondition + accessAmount);
+    const afterCondition = (Money.toCents(servicesBase) + Money.toCents(conditionAmount)) / 100;
+    const accessBase = groupSummaries.reduce((total, group) => {
+      const covered = group.lines.some(line => line.includedAccessTier === input.accessDifficulty || (line.includedAccessTier === 'harness' && ['double', 'harness'].includes(input.accessDifficulty)));
+      return total + (covered ? 0 : Money.scaleCents(Money.toCents(group.subtotalExGst), number(condition.multiplier, 1)));
+    }, 0) / 100;
+    const accessAmount = adjustmentAmount(accessBase, access.multiplier);
+    const afterAccess = (Money.toCents(afterCondition) + Money.toCents(accessAmount)) / 100;
     const recurringAmount = adjustmentAmount(afterAccess, recurring.multiplier);
-    const afterRecurring = roundMoney(afterAccess + recurringAmount);
-    const timingAmount = roundMoney(afterRecurring * number(timing.rate));
-    const afterTiming = roundMoney(afterRecurring + timingAmount);
+    const afterRecurring = (Money.toCents(afterAccess) + Money.toCents(recurringAmount)) / 100;
+    const timingAmount = Money.scaleCents(Money.toCents(afterRecurring), number(timing.rate)) / 100;
+    const afterTiming = (Money.toCents(afterRecurring) + Money.toCents(timingAmount)) / 100;
     const bundleRate = eligibleServiceCount >= 3 ? PRICING_CONFIG.bundleDiscounts.threePlus : eligibleServiceCount === 2 ? PRICING_CONFIG.bundleDiscounts.two : 0;
-    const bundleDiscount = roundMoney(afterTiming * bundleRate);
-    const servicesAfterDiscount = roundMoney(afterTiming - bundleDiscount);
+    const bundleDiscount = Money.scaleCents(Money.toCents(afterTiming), bundleRate) / 100;
+    const servicesAfterDiscount = (Money.toCents(afterTiming) - Money.toCents(bundleDiscount)) / 100;
     const travelCharge = roundMoney(number(travel.amount));
-    const subtotalExGst = roundMoney(servicesAfterDiscount + travelCharge);
-    const gst = roundMoney(subtotalExGst * PRICING_CONFIG.gstRate);
-    const totalIncGst = roundMoney(subtotalExGst + gst);
+    const normalExGstCents = Money.toCents(servicesAfterDiscount) + Money.toCents(travelCharge);
+    const promotion = Money.promotion(normalExGstCents, 'one_off_service');
+    const { subtotalExGst, gst, totalIncGst } = promotion;
 
     const hasPrice = subtotalExGst > 0;
     const fromPrice = resolvedLines.some((line) => line.fromPrice) || manualReviewRequired;
@@ -464,7 +540,7 @@
       ? `${fromPrice ? 'From ' : ''}${money(totalIncGst)} incl. GST${manualReviewRequired ? ' - review required' : ''}`
       : 'Inspection required';
     const reasons = [
-      `${PRICING_CONFIG.version} rates used`,
+      'Approved service catalogue rates used',
       ...groupSummaries.filter((group) => group.minimumAdjustmentExGst > 0).map((group) => `${group.groupLabel} minimum applied once`),
       condition.multiplier !== 1 ? `${condition.label} allowance included` : condition.label,
       access.multiplier !== 1 ? `${access.label} allowance included` : access.label,
@@ -472,7 +548,8 @@
       timing.rate ? `${timing.label} loading included` : timing.label,
       bundleRate ? `${eligibleServiceCount >= 3 ? 'Three-service' : 'Two-service'} bundle discount included` : '',
       travel.label,
-      'GST added once at 10%',
+      promotion.campaign.label,
+      'GST added once at 10% after the campaign discount',
       photoRequired ? 'Photographs are required before confirmation' : '',
       manualReviewRequired ? 'Team review or inspection required before final confirmation' : '',
       resolvedLines.some((line) => line.removalDisclaimer) ? 'Complete stain or contamination removal is not guaranteed' : '',
@@ -480,6 +557,7 @@
     ].filter(Boolean);
 
     const calculationBreakdown = {
+      ...promotion,
       lines: resolvedLines.map((line) => ({
         code: line.code,
         group: line.groupLabel,
@@ -512,7 +590,10 @@
       totalIncGst,
     };
 
+
     return {
+      validationErrors,
+      classification: 'one_off_service',
       estimateMin: subtotalExGst,
       estimateMax: subtotalExGst,
       estimateMinIncGst: totalIncGst,
@@ -532,7 +613,7 @@
         ? 'This is a starting estimate only. Photographs or inspection and team confirmation are required.'
         : 'Calculated from the selected service, quantity and master price list. Final scope is confirmed before work starts.',
       accuracyLevel: manualReviewRequired ? 'Low' : photoRequired ? 'Medium' : 'High',
-      eligibleForGiveaway: subtotalExGst >= 495,
+      eligibleForGiveaway: isGiveawayValueEligible(totalIncGst),
       calculationBreakdown,
       internalCalculation: {
         pricingVersion: PRICING_CONFIG.version,
@@ -548,6 +629,7 @@
 
   function generateSummary(input, estimate) {
     const lineText = estimate.calculationBreakdown.lines.map((line) => `${line.quantity} ${line.unitLabel} of ${line.label}`).join(', ');
+    if (estimate.automaticPricingUnavailable) return `Large roof — inspection required. Requested scope: ${lineText}. The complete entered area is retained; no automatic price is available before inspection and team review.`;
     return `This estimate uses the T&A Pro Cleaning master price list for ${lineText || 'the selected cleaning scope'}. Service minimums are applied once per category and 10% GST is added once at the end.${estimate.manualReviewRequired ? ' Photographs or inspection and team confirmation are required.' : ' Final scope is confirmed before work starts.'}`;
   }
 
@@ -606,7 +688,9 @@
 
   return {
     PRICING_CONFIG,
+    validateInput,
     calculateEstimate,
+    isGiveawayValueEligible,
     generateSummary,
     buildServiceScope,
     getGroups: () => PRICING_CONFIG.groups,

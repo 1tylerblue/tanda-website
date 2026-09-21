@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /backend/
+Disallow: /tests/
+Disallow: /scripts/
+Sitemap: https://www.tandaprocleaning.com.au/sitemap.xml

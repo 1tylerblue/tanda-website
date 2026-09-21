@@ -1,0 +1,20 @@
+.promotion-panel{max-width:1180px;margin:1.25rem auto;padding:1.25rem 1.5rem;border:1px solid #cad9de;border-radius:16px;background:#f0f7f8;color:#12343b;box-sizing:border-box}
+.promotion-panel h2{font-size:clamp(1.25rem,3vw,1.8rem);margin:0 0 .5rem;color:#12343b}
+.promotion-panel p{margin:.5rem 0;line-height:1.6}
+.promotion-panel a{color:#075769;text-decoration:underline;font-weight:700}
+.promotion-prices{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:1rem;margin-top:1rem}
+.promotion-price{background:#fff;padding:1rem;border-radius:10px;min-width:0}
+.promotion-price h3{font-size:1rem;margin:0 0 .5rem}
+.promotion-price s,.package-price-line s{display:block;color:#52626b;font-size:.85em}
+.promotion-price strong{display:block;font-size:1.2rem}
+.promotion-price small{display:block;font-size:.9rem;line-height:1.5}
+.payment-instructions{font-size:1rem;line-height:1.6;color:#243d47;padding:1rem;background:#f0f7f8;border-radius:10px}
+.price-value s{font-size:1rem;font-weight:400;line-height:1.5}
+.price-value small{display:block;font-size:.9rem;line-height:1.5;font-weight:400}
+:focus-visible{outline:3px solid #087485;outline-offset:3px}
+.home-showcase-head .eyebrow,.gallery-pill,.review-card-footer a{color:#075b8a!important}
+.builder-stage-button.primary{background:#0867ad!important;color:#fff!important}
+html:has(#quote:target){scroll-behavior:auto}
+.address-travel-status{min-height:5em}
+.address-travel-status[hidden]{display:block!important;visibility:hidden}
+@media(max-width:600px){.promotion-panel{margin:1rem;padding:1rem}.price-value{overflow-wrap:anywhere}}

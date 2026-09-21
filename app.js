@@ -25,7 +25,7 @@
   const trackedScrollMilestones = new Set();
   const GIVEAWAY_CONFIG = {
     unlockEntryTarget: 50,
-    minimumEligibleJobValueExGst: 495,
+    minimumEligibleJobValueIncGstCents: 49500,
     campaignName: 'T&A PRO Cleaning Giveaway Campaign',
     startsAt: '2026-08-24T00:00:00+10:00',
     endsAt: '2026-10-23T20:00:00+10:00',
@@ -35,6 +35,11 @@
     entriesCloseLabel: 'Entries close 23 October 2026 at 8:00 PM AEST.',
     entryStatusFallback: 'Verified entry totals will appear when live status is connected.',
   };
+
+  function isGiveawayValueEligible(totalIncGst) {
+    if (window.TAPricing) return window.TAPricing.isGiveawayValueEligible(totalIncGst);
+    return Number.isFinite(Number(totalIncGst)) && Math.round(Number(totalIncGst) * 100) >= GIVEAWAY_CONFIG.minimumEligibleJobValueIncGstCents;
+  }
 
   function getGiveawayCampaignPhase(referenceDate = new Date()) {
     const now = referenceDate instanceof Date ? referenceDate.getTime() : Date.parse(referenceDate);
@@ -225,6 +230,8 @@
     window.gtag('event', eventName, eventParams);
   }
 
+  window.TandaAnalytics = { capture: trackEvent };
+
   function getTrackingLocation(element) {
     if (!(element instanceof Element)) return 'main';
     if (element.closest('header, nav')) return 'header';
@@ -336,7 +343,7 @@
   }
 
   function trackGoogleAdsConversion(sendTo, options = {}) {
-    if (!sendTo) {
+    if (!sendTo || !analyticsEnabled) {
       return false;
     }
 
@@ -406,99 +413,6 @@
   }
 
   // ===== Editable Smart Estimate Pricing Config (EX GST) =====
-  const SMART_ESTIMATE_CONFIG = {
-    gstRate: 0.1,
-    minimumExGst: 250,
-    rangeByComplexity: {
-      simple: { spread: 0.065, accuracy: 'High' },
-      moderate: { spread: 0.12, accuracy: 'Medium' },
-      complex: { spread: 0.2, accuracy: 'Low' },
-    },
-    discountRates: {
-      none: 0,
-      pensioner: 0.05,
-      disability: 0.05,
-      military: 0.05,
-      subcontractor: 0.1,
-    },
-    windowBaseByRoomsExGst: {
-      small: { min: 300, max: 380 },
-      medium: { min: 400, max: 480 },
-      large: { min: 500, max: 650 },
-      xl: { min: 650, max: 780 },
-    },
-    windowAICalibratedBaseExGst: {
-      small: {
-        interior: { min: 285, max: 335 },
-        exterior: { min: 295, max: 345 },
-        both: { min: 305, max: 365 },
-      },
-      medium: {
-        interior: { min: 355, max: 415 },
-        exterior: { min: 365, max: 425 },
-        both: { min: 380, max: 440 },
-      },
-    },
-    nonWindowBaseByServiceExGst: {
-      'Pressure Washing': { small: 320, medium: 460, large: 620, xl: 840 },
-      'Roof Cleaning': { small: 680, medium: 890, large: 1120, xl: 1450 },
-      'Builder Clean': { small: 350, medium: 480, large: 620, xl: 820 },
-      'Gutter Cleaning': { small: 280, medium: 360, large: 470, xl: 620 },
-      'Solar Panel Cleaning': { small: 260, medium: 330, large: 420, xl: 560 },
-      'Carpet Cleaning': { small: 300, medium: 420, large: 550, xl: 730 },
-      'Upholstery Cleaning': { small: 280, medium: 390, large: 520, xl: 700 },
-      'Tile & Grout Cleaning': { small: 390, medium: 560, large: 760, xl: 980 },
-      'Bin Cleaning': { small: 250, medium: 280, large: 340, xl: 420 },
-    },
-    builderCleanAdjustment: { min: 0.4, max: 0.8, reason: 'Builder clean scope loading (+40–80%)' },
-    propertyAdjustments: {
-      residential: { min: 0, max: 0, reason: 'Residential scope' },
-      apartment: { min: 0, max: 0, reason: 'Apartment interior + accessible balcony scope' },
-      commercial: { min: 0.25, max: 0.5, reason: 'Commercial pricing profile' },
-      strata: { min: 0.4, max: 0.8, reason: 'Strata/body corporate scope complexity' },
-      building: { min: 0.4, max: 0.8, reason: 'Building-level scope complexity' },
-    },
-    storiesAdjustments: {
-      '1': { min: 0, max: 0, reason: 'Single-storey baseline' },
-      '2': { min: 0.2, max: 0.2, reason: 'Two-storey loading (+20%)' },
-      '3': { min: 0.3, max: 0.3, reason: 'Three-storey loading (+30%)' },
-      building: { min: 0.4, max: 0.6, reason: 'Building-height loading (+40–60%)' },
-    },
-    serviceAreaWindowAdjustments: {
-      interior: { min: -0.08, max: -0.06, reason: 'Interior-only window scope' },
-      exterior: { min: -0.02, max: 0.03, reason: 'Exterior-only window scope' },
-      both: { min: 0.05, max: 0.1, reason: 'Interior + exterior window scope' },
-    },
-    accessAdjustments: {
-      easy: { min: 0, max: 0, reason: 'Easy site access' },
-      standard: { min: 0, max: 0, reason: 'Standard site access' },
-      difficult: { min: 0.1, max: 0.15, reason: 'Difficult access loading (+10–15%)' },
-    },
-    conditionAdjustments: {
-      light: { min: 0, max: 0, reason: 'Light condition profile' },
-      standard: { min: 0, max: 0, reason: 'Standard condition profile' },
-      heavy: { min: 0.15, max: 0.25, reason: 'Heavy condition loading (+15–25%)' },
-    },
-    firstCleanAdjustment: { min: 0.2, max: 0.3, reason: 'First-clean loading (+20–30%)' },
-    addonExGst: {
-      'tracks & screens': { min: 50, max: 100 },
-      'gutter cleaning': { min: 95, max: 240 },
-      'solar panel cleaning': { min: 90, max: 220 },
-      'tile & grout cleaning': { min: 130, max: 320 },
-      'bin cleaning': { min: 45, max: 120 },
-      'upholstery cleaning': { min: 120, max: 280 },
-    },
-    simpleWindowTargetsExGst: {
-      small: { min: 300, max: 360 },
-      medium: { min: 380, max: 435 },
-      large: { min: 500, max: 610 },
-      xl: { min: 650, max: 760 },
-    },
-    standardWindowCeilingExGst: 480,
-    giveawayThresholdMinExGst: GIVEAWAY_CONFIG.minimumEligibleJobValueExGst,
-    vagueNotesPattern: /^(na|n\/a|none|no|nil|same|ok)$/i,
-  };
-
   function getApiBase() {
     if (window.__API_BASE__) {
       return String(window.__API_BASE__).replace(/\/$/, '');
@@ -591,322 +505,6 @@
     return `${clean.slice(0, -1).join(', ')}, and ${clean[clean.length - 1]}`;
   }
 
-  function mapRoomsToSizeTier(rooms) {
-    const key = normalize(rooms);
-    if (key === '3-4') {
-      return 'medium';
-    }
-    if (key === '5-6') {
-      return 'large';
-    }
-    if (key === '7+') {
-      return 'xl';
-    }
-    return 'small';
-  }
-
-  function normalizePropertyType(value) {
-    const key = normalize(value);
-    if (key.includes('apartment')) {
-      return 'apartment';
-    }
-    if (key.includes('commercial')) {
-      return 'commercial';
-    }
-    if (key.includes('strata') || key.includes('body corporate')) {
-      return 'strata';
-    }
-    if (key.includes('building')) {
-      return 'building';
-    }
-    return 'residential';
-  }
-
-  function normalizeStories(value) {
-    const key = normalize(value);
-    if (key === '2') {
-      return '2';
-    }
-    if (key === '3') {
-      return '3';
-    }
-    if (key.includes('building')) {
-      return 'building';
-    }
-    return '1';
-  }
-
-  function normalizeServiceArea(value) {
-    const key = normalize(value);
-    if (key.includes('both')) {
-      return 'both';
-    }
-    if (key.includes('exterior')) {
-      return 'exterior';
-    }
-    return 'interior';
-  }
-
-  function normalizeAccess(value) {
-    const key = normalize(value);
-    if (key.includes('difficult')) {
-      return 'difficult';
-    }
-    if (key.includes('standard')) {
-      return 'standard';
-    }
-    return 'easy';
-  }
-
-  function normalizeCondition(value) {
-    const key = normalize(value);
-    if (key.includes('heavy')) {
-      return 'heavy';
-    }
-    if (key.includes('standard')) {
-      return 'standard';
-    }
-    return 'light';
-  }
-
-  function normalizeDiscount(value) {
-    const key = normalize(value);
-    if (key.includes('pension')) {
-      return 'pensioner';
-    }
-    if (key.includes('disability') || key.includes('ndis')) {
-      return 'disability';
-    }
-    if (key.includes('military') || key.includes('veteran')) {
-      return 'military';
-    }
-    if (key.includes('subcontractor') || key.includes('trade partner')) {
-      return 'subcontractor';
-    }
-    return 'none';
-  }
-
-  function isFirstClean(lastCleaned) {
-    const key = normalize(lastCleaned);
-    return key.includes('1+ years') || key.includes('never') || key.includes('12 months');
-  }
-
-  function applyAdjustment(bucket, rule, reasons) {
-    if (!rule) {
-      return;
-    }
-    bucket.min += Number(rule.min || 0);
-    bucket.max += Number(rule.max || 0);
-    if (rule.reason) {
-      reasons.push(rule.reason);
-    }
-  }
-
-  function resolveServiceProfile(service) {
-    const normalizedService = normalize(service);
-
-    if (normalizedService.includes('window')) {
-      return {
-        canonicalService: 'Window Cleaning',
-        isWindowService: true,
-        isBuilderClean: false,
-      };
-    }
-
-    if (normalizedService.includes('builder')) {
-      return {
-        canonicalService: 'Builder Clean',
-        isWindowService: false,
-        isBuilderClean: true,
-      };
-    }
-
-    if (normalizedService.includes('pressure')) {
-      return {
-        canonicalService: 'Pressure Washing',
-        isWindowService: false,
-        isBuilderClean: false,
-      };
-    }
-
-    if (normalizedService.includes('roof')) {
-      return {
-        canonicalService: 'Roof Cleaning',
-        isWindowService: false,
-        isBuilderClean: false,
-      };
-    }
-
-    if (normalizedService.includes('tile') || normalizedService.includes('grout')) {
-      return {
-        canonicalService: 'Tile & Grout Cleaning',
-        isWindowService: false,
-        isBuilderClean: false,
-      };
-    }
-
-    if (normalizedService.includes('upholstery')) {
-      return {
-        canonicalService: 'Upholstery Cleaning',
-        isWindowService: false,
-        isBuilderClean: false,
-      };
-    }
-
-    return {
-      canonicalService: 'Pressure Washing',
-      isWindowService: false,
-      isBuilderClean: false,
-    };
-  }
-
-  function getServiceBaseRangeExGst(serviceProfile, sizeTier) {
-    if (serviceProfile.isWindowService) {
-      const tier =
-        SMART_ESTIMATE_CONFIG.windowBaseByRoomsExGst[sizeTier] ||
-        SMART_ESTIMATE_CONFIG.windowBaseByRoomsExGst.small;
-      return {
-        min: Number(tier.min || 300),
-        max: Number(tier.max || 380),
-        isWindowService: true,
-        isBuilderClean: false,
-        reason: 'Window cleaning room-tier baseline',
-      };
-    }
-
-    const table =
-      SMART_ESTIMATE_CONFIG.nonWindowBaseByServiceExGst[serviceProfile.canonicalService] ||
-      SMART_ESTIMATE_CONFIG.nonWindowBaseByServiceExGst['Pressure Washing'];
-    const base = Number(table[sizeTier] || table.small || 320);
-
-    return {
-      min: base,
-      max: base,
-      isWindowService: false,
-      isBuilderClean: serviceProfile.isBuilderClean,
-      reason: `${serviceProfile.canonicalService || 'Selected service'} pricing baseline`,
-    };
-  }
-
-  function getAIWindowBaseRangeExGst(normalizedLead, serviceProfile) {
-    if (!serviceProfile.isWindowService) {
-      return null;
-    }
-
-    const isSmallOrMedium = normalizedLead.sizeTier === 'small' || normalizedLead.sizeTier === 'medium';
-    const isResidentialScope = normalizedLead.propertyType === 'residential' || normalizedLead.propertyType === 'apartment';
-    if (!isSmallOrMedium || !isResidentialScope) {
-      return null;
-    }
-
-    const sizeTable = SMART_ESTIMATE_CONFIG.windowAICalibratedBaseExGst[normalizedLead.sizeTier];
-    if (!sizeTable) {
-      return null;
-    }
-
-    const areaKey = normalizedLead.serviceArea === 'both' || normalizedLead.serviceArea === 'exterior'
-      ? normalizedLead.serviceArea
-      : 'interior';
-    const profile = sizeTable[areaKey] || sizeTable.interior;
-    if (!profile) {
-      return null;
-    }
-
-    return {
-      min: Number(profile.min || 300),
-      max: Number(profile.max || 380),
-      isWindowService: true,
-      isBuilderClean: false,
-      reason: 'AI-calibrated local window baseline for small/medium scope',
-    };
-  }
-
-  function deriveComplexity(lead, normalizedLead) {
-    const simpleProperty = normalizedLead.propertyType === 'residential' || normalizedLead.propertyType === 'apartment';
-    const simpleStoreys = normalizedLead.stories === '1' || normalizedLead.stories === '2';
-    const simpleAccess = normalizedLead.access === 'easy' || normalizedLead.access === 'standard';
-    const simpleCondition = normalizedLead.condition === 'light' || normalizedLead.condition === 'standard';
-    const simpleProfile = simpleProperty && simpleStoreys && simpleAccess && simpleCondition;
-
-    let score = 0;
-    if (normalizedLead.propertyType === 'commercial') {
-      score += 2;
-    }
-    if (normalizedLead.propertyType === 'strata' || normalizedLead.propertyType === 'building') {
-      score += 4;
-    }
-    if (normalize(lead.service).includes('builder')) {
-      score += 3;
-    }
-    if (normalizedLead.stories === '2') {
-      score += 1;
-    }
-    if (normalizedLead.stories === '3') {
-      score += 2;
-    }
-    if (normalizedLead.stories === 'building') {
-      score += 3;
-    }
-    if (normalizedLead.sizeTier === 'medium') {
-      score += 1;
-    }
-    if (normalizedLead.sizeTier === 'large') {
-      score += 2;
-    }
-    if (normalizedLead.sizeTier === 'xl') {
-      score += 3;
-    }
-    if (normalizedLead.serviceArea === 'both') {
-      score += 2;
-    }
-    if (normalizedLead.access === 'difficult') {
-      score += 3;
-    }
-    if (normalizedLead.condition === 'heavy') {
-      score += 2;
-    }
-    if (isFirstClean(lead.lastCleaned)) {
-      score += 2;
-    }
-    if (normalizeAddons(lead.addons).length >= 2) {
-      score += 2;
-    }
-    if (normalizeAddons(lead.addons).length >= 4) {
-      score += 2;
-    }
-
-    if (simpleProfile && score <= 5) {
-      return 'simple';
-    }
-    if (score <= 4) {
-      return 'simple';
-    }
-    if (score <= 10) {
-      return 'moderate';
-    }
-    return 'complex';
-  }
-
-  function calculateJobType(normalizedLead, complexity) {
-    if (
-      normalizedLead.propertyType === 'strata' ||
-      normalizedLead.propertyType === 'building' ||
-      normalizedLead.stories === 'building'
-    ) {
-      return 'Large Site';
-    }
-
-    if (normalizedLead.access === 'difficult') {
-      return 'Premium Access';
-    }
-
-    if (complexity === 'moderate') {
-      return 'Moderate';
-    }
-
-    return 'Standard';
-  }
-
   function getJobTypeClass(jobType) {
     const normalizedType = normalize(jobType).replace(/\s+/g, '-');
     if (normalizedType.includes('large')) {
@@ -921,191 +519,13 @@
     return 'job-type-standard';
   }
 
-  function estimateLeadSmart(lead) {
-    if (window.TAPricing && typeof window.TAPricing.calculateEstimate === 'function') {
-      return window.TAPricing.calculateEstimate(lead);
-    }
-    const service = toText(lead.service);
-    const addons = normalizeAddons(lead.addons);
-    const firstClean = isFirstClean(lead.lastCleaned);
-    const serviceProfile = resolveServiceProfile(service);
-
-    const normalizedLead = {
-      propertyType: normalizePropertyType(lead.propertyType),
-      stories: normalizeStories(lead.storeys),
-      sizeTier: mapRoomsToSizeTier(lead.rooms),
-      serviceArea: normalizeServiceArea(lead.serviceArea),
-      access: normalizeAccess(lead.accessDifficulty),
-      condition: normalizeCondition(lead.conditionLevel),
-    };
-
-    if (serviceProfile.isBuilderClean) {
-      normalizedLead.condition = 'heavy';
-    }
-
-    const aiWindowBaseRange = getAIWindowBaseRangeExGst(normalizedLead, serviceProfile);
-    const baseRange = aiWindowBaseRange || getServiceBaseRangeExGst(serviceProfile, normalizedLead.sizeTier);
-    const reasons = [baseRange.reason];
-    const adjustment = { min: 0, max: 0 };
-
-    applyAdjustment(adjustment, SMART_ESTIMATE_CONFIG.propertyAdjustments[normalizedLead.propertyType], reasons);
-    applyAdjustment(adjustment, SMART_ESTIMATE_CONFIG.storiesAdjustments[normalizedLead.stories], reasons);
-
-    if (baseRange.isWindowService) {
-      applyAdjustment(adjustment, SMART_ESTIMATE_CONFIG.serviceAreaWindowAdjustments[normalizedLead.serviceArea], reasons);
-    }
-    if (normalizedLead.access === 'difficult') {
-      applyAdjustment(adjustment, SMART_ESTIMATE_CONFIG.accessAdjustments[normalizedLead.access], reasons);
-    }
-    if (normalizedLead.condition === 'heavy') {
-      applyAdjustment(adjustment, SMART_ESTIMATE_CONFIG.conditionAdjustments[normalizedLead.condition], reasons);
-    }
-    if (firstClean) {
-      applyAdjustment(adjustment, SMART_ESTIMATE_CONFIG.firstCleanAdjustment, reasons);
-    }
-    if (serviceProfile.isBuilderClean) {
-      applyAdjustment(adjustment, SMART_ESTIMATE_CONFIG.builderCleanAdjustment, reasons);
-      reasons.push('Builder clean jobs are treated as heavy-condition scope');
-    }
-
-    let addonsMin = 0;
-    let addonsMax = 0;
-    addons.forEach((addon) => {
-      const addonRule = SMART_ESTIMATE_CONFIG.addonExGst[normalize(addon)] || { min: 45, max: 120 };
-      addonsMin += Number(addonRule.min || 0);
-      addonsMax += Number(addonRule.max || 0);
-    });
-    if (addons.length >= 2) {
-      reasons.push('Multiple add-ons selected');
-    }
-
-    const discountKey = normalizeDiscount(lead.discountEligibility);
-    const discountRate = Number(SMART_ESTIMATE_CONFIG.discountRates[discountKey] || 0);
-    if (discountRate > 0) {
-      reasons.push(`${toTitleCase(discountKey)} discount applied (${Math.round(discountRate * 100)}% off ex GST)`);
-    }
-
-    const complexity = deriveComplexity(lead, normalizedLead);
-    const rangeProfile = SMART_ESTIMATE_CONFIG.rangeByComplexity[complexity];
-
-    const preDiscountMinEx = baseRange.min * (1 + adjustment.min) + addonsMin;
-    const preDiscountMaxEx = baseRange.max * (1 + adjustment.max) + addonsMax;
-    const discountedMinEx = preDiscountMinEx * (1 - discountRate);
-    const discountedMaxEx = preDiscountMaxEx * (1 - discountRate);
-    const centreEx = (discountedMinEx + discountedMaxEx) / 2;
-
-    let estimateMinExGst = centreEx * (1 - rangeProfile.spread);
-    let estimateMaxExGst = centreEx * (1 + rangeProfile.spread);
-
-  const shouldClampSimpleWindow =
-      serviceProfile.isWindowService &&
-      complexity === 'simple' &&
-      (normalizedLead.propertyType === 'residential' || normalizedLead.propertyType === 'apartment') &&
-      normalizedLead.stories === '1' &&
-      normalizedLead.access !== 'difficult' &&
-      normalizedLead.condition !== 'heavy' &&
-      !firstClean &&
-      addons.length === 0;
-
-    if (shouldClampSimpleWindow) {
-      const target =
-        SMART_ESTIMATE_CONFIG.simpleWindowTargetsExGst[normalizedLead.sizeTier] ||
-        SMART_ESTIMATE_CONFIG.simpleWindowTargetsExGst.small;
-      estimateMinExGst = Math.max(SMART_ESTIMATE_CONFIG.minimumExGst, target.min * (1 - discountRate));
-      estimateMaxExGst = Math.max(estimateMinExGst + 45, target.max * (1 - discountRate));
-      reasons.push('Tight calibrated range for straightforward residential scope');
-    }
-
-    const shouldApplyMediumResidentialCeiling =
-      serviceProfile.isWindowService &&
-      normalizedLead.propertyType === 'residential' &&
-      normalizedLead.stories === '1' &&
-      normalizedLead.sizeTier === 'medium' &&
-      normalizedLead.access === 'standard' &&
-      normalizedLead.condition === 'standard' &&
-      !firstClean &&
-      addons.length === 0;
-
-    if (shouldApplyMediumResidentialCeiling) {
-      estimateMaxExGst = Math.min(estimateMaxExGst, SMART_ESTIMATE_CONFIG.standardWindowCeilingExGst);
-      estimateMinExGst = Math.min(estimateMinExGst, estimateMaxExGst - 40);
-      reasons.push('Standard 3–4 room residential ceiling applied');
-    }
-
-    const shouldApplySmallMediumWindowGuardrail =
-      serviceProfile.isWindowService &&
-      (normalizedLead.propertyType === 'residential' || normalizedLead.propertyType === 'apartment') &&
-      (normalizedLead.sizeTier === 'small' || normalizedLead.sizeTier === 'medium') &&
-      normalizedLead.access !== 'difficult' &&
-      addons.length === 0;
-
-    if (shouldApplySmallMediumWindowGuardrail) {
-      let aiCap = Number.POSITIVE_INFINITY;
-
-      if (normalizedLead.sizeTier === 'small' && normalizedLead.stories === '1' && normalizedLead.condition !== 'heavy' && !firstClean) {
-        aiCap = 380;
-      } else if (normalizedLead.sizeTier === 'small' && normalizedLead.stories === '2' && normalizedLead.condition !== 'heavy' && !firstClean) {
-        aiCap = 460;
-      } else if (normalizedLead.sizeTier === 'medium' && normalizedLead.stories === '1' && normalizedLead.condition !== 'heavy' && !firstClean) {
-        aiCap = SMART_ESTIMATE_CONFIG.standardWindowCeilingExGst;
-      } else if (normalizedLead.sizeTier === 'medium' && normalizedLead.stories === '2' && normalizedLead.condition !== 'heavy' && !firstClean) {
-        aiCap = 540;
-      }
-
-      if (Number.isFinite(aiCap)) {
-        estimateMaxExGst = Math.min(estimateMaxExGst, aiCap);
-        estimateMinExGst = Math.min(estimateMinExGst, estimateMaxExGst - 45);
-        reasons.push('AI guardrail applied to keep small/medium window estimate competitive');
-      }
-    }
-
-    estimateMinExGst = roundToNearestTen(Math.max(SMART_ESTIMATE_CONFIG.minimumExGst, estimateMinExGst));
-    estimateMaxExGst = roundToNearestTen(Math.max(estimateMinExGst + 40, estimateMaxExGst));
-
-    const estimateMinIncGst = roundToNearestTen(estimateMinExGst * (1 + SMART_ESTIMATE_CONFIG.gstRate));
-    const estimateMaxIncGst = roundToNearestTen(estimateMaxExGst * (1 + SMART_ESTIMATE_CONFIG.gstRate));
-
-    const tailoredQuoteRecommended =
-      (normalizedLead.propertyType === 'strata' || normalizedLead.propertyType === 'building') &&
-      (normalizedLead.stories === 'building' ||
-        normalizedLead.access === 'difficult' ||
-        normalizedLead.sizeTier === 'xl' ||
-        complexity === 'complex');
-
-    if (normalizedLead.propertyType === 'apartment') {
-      reasons.push('Apartment jobs priced as interior + accessible balcony scope');
-    }
-
-    if (tailoredQuoteRecommended) {
-      reasons.push('Complex building/strata profile requires tailored confirmation');
-    }
-
-    const estimatedJobType = calculateJobType(normalizedLead, complexity);
-
-    return {
-      estimateMin: estimateMinExGst,
-      estimateMax: estimateMaxExGst,
-      estimateMinIncGst,
-      estimateMaxIncGst,
-      estimateLabel: formatMoneyRange(estimateMinIncGst, estimateMaxIncGst),
-      estimateReasons: uniqueReasons(reasons).slice(0, 9),
-      estimatedJobType,
-      tailoredQuoteRecommended,
-      estimateGuidance: tailoredQuoteRecommended
-        ? 'This appears to be a larger or more complex project. We recommend a tailored quote. Final pricing confirmed after site inspection.'
-        : 'Final pricing confirmed after site inspection.',
-      accuracyLevel: rangeProfile.accuracy,
-      eligibleForGiveaway: isGiveawayCampaignOpen() && estimateMinExGst >= SMART_ESTIMATE_CONFIG.giveawayThresholdMinExGst,
-    };
-  }
-
   function isInformativeNotes(notes) {
     const text = toText(notes);
     if (!text) {
       return false;
     }
 
-    if (SMART_ESTIMATE_CONFIG.vagueNotesPattern.test(text.toLowerCase())) {
+    if (/^(na|n\/a|none|no|nil|same|ok)$/i.test(text.toLowerCase())) {
       return false;
     }
 
@@ -1147,33 +567,6 @@
     }
 
     return 'low';
-  }
-
-  function generateAISummary(lead, estimate) {
-    const segments = [];
-    const service = toText(lead.service) || 'cleaning service';
-    const propertyType = toText(lead.propertyType) || 'property';
-    const serviceArea = toText(lead.serviceArea) || 'service';
-    const addons = normalizeAddons(lead.addons);
-
-    segments.push(`${propertyType} property requiring ${service.toLowerCase()} across ${serviceArea.toLowerCase()} areas.`);
-    const roomDescription = toText(lead.rooms) ? `, ${toText(lead.rooms)} rooms` : '';
-    segments.push(`Site profile: ${toText(lead.storeys)} storey${roomDescription}, ${toText(lead.accessDifficulty).toLowerCase()} access, ${toText(lead.conditionLevel).toLowerCase()} condition.`);
-
-    if (addons.length) {
-      segments.push(`Add-ons selected: ${toSentenceList(addons)}.`);
-    }
-
-    if (toText(lead.notes)) {
-      segments.push(`Customer notes: ${toText(lead.notes).replace(/\s+/g, ' ')}.`);
-    }
-
-    if (toText(lead.preferredDate) || toText(lead.preferredTime)) {
-      segments.push(`Preferred booking: ${toText(lead.preferredDate) || 'next available date'} (${toText(lead.preferredTime) || 'flexible time window'}).`);
-    }
-
-    segments.push(`Quote range prepared: ${toText(estimate.estimateLabel)}. Confidence level: ${toText(estimate.accuracyLevel)}.`);
-    return segments.join(' ');
   }
 
   function setCurrentYear() {
@@ -1518,9 +911,9 @@
     } else if (giveawayPhase === 'closed') {
       giveawayNode.textContent = `This giveaway closed ${GIVEAWAY_CONFIG.endsLabel}.`;
     } else if (result.eligibleForGiveaway) {
-      giveawayNode.textContent = 'Eligible quote requests may be reviewed for the T&A PRO Cleaning Giveaway Campaign after the team confirms scope and campaign requirements.';
+      giveawayNode.textContent = 'This estimate meets the $495 incl GST value threshold after discount. An entry still requires team confirmation and a paid 50% deposit (full upfront payment for any supported Afterpay booking). Cancelled or refunded qualifying deposits remove the entry.';
     } else {
-      giveawayNode.textContent = 'Eligible quote requests may be reviewed for the T&A PRO Cleaning Giveaway Campaign; giveaway participation is separate from quote approval and booking.';
+      giveawayNode.textContent = 'An entry requires a confirmed final discounted total of at least $495 incl GST and a paid qualifying deposit. Sending this request does not create an entry.';
     }
 
     panel.hidden = false;
@@ -1549,7 +942,7 @@
     if (!breakdown || !Array.isArray(breakdown.lines) || !breakdown.lines.length) return;
 
     const title = document.createElement('h4');
-    title.textContent = 'Price calculation';
+    title.textContent = breakdown.automaticPricingUnavailable ? 'Scope requiring inspection' : 'Price calculation';
     container.appendChild(title);
 
     breakdown.lines.forEach((line) => {
@@ -1565,7 +958,7 @@
       detail.textContent = `${line.quantity} ${line.unitLabel}${rateText}`;
       copy.append(name, detail);
       const amount = document.createElement('b');
-      amount.textContent = window.TAPricing.money(line.subtotalExGst);
+      amount.textContent = breakdown.automaticPricingUnavailable ? 'Inspection required' : window.TAPricing.money(line.subtotalExGst);
       row.append(copy, amount);
       container.appendChild(row);
 
@@ -1576,6 +969,8 @@
         container.appendChild(minimum);
       }
     });
+
+    if (breakdown.automaticPricingUnavailable) return;
 
     (Array.isArray(breakdown.adjustments) ? breakdown.adjustments : []).forEach((adjustment) => {
       const row = document.createElement('div');
@@ -1590,7 +985,9 @@
     });
 
     const totals = [
-      ['Subtotal ex GST', breakdown.subtotalExGst],
+      ['Normal price ex GST', breakdown.normalExGst],
+      [breakdown.campaign?.label || 'Campaign discount', -breakdown.discount],
+      ['Discounted subtotal ex GST', breakdown.subtotalExGst],
       ['GST (10%)', breakdown.gst],
       ['Total incl. GST', breakdown.totalIncGst],
     ];
@@ -1599,7 +996,7 @@
       row.className = `estimate-calc-row ${index === totals.length - 1 ? 'estimate-calc-total' : ''}`;
       const label = document.createElement(index === totals.length - 1 ? 'strong' : 'span');
       label.textContent = labelText;
-      const amount = document.createElement('b');
+      const amount = document.createElement(labelText === 'Normal price ex GST' ? 's' : 'b');
       amount.textContent = window.TAPricing.money(value);
       row.append(label, amount);
       container.appendChild(row);
@@ -1721,7 +1118,7 @@
         setStatus(
           feeApplied ? 'fee' : 'clear',
           feeApplied
-            ? `Travel checked: $50 incl. GST added (${distanceKm} km from Biggera Waters).`
+            ? `Travel checked: normal travel charge $50 incl. GST before the 25% campaign discount (${distanceKm} km from Biggera Waters).`
             : `Travel checked: no extra fee (${distanceKm} km from Biggera Waters).`,
         );
         return true;
@@ -1775,7 +1172,7 @@
       storeys: toText(formData.get('storeys')),
       rooms: toText(formData.get('rooms')),
       serviceArea: toText(formData.get('serviceArea')),
-      scopeQuantity: Math.max(0, Math.round(Number(formData.get('scopeQuantity') || 0))),
+      scopeQuantity: normalizePricingQuantity(formData.get('pricingItemCode'), formData.get('scopeQuantity')),
       scopeUnit: toText(formData.get('scopeUnit')),
       scopeDetail: toText(formData.get('scopeDetail')),
       accessDifficulty: toText(formData.get('accessDifficulty')),
@@ -1821,7 +1218,7 @@
       Number(payload.scopeQuantity || 0) > 0 &&
       toText(payload.propertyType) &&
       toText(payload.storeys) &&
-      toText(payload.serviceArea)
+      (payload.serviceGroup !== 'window-cleaning' || toText(payload.serviceArea))
     );
   }
 
@@ -1877,50 +1274,6 @@
     };
   }
 
-  function normalizeApiResult(apiResult, fallbackResult) {
-    const merged = {
-      ...fallbackResult,
-      ...(apiResult && typeof apiResult === 'object' ? apiResult : {}),
-    };
-
-    merged.estimateMin = Number.isFinite(Number(merged.estimateMin)) ? Number(merged.estimateMin) : fallbackResult.estimateMin;
-    merged.estimateMax = Number.isFinite(Number(merged.estimateMax)) ? Number(merged.estimateMax) : fallbackResult.estimateMax;
-    merged.estimateLabel = toText(merged.estimateLabel) || fallbackResult.estimateLabel;
-
-    if (!Array.isArray(merged.estimateReasons) || !merged.estimateReasons.length) {
-      merged.estimateReasons = fallbackResult.estimateReasons;
-    }
-
-    if (!toText(merged.aiSummary)) {
-      merged.aiSummary = fallbackResult.aiSummary;
-    }
-
-    if (!Array.isArray(merged.customerScope) || !merged.customerScope.length) {
-      merged.customerScope = fallbackResult.customerScope;
-    }
-
-    if (!toText(merged.leadQuality)) {
-      merged.leadQuality = fallbackResult.leadQuality;
-    }
-
-    if (!toText(merged.accuracyLevel)) {
-      merged.accuracyLevel = fallbackResult.accuracyLevel;
-    }
-
-    const explicitEligible = typeof merged.eligibleForGiveaway === 'boolean' ? merged.eligibleForGiveaway : null;
-    merged.eligibleForGiveaway = explicitEligible !== null
-      ? explicitEligible
-      : merged.estimateMin >= SMART_ESTIMATE_CONFIG.giveawayThresholdMinExGst;
-
-    merged.estimatedJobType = toText(merged.estimatedJobType) || fallbackResult.estimatedJobType;
-    merged.tailoredQuoteRecommended = typeof merged.tailoredQuoteRecommended === 'boolean'
-      ? merged.tailoredQuoteRecommended
-      : Boolean(fallbackResult.tailoredQuoteRecommended);
-    merged.estimateGuidance = toText(merged.estimateGuidance) || fallbackResult.estimateGuidance;
-
-    return merged;
-  }
-
   function bumpGiveawayCounterIfEligible(isEligible) {
     if (!isEligible) {
       return;
@@ -1945,7 +1298,12 @@
         return;
       }
 
-      renderEstimatePreview(estimateLeadSmart(payload));
+      const estimate = estimateLeadSmart(payload);
+      renderEstimatePreview(estimate);
+      const signature = JSON.stringify(estimate.calculationBreakdown);
+      if (signature !== form.dataset.estimateSignature && !estimate.automaticPricingUnavailable) {
+        form.dataset.estimateSignature = signature; trackEvent('estimate_calculated', { service: payload.service });
+      }
     };
 
     const queuePreview = () => {
@@ -1955,6 +1313,7 @@
       rafId = window.requestAnimationFrame(runPreview);
     };
 
+    form.addEventListener('change', event => { if (event.target.name === 'paymentPreference') trackEvent('payment_preference_selected', { method: event.target.value }); });
     form.addEventListener('input', queuePreview, { passive: true });
     form.addEventListener('change', queuePreview, { passive: true });
   }
@@ -2006,6 +1365,11 @@
     const syncUnit = (itemSelect, quantityInput, unitNode, clearQuantity = false) => {
       const entry = engine.getItem(itemSelect.value);
       const isPrimaryItem = unitNode === unit;
+      if (isPrimaryItem) {
+        const coverage = form.querySelector('#serviceArea');
+        const relevant = entry?.groupId === 'window-cleaning';
+        coverage.required = relevant; coverage.disabled = !relevant; coverage.closest('.field').hidden = !relevant;
+      }
       if (clearQuantity) quantityInput.value = '';
       if (!entry) {
         if (unitNode instanceof HTMLInputElement) unitNode.value = '';
@@ -2021,8 +1385,10 @@
       }
       const isFixed = entry.mode === 'fixed' || entry.manual;
       if (isFixed) quantityInput.value = '1';
-      quantityInput.min = '1';
-      quantityInput.step = '1';
+      quantityInput.setCustomValidity('');
+      quantityInput.max = '10000';
+      quantityInput.min = ['square-metres', 'linear-metres', 'labour-hours'].includes(entry.unit) ? '0.01' : '1';
+      quantityInput.step = ['square-metres', 'linear-metres', 'labour-hours'].includes(entry.unit) ? 'any' : '1';
       quantityInput.inputMode = 'numeric';
       quantityInput.placeholder = `Enter ${engine.unitLabel(entry.unit, 2)}`;
       if (unitNode instanceof HTMLInputElement) unitNode.value = entry.unit;
@@ -2054,7 +1420,9 @@
       const quantityInput = document.createElement('input');
       quantityInput.className = 'additional-service-quantity';
       quantityInput.type = 'number';
-      quantityInput.min = '1';
+      quantityInput.setCustomValidity('');
+      quantityInput.max = '10000';
+      quantityInput.min = ['square-metres', 'linear-metres', 'labour-hours'].includes(entry.unit) ? '0.01' : '1';
       quantityInput.step = '1';
       quantityInput.inputMode = 'numeric';
       quantityInput.placeholder = 'Quantity';
@@ -2116,7 +1484,8 @@
     const normalizeWholeNumber = (input) => {
       if (!(input instanceof HTMLInputElement) || !input.value) return;
       const value = Number(input.value);
-      if (Number.isFinite(value)) input.value = String(Math.max(1, Math.round(value)));
+      if (input.step === 'any') return;
+      input.setCustomValidity(Number.isInteger(value) && value > 0 && value <= 10000 ? '' : 'Enter a whole quantity from 1 to 10000.');
     };
 
     quantity.addEventListener('change', () => normalizeWholeNumber(quantity));
@@ -2364,7 +1733,7 @@
       applySelectedItems();
       jobPicker.close();
       const nextField = quantityField instanceof HTMLElement && quantityField.hidden
-        ? form.querySelector('#serviceArea')
+        ? (form.querySelector('#serviceArea').disabled ? form.querySelector('#propertyType') : form.querySelector('#serviceArea'))
         : quantity;
       if (nextField instanceof HTMLElement) nextField.focus();
     });
@@ -2392,15 +1761,17 @@
     }
   }
 
+  function normalizePricingQuantity(code, value) { return Number(value); }
+
   function collectPricingLineItems(form) {
     const lines = [];
     const primaryCode = toText(form.querySelector('#pricingItemCode')?.value);
     if (primaryCode) {
-      lines.push({ code: primaryCode, quantity: Math.max(0, Math.round(Number(form.querySelector('#scopeQuantity')?.value) || 0)) });
+      lines.push({ code: primaryCode, quantity: normalizePricingQuantity(primaryCode, form.querySelector('#scopeQuantity')?.value) });
     }
     form.querySelectorAll('.additional-service-row').forEach((row) => {
       const code = toText(row.querySelector('.additional-service-item')?.value);
-      const quantity = Math.max(0, Math.round(Number(row.querySelector('.additional-service-quantity')?.value) || 0));
+      const quantity = normalizePricingQuantity(code, row.querySelector('.additional-service-quantity')?.value);
       if (code) lines.push({ code, quantity });
     });
     return lines;
@@ -2453,7 +1824,7 @@
       });
       if (safeStep === 3) updateReview();
       if (window.matchMedia('(max-width: 760px)').matches) {
-        form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        form.scrollIntoView({ behavior: 'instant', block: 'start' });
       }
     };
 
@@ -2526,6 +1897,7 @@
       if (quoteStartTracked) return;
       quoteStartTracked = true;
       trackEvent('quote_form_start');
+      fetchWithTimeout(`${API_BASE}/api/health`, {}, 9000).catch(() => {});
     };
 
     const trackQuoteField = (fieldName) => {
@@ -2617,6 +1989,7 @@
 
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
+      if (form.dataset.submitting === 'true') return;
 
       if (!form.checkValidity()) {
         form.reportValidity();
@@ -2630,7 +2003,8 @@
         setButtonLabel(button, 'Preparing quote...');
       }
 
-      setFormMessage('Reviewing your details and preparing a quote range...', 'info');
+      form.dataset.submitting = 'true';
+      setFormMessage('Preparing your quote request. The first connection can take up to 45 seconds; please keep this page open.', 'info');
 
       try {
         await travelPricing.ensureCurrent();
@@ -2638,21 +2012,11 @@
         if (payload.uploadWarnings.length) {
           updateUploadNote(payload.uploadWarnings.join(' '), 'error');
         }
+        const pricingErrors = window.TAPricing.validateInput(payload);
+        if (pricingErrors.length) throw new Error(pricingErrors.join(' '));
         const localResult = buildLocalResult(payload);
 
-        const response = await fetchWithTimeout(`${API_BASE}/api/leads`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(payload),
-        });
-
-        const result = await response.json().catch(() => ({}));
-
-        if (!response.ok) {
-          throw new Error(String(result.error || 'Unable to process your request right now.'));
-        }
+        const result = await window.TASubmissions.submit(`${API_BASE}/api/leads`, payload);
 
         const mergedResult = normalizeApiResult(result, localResult);
         renderQuoteResult(mergedResult);
@@ -2664,18 +2028,17 @@
             : 'Your quote request was saved, but email delivery is delayed. Please call 0466 224 927 or email tandaprocleaning@gmail.com if your job is urgent.',
           emailSent ? 'success' : 'error',
         );
-        if (!quoteSubmissionSucceeded) {
-          quoteSubmissionSucceeded = true;
+        quoteSubmissionSucceeded = true;
+        window.TASubmissions.once(result.lead.id, () => {
           trackEvent('quote_submit_success');
-        }
-        trackQuoteSubmittedConversion();
-        bumpGiveawayCounterIfEligible(mergedResult.eligibleForGiveaway);
-        await loadStats();
+          trackQuoteSubmittedConversion();
+        });
+        loadStats().catch(() => {});
       } catch (error) {
         const fallbackPayload = buildBasePayload(form);
         const fallbackResult = buildLocalResult(fallbackPayload);
         renderQuoteResult(fallbackResult);
-        bumpGiveawayCounterIfEligible(fallbackResult.eligibleForGiveaway);
+
 
         const timedOut = error instanceof DOMException && error.name === 'AbortError';
         const message = timedOut
@@ -2689,6 +2052,7 @@
           event_label: 'fallback_used',
         });
       } finally {
+        form.dataset.submitting = 'false';
         if (button instanceof HTMLButtonElement) {
           button.disabled = false;
           setButtonLabel(button, 'Get a Free Quote');
@@ -2696,6 +2060,14 @@
       }
     });
   }
+
+  function estimateLeadSmart(lead) {
+    const estimate = window.TAPricing.calculateEstimate(lead);
+    return { ...estimate, eligibleForGiveaway: isGiveawayCampaignOpen() && estimate.eligibleForGiveaway };
+  }
+  function generateAISummary(lead, estimate) { return window.TAPricing.generateSummary(lead, estimate); }
+  function formatScopeUnit(unit, quantity) { return window.TAPricing.unitLabel(unit, quantity); }
+  function getScopeDetailRule() { return null; }
 
   function buildImprovedDescription(payload) {
     const lines = [];
@@ -2741,7 +2113,7 @@
 
     button.addEventListener('click', () => {
       const payload = buildBasePayload(form);
-      if (!payload.service || !payload.propertyType || !payload.storeys || !payload.serviceArea) {
+      if (!payload.service || !payload.propertyType || !payload.storeys) {
         setFormMessage('Please choose service, property type, stories and service area first.', 'error');
         return;
       }
@@ -2756,710 +2128,27 @@
     });
   }
 
-  const REALISTIC_ESTIMATE_CONFIG = {
-    gstRate: 0.1,
-    minimumExGst: 90,
-    marketCalibrationVersion: 'SEQ-2026-07',
-    giveawayThresholdMinExGst: GIVEAWAY_CONFIG.minimumEligibleJobValueExGst,
-    vagueNotesPattern: /^(na|n\/a|none|no|nil|same|ok|need cleaning)$/i,
-    discountRates: {
-      none: 0,
-      pensioner: 0.05,
-      disability: 0.05,
-      military: 0.05,
-      subcontractor: 0.1,
-    },
-    windowRangesExGst: {
-      single: {
-        compact: { interior: { min: 150, max: 240 }, exterior: { min: 160, max: 260 }, both: { min: 220, max: 330 }, bothTracks: { min: 290, max: 420 } },
-        small: { interior: { min: 160, max: 260 }, exterior: { min: 180, max: 290 }, both: { min: 230, max: 350 }, bothTracks: { min: 300, max: 430 } },
-        standard: { interior: { min: 220, max: 330 }, exterior: { min: 250, max: 380 }, both: { min: 300, max: 440 }, bothTracks: { min: 380, max: 560 } },
-        large: { interior: { min: 320, max: 480 }, exterior: { min: 380, max: 580 }, both: { min: 460, max: 700 }, bothTracks: { min: 580, max: 900 } },
-        xl: { interior: { min: 450, max: 700 }, exterior: { min: 550, max: 900 }, both: { min: 700, max: 1150 }, bothTracks: { min: 850, max: 1450 } },
-        unknown: { interior: { min: 180, max: 300 }, exterior: { min: 220, max: 350 }, both: { min: 260, max: 400 }, bothTracks: { min: 330, max: 520 } },
-      },
-      double: {
-        compact: { interior: { min: 240, max: 380 }, exterior: { min: 320, max: 500 }, both: { min: 400, max: 600 }, bothTracks: { min: 520, max: 760 } },
-        small: { interior: { min: 250, max: 400 }, exterior: { min: 330, max: 520 }, both: { min: 410, max: 620 }, bothTracks: { min: 530, max: 780 } },
-        standard: { interior: { min: 320, max: 500 }, exterior: { min: 420, max: 650 }, both: { min: 500, max: 750 }, bothTracks: { min: 640, max: 950 } },
-        large: { interior: { min: 420, max: 650 }, exterior: { min: 560, max: 850 }, both: { min: 700, max: 1100 }, bothTracks: { min: 850, max: 1350 } },
-        xl: { interior: { min: 580, max: 900 }, exterior: { min: 760, max: 1200 }, both: { min: 980, max: 1650 }, bothTracks: { min: 1200, max: 2100 } },
-        unknown: { interior: { min: 280, max: 450 }, exterior: { min: 390, max: 600 }, both: { min: 470, max: 700 }, bothTracks: { min: 580, max: 880 } },
-      },
-      high: {
-        interior: { min: 320, max: 520 },
-        exterior: { min: 440, max: 760 },
-        both: { min: 520, max: 850 },
-        bothTracks: { min: 650, max: 1050 },
-      },
-    },
-    serviceRangesExGst: {
-      'Pressure Washing': {
-        compact: { min: 150, max: 250 },
-        small: { min: 250, max: 450 },
-        standard: { min: 450, max: 750 },
-        large: { min: 750, max: 1400 },
-        xl: { min: 1000, max: 1800 },
-        unknown: { min: 250, max: 500 },
-      },
-      'Driveway Cleaning': {
-        compact: { min: 150, max: 250 },
-        small: { min: 250, max: 450 },
-        standard: { min: 450, max: 750 },
-        large: { min: 750, max: 1400 },
-        xl: { min: 1000, max: 1800 },
-        unknown: { min: 250, max: 500 },
-      },
-      'Soft Washing': {
-        compact: { min: 350, max: 550 },
-        small: { min: 500, max: 750 },
-        standard: { min: 750, max: 1200 },
-        large: { min: 1200, max: 2000 },
-        xl: { min: 1500, max: 2600 },
-        unknown: { min: 500, max: 900 },
-      },
-      'Gutter Cleaning': {
-        compact: { min: 165, max: 260 },
-        small: { min: 220, max: 380 },
-        standard: { min: 350, max: 650 },
-        large: { min: 650, max: 1050 },
-        xl: { min: 850, max: 1450 },
-        unknown: { min: 220, max: 450 },
-      },
-      'Solar Panel Cleaning': {
-        compact: { min: 150, max: 220 },
-        small: { min: 190, max: 300 },
-        standard: { min: 280, max: 450 },
-        large: { min: 450, max: 750 },
-        xl: { min: 600, max: 1000 },
-        unknown: { min: 180, max: 360 },
-      },
-      'Carpet Cleaning': {
-        compact: { min: 100, max: 180 },
-        small: { min: 135, max: 260 },
-        standard: { min: 220, max: 400 },
-        large: { min: 320, max: 600 },
-        xl: { min: 450, max: 850 },
-        unknown: { min: 120, max: 250 },
-      },
-      'Roof Cleaning': {
-        compact: { min: 450, max: 800 },
-        small: { min: 650, max: 1200 },
-        standard: { min: 1000, max: 2000 },
-        large: { min: 1600, max: 3000 },
-        xl: { min: 2400, max: 4500 },
-        unknown: { min: 650, max: 1500 },
-      },
-      'Tile & Grout Cleaning': {
-        compact: { min: 220, max: 420 },
-        small: { min: 350, max: 650 },
-        standard: { min: 550, max: 950 },
-        large: { min: 850, max: 1500 },
-        xl: { min: 1300, max: 2200 },
-        unknown: { min: 350, max: 800 },
-      },
-      'Upholstery Cleaning': {
-        compact: { min: 120, max: 200 },
-        small: { min: 180, max: 280 },
-        standard: { min: 260, max: 380 },
-        large: { min: 360, max: 560 },
-        xl: { min: 500, max: 800 },
-        unknown: { min: 160, max: 340 },
-      },
-      'Bin Cleaning': {
-        compact: { min: 80, max: 120 },
-        small: { min: 100, max: 150 },
-        standard: { min: 140, max: 210 },
-        large: { min: 200, max: 300 },
-        xl: { min: 280, max: 420 },
-        unknown: { min: 90, max: 180 },
-      },
-    },
-    manualRangesExGst: {
-      compact: { min: 600, max: 1200 },
-      small: { min: 800, max: 1800 },
-      standard: { min: 1200, max: 2800 },
-      large: { min: 2000, max: 4500 },
-      xl: { min: 3500, max: 7000 },
-      unknown: { min: 900, max: 2500 },
-    },
-    addonExGst: {
-      'gutter cleaning': { min: 110, max: 210, reason: 'Gutter cleaning add-on selected' },
-      'solar panel cleaning': { min: 130, max: 250, reason: 'Solar panel cleaning add-on selected' },
-      'tile & grout cleaning': { min: 250, max: 500, reason: 'Tile and grout add-on selected' },
-      'bin cleaning': { min: 60, max: 100, reason: 'Bin cleaning add-on selected' },
-      'upholstery cleaning': { min: 120, max: 230, reason: 'Upholstery cleaning add-on selected' },
-    },
-    quantityRatesExGst: {
-      'Window Cleaning': { unit: 'panes', minimum: 160, rates: { interior: 6.25, exterior: 6.75, both: 10.5 }, tracksScreensPerUnit: 3.25, storyMultipliers: { double: 1.18, high: 1.35 } },
-      'Pressure Washing': { unit: 'square-metres', minimum: 150, rate: 4.5 },
-      'Driveway Cleaning': { unit: 'square-metres', minimum: 150, rate: 4.5 },
-      'Soft Washing': { unit: 'square-metres', minimum: 325, rate: 4.5, storyMultipliers: { double: 1.08, high: 1.18 } },
-      'Roof Cleaning': { unit: 'square-metres', minimum: 450, rate: 5.5, storyMultipliers: { double: 1.12, high: 1.25 } },
-      'Gutter Cleaning': { unit: 'linear-metres', minimum: 165, rate: 8.5, storyMultipliers: { double: 1.15, high: 1.3 } },
-      'Solar Panel Cleaning': { unit: 'solar-panels', minimum: 150, rate: 12.5, storyMultipliers: { double: 1.12, high: 1.25 } },
-      'Carpet Cleaning': { unit: 'carpeted-rooms', minimum: 100, rate: 45 },
-      'Tile & Grout Cleaning': { unit: 'square-metres', minimum: 220, rate: 28 },
-      'Upholstery Cleaning': { unit: 'upholstery-seats', minimum: 120, rate: 40 },
-      'Bin Cleaning': { unit: 'bins', minimum: 80, rate: 40 },
-    },
-    scopeDetailRules: {
-      'standard-glass': { multiplier: 1, label: 'Standard glass' },
-      'divided-small-panes': { multiplier: 1.18, label: 'Many small or divided panes' },
-      'hard-water-staining': { multiplier: 1.3, label: 'Hard-water or mineral staining' },
-      'plain-concrete': { multiplier: 1, label: 'Plain concrete' },
-      'exposed-aggregate': { multiplier: 1.2, label: 'Exposed aggregate' },
-      'pavers-cobblestone': { multiplier: 1.4, label: 'Pavers or cobblestone' },
-      'painted-render': { multiplier: 1, label: 'Painted render or cladding' },
-      'brick-masonry': { multiplier: 1.1, label: 'Brick or masonry' },
-      'heavy-organic-growth': { multiplier: 1.25, label: 'Heavy mould or organic growth' },
-      'metal-roof': { multiplier: 0.9, label: 'Metal roof' },
-      'concrete-tiles': { multiplier: 1, label: 'Concrete roof tiles' },
-      'terracotta-tiles': { multiplier: 1.15, label: 'Terracotta roof tiles' },
-      'light-debris': { multiplier: 0.9, label: 'Light gutter debris' },
-      'standard-debris': { multiplier: 1, label: 'Standard gutter debris' },
-      'heavy-debris': { multiplier: 1.3, label: 'Heavy or compacted gutter debris' },
-      'standard-soiling': { multiplier: 1, label: 'Standard panel soiling' },
-      'heavy-bird-soiling': { multiplier: 1.2, label: 'Heavy bird or organic soiling' },
-      'standard-bedroom': { multiplier: 1, label: 'Standard bedroom-sized rooms' },
-      'large-room': { multiplier: 1.3, label: 'Large rooms or living areas' },
-      'stairs-hallways': { multiplier: 1.4, label: 'Stairs or hallways' },
-      'standard-ceramic': { multiplier: 1, label: 'Standard ceramic or porcelain tile' },
-      'heavy-grout': { multiplier: 1.2, label: 'Heavy grout staining' },
-      'natural-stone': { multiplier: 1.35, label: 'Natural stone or specialist surface' },
-      'standard-fabric': { multiplier: 1, label: 'Standard upholstery fabric' },
-      'delicate-light-fabric': { multiplier: 1.2, label: 'Delicate or light-coloured fabric' },
-      'leather-specialist': { multiplier: 1.25, label: 'Leather or specialist material' },
-      'standard-bin': { multiplier: 1, label: 'Standard bin condition' },
-      'heavy-bin-soiling': { multiplier: 1.25, label: 'Heavy bin soiling' },
-    },
-  };
-
-  function resolveServiceProfile(service) {
-    const normalizedService = normalize(service);
-    const aliases = [
-      { match: 'window', canonicalService: 'Window Cleaning', isWindowService: true },
-      { match: 'builder', canonicalService: 'Builder Clean', isBuilderClean: true },
-      { match: 'construction', canonicalService: 'Builder Clean', isBuilderClean: true },
-      { match: 'strata', canonicalService: 'Builder Clean', isBuilderClean: true },
-      { match: 'body corporate', canonicalService: 'Builder Clean', isBuilderClean: true },
-      { match: 'commercial', canonicalService: 'Builder Clean', isBuilderClean: true },
-      { match: 'gym', canonicalService: 'Builder Clean', isBuilderClean: true },
-      { match: 'driveway', canonicalService: 'Driveway Cleaning' },
-      { match: 'pressure', canonicalService: 'Pressure Washing' },
-      { match: 'soft', canonicalService: 'Soft Washing' },
-      { match: 'house wash', canonicalService: 'Soft Washing' },
-      { match: 'roof', canonicalService: 'Roof Cleaning' },
-      { match: 'gutter', canonicalService: 'Gutter Cleaning' },
-      { match: 'solar', canonicalService: 'Solar Panel Cleaning' },
-      { match: 'carpet', canonicalService: 'Carpet Cleaning' },
-      { match: 'tile', canonicalService: 'Tile & Grout Cleaning' },
-      { match: 'grout', canonicalService: 'Tile & Grout Cleaning' },
-      { match: 'upholstery', canonicalService: 'Upholstery Cleaning' },
-      { match: 'bin', canonicalService: 'Bin Cleaning' },
-    ];
-
-    const match = aliases.find((entry) => normalizedService.includes(entry.match));
-    return {
-      canonicalService: match ? match.canonicalService : 'Window Cleaning',
-      isWindowService: Boolean(match && match.isWindowService),
-      isBuilderClean: Boolean(match && match.isBuilderClean),
-    };
-  }
-
-  function mapRoomsToPricingSizeTier(rooms) {
-    const key = normalize(rooms);
-    if (!key) return 'unknown';
-    if (key === '1-2') return 'compact';
-    if (key === '3-4') return 'small';
-    if (key === '5-6') return 'standard';
-    if (key === '7+') return 'large';
-    return 'unknown';
-  }
-
-  function hasTracksScreens(addons) {
-    return addons.some((addon) => {
-      const key = normalize(addon);
-      return key.includes('track') || key.includes('screen');
-    });
-  }
-
-  function isManualScope(serviceProfile, normalizedLead, rawService) {
-    const serviceKey = normalize(rawService);
-    return Boolean(
-      serviceProfile.isBuilderClean ||
-        normalizedLead.propertyType === 'commercial' ||
-        normalizedLead.propertyType === 'strata' ||
-        normalizedLead.propertyType === 'building' ||
-        serviceKey.includes('gym') ||
-        serviceKey.includes('construction')
-    );
-  }
-
-  function getWindowScopeKey(normalizedLead, tracksScreensSelected) {
-    if (normalizedLead.serviceArea === 'both') {
-      return tracksScreensSelected ? 'bothTracks' : 'both';
-    }
-    if (normalizedLead.serviceArea === 'exterior') {
-      return 'exterior';
-    }
-    return 'interior';
-  }
-
-  function getWindowRange(normalizedLead, tracksScreensSelected) {
-    const storeyGroup = normalizedLead.stories === 'building' || normalizedLead.stories === '3'
-      ? 'high'
-      : normalizedLead.stories === '2'
-        ? 'double'
-        : 'single';
-    const scopeKey = getWindowScopeKey(normalizedLead, tracksScreensSelected);
-
-    if (storeyGroup === 'high') {
-      return REALISTIC_ESTIMATE_CONFIG.windowRangesExGst.high[scopeKey] || REALISTIC_ESTIMATE_CONFIG.windowRangesExGst.high.both;
-    }
-
-    const group = REALISTIC_ESTIMATE_CONFIG.windowRangesExGst[storeyGroup] || REALISTIC_ESTIMATE_CONFIG.windowRangesExGst.single;
-    const sizeTable = group[normalizedLead.sizeTier] || group.unknown;
-    return sizeTable[scopeKey] || sizeTable.both;
-  }
-
-  function getServiceRange(serviceProfile, normalizedLead) {
-    const table = REALISTIC_ESTIMATE_CONFIG.serviceRangesExGst[serviceProfile.canonicalService] || REALISTIC_ESTIMATE_CONFIG.serviceRangesExGst['Pressure Washing'];
-    let sizeTier = normalizedLead.sizeTier;
-
-    if (serviceProfile.canonicalService === 'Soft Washing' && normalizedLead.stories === '2' && (sizeTier === 'compact' || sizeTier === 'small')) {
-      sizeTier = 'standard';
-    }
-    if (serviceProfile.canonicalService === 'Gutter Cleaning' && normalizedLead.stories === '2') {
-      sizeTier = sizeTier === 'compact' ? 'standard' : 'large';
-    }
-    if (serviceProfile.canonicalService === 'Roof Cleaning' && normalizedLead.stories === '2') {
-      sizeTier = 'standard';
-    }
-    if (serviceProfile.canonicalService === 'Solar Panel Cleaning' && (normalizedLead.access === 'difficult' || normalizedLead.propertyType === 'commercial')) {
-      sizeTier = sizeTier === 'compact' ? 'small' : 'large';
-    }
-
-    return table[sizeTier] || table.unknown || table.small;
-  }
-
-  function cloneRange(range) {
-    return {
-      min: Number(range && range.min ? range.min : REALISTIC_ESTIMATE_CONFIG.minimumExGst),
-      max: Number(range && range.max ? range.max : Number(range && range.min ? range.min : REALISTIC_ESTIMATE_CONFIG.minimumExGst) + 100),
-    };
-  }
-
-  function applyMultiplier(range, minRate, maxRate) {
-    range.min *= 1 + minRate;
-    range.max *= 1 + maxRate;
-  }
-
-  function addRange(range, addonRange) {
-    range.min += Number(addonRange.min || 0);
-    range.max += Number(addonRange.max || 0);
-  }
-
-  function buildBaseReasons(serviceProfile, normalizedLead, tracksScreensSelected) {
-    const reasons = [`${serviceProfile.canonicalService} baseline`];
-
-    if (normalizedLead.propertyType === 'residential' && normalizedLead.stories === '1' && normalizedLead.sizeTier === 'small') {
-      reasons.push('Small single-storey residential property');
-    } else if (normalizedLead.sizeTier === 'compact') {
-      reasons.push('Small/below-standard property profile');
-    } else if (normalizedLead.sizeTier === 'standard') {
-      reasons.push('Standard residential property size');
-    } else if (normalizedLead.sizeTier === 'large' || normalizedLead.sizeTier === 'xl') {
-      reasons.push('Large property scope');
-    } else {
-      reasons.push('Property size not fully confirmed');
-    }
-
-    if (normalizedLead.stories === '2') reasons.push('Double-storey access profile');
-    if (normalizedLead.stories === '3' || normalizedLead.stories === 'building') reasons.push('Height/access requires review');
-    if (normalizedLead.serviceArea === 'both') reasons.push('Interior + exterior coverage');
-    if (normalizedLead.serviceArea === 'interior') reasons.push('Interior-only coverage');
-    if (normalizedLead.serviceArea === 'exterior') reasons.push('Exterior-only coverage');
-    if (normalizedLead.access === 'standard') reasons.push('Standard access');
-    if (normalizedLead.access === 'easy') reasons.push('Easy access');
-    if (normalizedLead.access === 'difficult') reasons.push('Difficult access loading applied');
-    if (normalizedLead.access === 'unknown') reasons.push('Access details not fully confirmed');
-    if (normalizedLead.condition === 'standard') reasons.push('Standard condition');
-    if (normalizedLead.condition === 'light') reasons.push('Light condition');
-    if (normalizedLead.condition === 'heavy') reasons.push('Heavy condition loading applied');
-    if (normalizedLead.condition === 'unknown') reasons.push('Condition details not fully confirmed');
-    if (tracksScreensSelected) reasons.push('Tracks/screens selected');
-
-    return reasons;
-  }
-
-  function applyRiskModifiers(range, normalizedLead, serviceProfile, lead, reasons) {
-    if (normalizedLead.condition === 'heavy') {
-      applyMultiplier(range, 0.18, 0.35);
-    }
-    if (normalizedLead.access === 'difficult') {
-      applyMultiplier(range, 0.12, 0.28);
-    }
-    if (isFirstClean(lead.lastCleaned)) {
-      applyMultiplier(range, 0.08, 0.18);
-      reasons.push('First clean or long gap since last service');
-    }
-    if (!serviceProfile.isWindowService && normalizedLead.sizeTier === 'large' && normalizedLead.condition !== 'heavy' && normalizedLead.access !== 'difficult') {
-      reasons.push('Large scope selected without heavy-condition or difficult-access loading');
-    }
-  }
-
-  function applyAddons(range, addons, serviceProfile, reasons) {
-    addons.forEach((addon) => {
-      const key = normalize(addon);
-      if (serviceProfile.isWindowService && (key.includes('track') || key.includes('screen'))) {
-        return;
-      }
-      const rule = REALISTIC_ESTIMATE_CONFIG.addonExGst[key] || { min: 45, max: 100, reason: `${toText(addon)} add-on selected` };
-      addRange(range, rule);
-      if (rule.reason) reasons.push(rule.reason);
-    });
-  }
-
-  function applyPricingDiscount(range, lead, reasons) {
-    const discountKey = normalizeDiscount(lead.discountEligibility);
-    const discountRate = Number(REALISTIC_ESTIMATE_CONFIG.discountRates[discountKey] || 0);
-    if (discountRate <= 0) return;
-    range.min *= 1 - discountRate;
-    range.max *= 1 - discountRate;
-    reasons.push(`${toTitleCase(discountKey)} discount applied`);
-  }
-
-  function normalizePricingRange(range) {
-    const estimateMin = roundToNearestFive(Math.max(REALISTIC_ESTIMATE_CONFIG.minimumExGst, range.min));
-    const estimateMax = roundToNearestFive(Math.max(estimateMin + 50, range.max));
-    return {
-      estimateMin,
-      estimateMax,
-      estimateMinIncGst: roundToNearestFive(estimateMin * (1 + REALISTIC_ESTIMATE_CONFIG.gstRate)),
-      estimateMaxIncGst: roundToNearestFive(estimateMax * (1 + REALISTIC_ESTIMATE_CONFIG.gstRate)),
-    };
-  }
-
-  function formatScopeUnit(unit, quantity) {
-    const labels = {
-      panes: 'window panes',
-      'square-metres': 'square metres',
-      'solar-panels': 'solar panels',
-      'carpeted-rooms': 'carpeted rooms',
-      'upholstery-seats': 'upholstery seats',
-      'linear-metres': 'linear metres of gutter',
-      bins: quantity === 1 ? 'bin' : 'bins',
-    };
-    return labels[normalize(unit)] || 'measured units';
-  }
-
-  function getScopeDetailRule(lead) {
-    return REALISTIC_ESTIMATE_CONFIG.scopeDetailRules[normalize(lead.scopeDetail)] || null;
-  }
-
-  function applyScopeDetailMultiplier(range, lead, reasons) {
-    const rule = getScopeDetailRule(lead);
-    if (!rule) return;
-    const multiplier = Number(rule.multiplier || 1);
-    range.min *= multiplier;
-    range.max *= multiplier;
-    reasons.push(`${rule.label} selected`);
-  }
-
-  function getQuantityEstimateExGst(lead, serviceProfile, normalizedLead, addons) {
-    const quantity = Number(lead.scopeQuantity || 0);
-    const unit = normalize(lead.scopeUnit);
-    const profile = REALISTIC_ESTIMATE_CONFIG.quantityRatesExGst[serviceProfile.canonicalService];
-
-    if (!profile || !Number.isFinite(quantity) || quantity <= 0 || unit !== profile.unit) {
-      return null;
-    }
-
-    const areaRate = profile.rates ? Number(profile.rates[normalizedLead.serviceArea] || profile.rates.both) : Number(profile.rate || 0);
-    let estimate = Math.max(Number(profile.minimum || REALISTIC_ESTIMATE_CONFIG.minimumExGst), quantity * areaRate);
-
-    if (serviceProfile.isWindowService && hasTracksScreens(addons)) {
-      estimate += quantity * Number(profile.tracksScreensPerUnit || 0);
-    }
-
-    const storyMultipliers = profile.storyMultipliers || {};
-    if (normalizedLead.stories === '2') estimate *= Number(storyMultipliers.double || 1);
-    if (normalizedLead.stories === '3' || normalizedLead.stories === 'building') estimate *= Number(storyMultipliers.high || 1);
-    const detailRule = getScopeDetailRule(lead);
-    if (detailRule) estimate *= Number(detailRule.multiplier || 1);
-    if (normalizedLead.access === 'difficult') estimate *= 1.15;
-    if (normalizedLead.access === 'easy') estimate *= 0.97;
-    if (normalizedLead.condition === 'heavy') estimate *= 1.2;
-    if (normalizedLead.condition === 'light') estimate *= 0.95;
-    if (isFirstClean(lead.lastCleaned)) estimate *= 1.1;
-
-    addons.forEach((addon) => {
-      const key = normalize(addon);
-      if (serviceProfile.isWindowService && (key.includes('track') || key.includes('screen'))) return;
-      const rule = REALISTIC_ESTIMATE_CONFIG.addonExGst[key];
-      if (rule) estimate += (Number(rule.min || 0) + Number(rule.max || 0)) / 2;
-    });
-
-    estimate = Math.max(Number(profile.minimum || REALISTIC_ESTIMATE_CONFIG.minimumExGst), estimate);
-    const discountRate = Number(REALISTIC_ESTIMATE_CONFIG.discountRates[normalizeDiscount(lead.discountEligibility)] || 0);
-    estimate *= 1 - discountRate;
-    return roundToNearestFive(Math.max(REALISTIC_ESTIMATE_CONFIG.minimumExGst, estimate));
-  }
-
-  function calculateRecommendedPricing(normalizedRange, lead, normalizedLead, serviceProfile, addons, accuracyLevel, manualScope) {
-    const quantityEstimate = getQuantityEstimateExGst(lead, serviceProfile, normalizedLead, addons);
-    let recommendedEstimate;
-    let pricingMethod;
-    let internalRange = { ...normalizedRange };
-
-    if (Number.isFinite(quantityEstimate)) {
-      recommendedEstimate = quantityEstimate;
-      pricingMethod = 'Measured quantity';
-      const spread = accuracyLevel === 'High' ? 0.08 : accuracyLevel === 'Low' ? 0.18 : 0.12;
-      internalRange = normalizePricingRange({
-        min: recommendedEstimate * (1 - spread),
-        max: recommendedEstimate * (1 + spread),
-      });
-    } else {
-      let position = manualScope ? 0.5 : 0.38;
-      if (normalizedLead.condition === 'heavy') position += 0.08;
-      if (normalizedLead.access === 'difficult') position += 0.06;
-      if (isFirstClean(lead.lastCleaned)) position += 0.04;
-      if (normalizedLead.condition === 'light') position -= 0.04;
-      if (normalizedLead.access === 'easy') position -= 0.03;
-      position = Math.min(0.72, Math.max(0.28, position));
-      recommendedEstimate = roundToNearestFive(
-        normalizedRange.estimateMin + (normalizedRange.estimateMax - normalizedRange.estimateMin) * position
-      );
-      pricingMethod = manualScope ? 'Structured scope midpoint' : 'Competitive structured estimate';
-    }
-
-    const recommendedEstimateIncGst = roundToNearestFive(recommendedEstimate * (1 + REALISTIC_ESTIMATE_CONFIG.gstRate));
-    return {
-      ...internalRange,
-      recommendedEstimate,
-      recommendedEstimateIncGst,
-      recommendedEstimateLabel: `${toCurrency(recommendedEstimateIncGst)} incl. GST`,
-      internalEstimateLabel: formatMoneyRange(internalRange.estimateMinIncGst, internalRange.estimateMaxIncGst),
-      pricingMethod,
-    };
-  }
-
-  function hasEstimatePhotos(lead) {
-    if (Number(lead.photoUploadCount || 0) > 0) return true;
-    return Array.isArray(lead.photoUploads) && lead.photoUploads.length > 0;
-  }
-
-  function isPricingInformativeNotes(notes) {
-    const text = toText(notes);
-    if (!text || REALISTIC_ESTIMATE_CONFIG.vagueNotesPattern.test(text.toLowerCase())) return false;
-    return text.length >= 30 && text.split(/\s+/).filter(Boolean).length >= 5;
-  }
-
-  function hasDetailedMeasurement(notes) {
-    return /\b\d+\s*(windows?|panels?|glass|doors?|sqm|m2|square|rooms?)\b/.test(normalize(notes));
-  }
-
-  function calculateAccuracy(lead, normalizedLead) {
-    const coreValues = [lead.service, lead.propertyType, lead.storeys, lead.rooms, lead.serviceArea, lead.accessDifficulty, lead.conditionLevel];
-    const completedCore = coreValues.filter((value) => toText(value)).length;
-    const missingImportant =
-      completedCore < 6 ||
-      normalizedLead.sizeTier === 'unknown' ||
-      normalizedLead.access === 'unknown' ||
-      normalizedLead.condition === 'unknown' ||
-      normalizedLead.stories === 'unknown';
-
-    if (missingImportant) return 'Low';
-    const hasStructuredQuantity = Number(lead.scopeQuantity || 0) > 0 && Boolean(toText(lead.scopeUnit));
-    if (hasStructuredQuantity && (hasEstimatePhotos(lead) || isPricingInformativeNotes(lead.notes))) return 'High';
-    if (hasEstimatePhotos(lead) && isPricingInformativeNotes(lead.notes) && hasDetailedMeasurement(lead.notes)) return 'High';
-    return 'Medium';
-  }
-
-  function calculateJobType(normalizedLead, manualScope) {
-    if (manualScope || normalizedLead.propertyType === 'strata' || normalizedLead.propertyType === 'building') {
-      return 'Large Scope';
-    }
-
-    if (normalizedLead.access === 'difficult' || normalizedLead.stories === '3') {
-      return 'Premium Standard';
-    }
-
-    if (normalizedLead.propertyType === 'commercial' || normalizedLead.sizeTier === 'large' || normalizedLead.sizeTier === 'xl') {
-      return 'Large Scope';
-    }
-
-    return 'Standard';
-  }
-
-  function getNormalizedPricingLead(lead) {
-    return {
-      propertyType: normalizePropertyType(lead.propertyType),
-      stories: normalizeStories(lead.storeys),
-      sizeTier: mapRoomsToPricingSizeTier(lead.rooms),
-      serviceArea: normalizeServiceArea(lead.serviceArea),
-      access: normalizeAccess(lead.accessDifficulty),
-      condition: normalizeCondition(lead.conditionLevel),
-    };
-  }
-
-  function estimateLeadSmart(lead) {
-    if (window.TAPricing && typeof window.TAPricing.calculateEstimate === 'function') {
-      return window.TAPricing.calculateEstimate(lead);
-    }
-    const service = toText(lead.service);
-    const addons = normalizeAddons(lead.addons);
-    const serviceProfile = resolveServiceProfile(service);
-    const normalizedLead = getNormalizedPricingLead(lead);
-    const tracksScreensSelected = hasTracksScreens(addons);
-    const manualScope = isManualScope(serviceProfile, normalizedLead, service);
-    let range;
-
-    if (manualScope) {
-      range = cloneRange(REALISTIC_ESTIMATE_CONFIG.manualRangesExGst[normalizedLead.sizeTier] || REALISTIC_ESTIMATE_CONFIG.manualRangesExGst.unknown);
-    } else if (serviceProfile.isWindowService) {
-      range = cloneRange(getWindowRange(normalizedLead, tracksScreensSelected));
-    } else {
-      range = cloneRange(getServiceRange(serviceProfile, normalizedLead));
-    }
-
-    const reasons = buildBaseReasons(serviceProfile, normalizedLead, tracksScreensSelected);
-
-    if (manualScope) {
-      reasons.push('Manual inspection recommended before final pricing');
-      reasons.push('Photos, square metres, bathrooms, glass count and recurring/one-off scope should be confirmed');
-    } else {
-      applyRiskModifiers(range, normalizedLead, serviceProfile, lead, reasons);
-      applyScopeDetailMultiplier(range, lead, reasons);
-      applyAddons(range, addons, serviceProfile, reasons);
-    }
-
-    applyPricingDiscount(range, lead, reasons);
-    const normalizedRange = normalizePricingRange(range);
-    const accuracyLevel = manualScope && !hasEstimatePhotos(lead) ? 'Low' : calculateAccuracy(lead, normalizedLead);
-    const recommendedPricing = calculateRecommendedPricing(
-      normalizedRange,
-      lead,
-      normalizedLead,
-      serviceProfile,
-      addons,
-      accuracyLevel,
-      manualScope
-    );
-    const tailoredQuoteRecommended =
-      manualScope ||
-      normalizedLead.stories === 'building' ||
-      normalizedLead.propertyType === 'building' ||
-      normalizedLead.access === 'difficult' ||
-      normalizedLead.condition === 'heavy' ||
-      normalizedLead.sizeTier === 'xl';
-
-    if (normalizedLead.propertyType === 'apartment') {
-      reasons.push('Apartment jobs priced as interior and safely accessible balcony scope only');
-    }
-
-    if (normalizedLead.propertyType === 'apartment' && normalizedLead.stories === 'building') {
-      reasons.push('High-rise apartments exclude rope access and suspended external work');
-    }
-
-    if (Number(lead.scopeQuantity || 0) > 0 && toText(lead.scopeUnit)) {
-      reasons.unshift(`Customer supplied approximately ${Number(lead.scopeQuantity)} ${formatScopeUnit(lead.scopeUnit, Number(lead.scopeQuantity))}`);
-    }
-    const scopeDetailRule = getScopeDetailRule(lead);
-    if (scopeDetailRule) reasons.unshift(`${scopeDetailRule.label} used for pricing`);
-    reasons.unshift(`${recommendedPricing.pricingMethod} used for the displayed price`);
-
-    return {
-      ...recommendedPricing,
-      estimateLabel: recommendedPricing.recommendedEstimateLabel,
-      estimateReasons: uniqueReasons(reasons).slice(0, 9),
-      estimatedJobType: calculateJobType(normalizedLead, manualScope),
-      tailoredQuoteRecommended,
-      estimateGuidance: tailoredQuoteRecommended
-        ? 'Recommended estimate based on the details provided. Photos, access and final scope are reviewed before the price is confirmed.'
-        : 'Recommended estimate based on the details provided. Your final price is confirmed before work starts.',
-      accuracyLevel,
-      eligibleForGiveaway: isGiveawayCampaignOpen() && recommendedPricing.recommendedEstimate >= REALISTIC_ESTIMATE_CONFIG.giveawayThresholdMinExGst,
-    };
-  }
-
-  function serviceSummaryName(service) {
-    const key = normalize(service);
-    if (key.includes('window')) return 'window clean';
-    if (key.includes('pressure') || key.includes('driveway')) return 'pressure cleaning job';
-    if (key.includes('soft')) return 'house wash/soft wash';
-    if (key.includes('gutter')) return 'gutter clean';
-    if (key.includes('solar')) return 'solar panel clean';
-    if (key.includes('carpet')) return 'carpet clean';
-    if (key.includes('builder') || key.includes('commercial') || key.includes('gym')) return 'builder/detail clean';
-    return `${toText(service).toLowerCase()} service`;
-  }
-
-  function sizeSummary(normalizedLead) {
-    if (normalizedLead.sizeTier === 'compact') return 'small/below-standard';
-    if (normalizedLead.sizeTier === 'small') return 'small';
-    if (normalizedLead.sizeTier === 'standard') return 'standard';
-    if (normalizedLead.sizeTier === 'large') return 'large';
-    if (normalizedLead.sizeTier === 'xl') return 'extra-large';
-    return 'scope-unconfirmed';
-  }
-
-  function storeySummary(normalizedLead) {
-    if (normalizedLead.stories === '1') return 'single-storey';
-    if (normalizedLead.stories === '2') return 'double-storey';
-    if (normalizedLead.stories === '3') return 'three-storey';
-    if (normalizedLead.stories === 'building') return 'building-height';
-    return 'storey-unconfirmed';
-  }
-
-  function serviceAreaSummary(normalizedLead) {
-    if (normalizedLead.serviceArea === 'both') return 'interior and exterior coverage';
-    if (normalizedLead.serviceArea === 'exterior') return 'exterior coverage';
-    if (normalizedLead.serviceArea === 'interior') return 'interior coverage';
-    return 'coverage still to be confirmed';
-  }
-
-  function generateAISummary(lead, estimate) {
-    if (window.TAPricing && typeof window.TAPricing.generateSummary === 'function') {
-      return window.TAPricing.generateSummary(lead, estimate || window.TAPricing.calculateEstimate(lead));
-    }
-    const normalizedLead = getNormalizedPricingLead(lead);
-    const addons = normalizeAddons(lead.addons);
-    const addonText = addons.length ? `, and selected ${toSentenceList(addons)}` : '';
-    const property = normalizedLead.propertyType === 'commercial'
-      ? 'commercial'
-      : normalizedLead.propertyType === 'apartment'
-        ? 'apartment'
-        : 'residential';
-
-    const quantityText = Number(lead.scopeQuantity || 0) > 0 && toText(lead.scopeUnit)
-      ? `, using approximately ${Number(lead.scopeQuantity)} ${formatScopeUnit(lead.scopeUnit, Number(lead.scopeQuantity))}`
-      : '';
-    const detailRule = getScopeDetailRule(lead);
-    const detailText = detailRule ? `, with ${detailRule.label.toLowerCase()}` : '';
-    return `This recommended estimate is based on a ${sizeSummary(normalizedLead)} ${storeySummary(normalizedLead)} ${property} ${serviceSummaryName(lead.service)} with ${serviceAreaSummary(normalizedLead)}, ${normalizedLead.access || 'unconfirmed'} access, ${normalizedLead.condition || 'unconfirmed'} condition${quantityText}${detailText}${addonText}. Final pricing may change after photos, exact counts, access, tracks/screens and condition are reviewed.`;
-  }
-
   function normalizeApiResult(apiResult, fallbackResult) {
+    if (fallbackResult.automaticPricingUnavailable) {
+      return { ...apiResult, ...fallbackResult };
+    }
     const merged = {
       ...fallbackResult,
       ...(apiResult && typeof apiResult === 'object' ? apiResult : {}),
     };
 
-    merged.estimateMin = Number.isFinite(Number(merged.estimateMin)) ? Number(merged.estimateMin) : fallbackResult.estimateMin;
-    merged.estimateMax = Number.isFinite(Number(merged.estimateMax)) ? Number(merged.estimateMax) : fallbackResult.estimateMax;
-    merged.estimateMinIncGst = Number.isFinite(Number(merged.estimateMinIncGst))
+    merged.estimateMin = merged.estimateMin !== null && Number.isFinite(Number(merged.estimateMin)) ? Number(merged.estimateMin) : fallbackResult.estimateMin;
+    merged.estimateMax = merged.estimateMax !== null && Number.isFinite(Number(merged.estimateMax)) ? Number(merged.estimateMax) : fallbackResult.estimateMax;
+    merged.estimateMinIncGst = merged.estimateMinIncGst !== null && Number.isFinite(Number(merged.estimateMinIncGst))
       ? Number(merged.estimateMinIncGst)
       : fallbackResult.estimateMinIncGst;
-    merged.estimateMaxIncGst = Number.isFinite(Number(merged.estimateMaxIncGst))
+    merged.estimateMaxIncGst = merged.estimateMaxIncGst !== null && Number.isFinite(Number(merged.estimateMaxIncGst))
       ? Number(merged.estimateMaxIncGst)
       : fallbackResult.estimateMaxIncGst;
-    merged.recommendedEstimate = Number.isFinite(Number(merged.recommendedEstimate))
+    merged.recommendedEstimate = merged.recommendedEstimate !== null && Number.isFinite(Number(merged.recommendedEstimate))
       ? Number(merged.recommendedEstimate)
       : fallbackResult.recommendedEstimate;
-    merged.recommendedEstimateIncGst = Number.isFinite(Number(merged.recommendedEstimateIncGst))
+    merged.recommendedEstimateIncGst = merged.recommendedEstimateIncGst !== null && Number.isFinite(Number(merged.recommendedEstimateIncGst))
       ? Number(merged.recommendedEstimateIncGst)
       : fallbackResult.recommendedEstimateIncGst;
     merged.recommendedEstimateLabel = toText(merged.recommendedEstimateLabel) || fallbackResult.recommendedEstimateLabel;
@@ -3697,7 +2386,7 @@
         throw new Error('Local preview fallback');
       }
 
-      const response = await fetch(`${API_BASE}/api/giveaway/status`);
+      const response = await fetchWithTimeout(`${API_BASE}/api/giveaway/status`, {}, 9000);
       if (!response.ok) {
         throw new Error('Giveaway status unavailable');
       }

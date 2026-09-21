@@ -172,14 +172,15 @@ async function sendEmailViaWebhook({ subject, text, photoUploads, replyTo }) {
   }
 }
 
-function buildLeadText(lead) {
+export function buildLeadText(lead) {
   const addons = toList(lead?.addons);
   const reasons = toList(lead?.estimateReasons);
   const customerScope = toList(lead?.customerScope);
   const calculation = lead?.calculationBreakdown && typeof lead.calculationBreakdown === 'object' ? lead.calculationBreakdown : {};
   const pricedLines = Array.isArray(calculation.lines) ? calculation.lines : [];
+  const inspectionRequired = Boolean(lead?.automaticPricingUnavailable || calculation.automaticPricingUnavailable);
   const pricedLineText = pricedLines.length
-    ? pricedLines.map((line) => `${formatStructuredValue(line.quantity)} ${toText(line.unitLabel)} - ${toText(line.label)} @ ${formatStructuredValue(line.unitRateExGst)} ex GST = ${formatStructuredValue(line.subtotalExGst)} ex GST`).join(' | ')
+    ? pricedLines.map((line) => `${formatStructuredValue(line.quantity)} ${toText(line.unitLabel)} - ${toText(line.label)}${inspectionRequired ? ' - inspection required' : ` @ ${formatStructuredValue(line.unitRateExGst)} ex GST = ${formatStructuredValue(line.subtotalExGst)} ex GST`}`).join(' | ')
     : 'None';
 
   const lines = [
@@ -229,9 +230,14 @@ function buildLeadText(lead) {
     `- Recommended estimate: ${toText(lead?.recommendedEstimateLabel || lead?.estimateLabel)}`,
     `- Internal confidence band: ${toText(lead?.internalEstimateLabel)}`,
     `- Pricing method: ${toText(lead?.pricingMethod)}`,
-    `- Subtotal ex GST: ${formatStructuredValue(calculation.subtotalExGst)}`,
-    `- GST: ${formatStructuredValue(calculation.gst)}`,
-    `- Total incl. GST: ${formatStructuredValue(calculation.totalIncGst)}`,
+    ...(inspectionRequired ? ['- Automatic pricing unavailable: inspection and team review required'] : [
+      `- Normal price ex GST: ${formatStructuredValue(calculation.normalExGst)}`,
+      `- Campaign: ${toText(calculation.campaign?.label)}`,
+      `- Discount: ${formatStructuredValue(calculation.discount)}`,
+      `- Subtotal ex GST: ${formatStructuredValue(calculation.subtotalExGst)}`,
+      `- GST: ${formatStructuredValue(calculation.gst)}`,
+      `- Total incl. GST: ${formatStructuredValue(calculation.totalIncGst)}`,
+    ]),
     `- Manual review required: ${boolLabel(Boolean(lead?.manualReviewRequired))}`,
     `- Photos required: ${boolLabel(Boolean(lead?.photoRequired))}`,
     `- Accuracy level: ${toText(lead?.accuracyLevel)}`,
@@ -239,6 +245,9 @@ function buildLeadText(lead) {
     `- Tailored quote recommended: ${boolLabel(Boolean(lead?.tailoredQuoteRecommended))}`,
     `- Lead quality: ${toText(lead?.leadQuality)}`,
     `- Giveaway eligible: ${boolLabel(Boolean(lead?.eligibleForGiveaway))}`,
+    '- Entry pending verified payment: 50% deposit, or full upfront payment for supported Afterpay; cancellations/refunds remove entry.',
+    '- Payment preference only: no payment taken by this form; staff must arrange an invoice or supported payment link.',
+    '- Minimum eligible job value: $495 including GST, subject to review.',
     `- AI summary: ${toText(lead?.aiSummary)}`,
     '',
     `Estimate reasons: ${reasons.length ? reasons.join(' | ') : 'None'}`,
