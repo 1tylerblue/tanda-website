@@ -40,8 +40,11 @@ for (const name of pages) {
       if (!home) serviceOffer={'@type':'Offer',price:b.totalIncGst.toFixed(2),priceCurrency:'AUD',description:`25% off. ${Pricing.getItem(selection[0]).label}; ${selection[1]} ${Pricing.unitLabel(Pricing.getItem(selection[0]).unit,selection[1])}. Standard scope within 50 km; includes GST.`,priceSpecification:{'@type':'PriceSpecification',price:b.totalIncGst.toFixed(2),priceCurrency:'AUD',valueAddedTaxIncluded:true}};
     }
     const title=subscription?'10% off subscriptions':'25% off one-off cleaning services';
-    const panel=`<aside class="promotion-panel" aria-label="Cleaning promotions"><h2>${title}</h2><p>${terms}</p>${cards?`<div class="promotion-prices">${cards}</div>`:''}<p><a href="${subscription?'#subscriptionBuilderForm':prefix+'index.html#quote'}">${subscription?'Build your subscription':'Get your discounted estimate'}</a>${home?' · <a href="subscription-builder.html">Save 10% on subscriptions</a>':''}</p></aside>`;
+    const panel=home
+      ? `<aside class="promotion-panel promotion-banner" aria-label="Cleaning promotions"><div class="promotion-banner-offer"><h2>25% OFF</h2><p>September Spring Cleaning <span>Storewide*</span></p></div><a class="promotion-banner-cta" href="#quote">Get a free quote <span aria-hidden="true">&rarr;</span></a><p class="promotion-banner-terms">*Subscriptions save 10%. <a href="#promotion-terms">Offer terms</a></p></aside>`
+      : `<aside class="promotion-panel" aria-label="Cleaning promotions"><h2>${title}</h2><p>${terms}</p>${cards?`<div class="promotion-prices">${cards}</div>`:''}<p><a href="${subscription?'#subscriptionBuilderForm':prefix+'index.html#quote'}">${subscription?'Build your subscription':'Get your discounted estimate'}</a></p></aside>`;
     html=html.replace(/<!-- PROMOTION:START -->[\s\S]*?<!-- PROMOTION:END -->/,`<!-- PROMOTION:START -->\n${panel}\n<!-- PROMOTION:END -->`);
+    html=html.replace(/(<p id="promotion-terms"[^>]*>)[\s\S]*?(<\/p>)/,`$1${terms}$2`);
     html=html.replace(/<span data-plan-price="(bronze|silver|gold|platinum):(first|monthly)">[\s\S]*?<\/span>/g,(_,key,type)=>{
       const plan=plans.find(p=>p.selectedPlanKey===key); const b=type==='first'?plan.firstBreakdown:plan.recurringBreakdown;
       // Avoid nested spans so regeneration is idempotent.

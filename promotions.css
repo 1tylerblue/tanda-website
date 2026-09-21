@@ -18,3 +18,15 @@ html:has(#quote:target){scroll-behavior:auto}
 .address-travel-status{min-height:5em}
 .address-travel-status[hidden]{display:block!important;visibility:hidden}
 @media(max-width:600px){.promotion-panel{margin:1rem;padding:1rem}.price-value{overflow-wrap:anywhere}}
+.promotion-panel.promotion-banner{max-width:none;margin:0;padding:1rem clamp(1rem,4vw,4rem);border:0;border-radius:0;background:#bd2026;color:#fff;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:.65rem 2rem}
+.promotion-banner-offer{display:flex;align-items:center;gap:1.25rem}
+.promotion-banner h2{margin:0;color:#fff;font-size:clamp(1.8rem,4vw,2.6rem);font-weight:800;line-height:1.1;white-space:nowrap}
+.promotion-banner .promotion-banner-offer p{margin:0;font-size:1rem;font-weight:700;line-height:1.35}
+.promotion-banner-offer span{display:block;font-size:.9rem;font-weight:400}
+.promotion-banner a.promotion-banner-cta{padding:.65rem 1rem;border:1px solid #fff;border-radius:6px;color:#fff;text-decoration:none;white-space:nowrap;font-size:.95rem}
+.promotion-banner a.promotion-banner-cta:hover{background:#fff;color:#a31b20}
+.promotion-banner a:focus-visible{outline-color:#fff}
+.promotion-banner p.promotion-banner-terms{flex-basis:100%;margin:0;text-align:center;font-size:.75rem;line-height:1.45;color:#fff}
+.promotion-banner .promotion-banner-terms a{color:#fff}
+#promotion-terms{scroll-margin-top:8rem}
+@media(max-width:600px){.promotion-panel.promotion-banner{padding:.85rem 1rem;gap:.65rem}.promotion-banner-offer{gap:.85rem}.promotion-banner .promotion-banner-offer p{font-size:.95rem}.promotion-banner a.promotion-banner-cta{padding:.4rem .8rem;font-size:.85rem}}
