@@ -1446,7 +1446,7 @@
     applyAccuracyBadge(accuracyNode, result.accuracyLevel);
 
     reasonsNode.innerHTML = '';
-    (Array.isArray(result.estimateReasons) ? result.estimateReasons : []).slice(0, 7).forEach((reason) => {
+    (Array.isArray(result.estimateReasons) ? result.estimateReasons : []).forEach((reason) => {
       const item = document.createElement('li');
       item.textContent = String(reason);
       reasonsNode.appendChild(item);
@@ -1565,31 +1565,37 @@
       detail.textContent = `${line.quantity} ${line.unitLabel}${rateText}`;
       copy.append(name, detail);
       const amount = document.createElement('b');
-      amount.textContent = window.TAPricing.money(line.subtotalExGst);
+      amount.textContent = `${window.TAPricing.money(line.subtotalExGst)} ex GST`;
       row.append(copy, amount);
       container.appendChild(row);
 
-      if (Number(line.minimumExGst || 0) > 0) {
-        const minimum = document.createElement('p');
-        minimum.className = 'estimate-calc-minimum';
-        minimum.textContent = `Service minimum: ${window.TAPricing.money(line.minimumExGst)} ex GST (applied once per category)`;
-        container.appendChild(minimum);
-      }
+
     });
 
-    (Array.isArray(breakdown.adjustments) ? breakdown.adjustments : []).forEach((adjustment) => {
+    const allAdjustments = Array.isArray(breakdown.adjustments) ? breakdown.adjustments : [];
+    const isPromotion = row => row.label === breakdown.campaign?.label;
+    const isTravel = row => row.label === 'Travel from Biggera Waters';
+    const calculationRows = [
+      ...(breakdown.groups || []).filter(group => group.minimumAdjustmentExGst > 0).map(group => ({ label: group.group + ' minimum top-up (once)', amountExGst: group.minimumAdjustmentExGst })),
+      ...allAdjustments.filter(row => !isPromotion(row) && !isTravel(row)),
+      { label: 'Normal service price ex GST', amountExGst: breakdown.normalExGst ?? breakdown.servicesSubtotalExGst, noSign: true },
+      ...allAdjustments.filter(isPromotion),
+    ];
+    calculationRows.forEach((adjustment) => {
       const row = document.createElement('div');
       row.className = 'estimate-calc-row';
       const label = document.createElement('span');
       label.textContent = adjustment.label;
       const amount = document.createElement('b');
       const value = Number(adjustment.amountExGst || 0);
-      amount.textContent = `${value < 0 ? '-' : '+'}${window.TAPricing.money(Math.abs(value))}`;
+      amount.textContent = `${adjustment.noSign ? '' : value < 0 ? '-' : '+'}${window.TAPricing.money(Math.abs(value))} ex GST`;
       row.append(label, amount);
       container.appendChild(row);
     });
 
     const totals = [
+      ['Service subtotal after promotion ex GST', Number(breakdown.normalExGst || breakdown.servicesSubtotalExGst) - Number(breakdown.discount || 0)],
+      ...(breakdown.travelFeeIncGst > 0 ? [['Travel incl. GST (not discounted)', breakdown.travelFeeIncGst]] : []),
       ['Subtotal ex GST', breakdown.subtotalExGst],
       ['GST (10%)', breakdown.gst],
       ['Total incl. GST', breakdown.totalIncGst],
@@ -1673,6 +1679,8 @@
     };
 
     const setUnverified = () => {
+      form.dataset.addressVerified = 'false';
+      form.dataset.distanceSource = '';
       travelBandInput.value = 'unverified';
       travelDistanceInput.value = '';
       travelFeeInput.value = '0';
@@ -1684,7 +1692,7 @@
       if (address.length < 4) {
         resolvedAddress = '';
         setUnverified();
-        setStatus('idle', '');
+        setStatus('error', 'Address requires confirmation. No travel charge has been added.');
         return false;
       }
 
@@ -1702,18 +1710,20 @@
           9000,
         );
         const result = await response.json().catch(() => ({}));
-        if (activeRequest !== requestId) return false;
+        if (activeRequest !== requestId || toText(addressInput.value) !== address) return false;
         if (!response.ok) {
           throw new Error(String(result.error || 'Travel distance could not be verified.'));
         }
 
         const distanceKm = Number(result.distanceKm);
         const feeApplied = Boolean(result.feeApplied);
-        if (!Number.isFinite(distanceKm)) {
-          throw new Error('Travel distance could not be verified.');
+        if (result.addressVerified !== true || result.distanceSource !== 'driving-route' || result.distanceKm === null || !Number.isFinite(distanceKm)) {
+          throw new Error('Address requires confirmation. No travel charge has been added.');
         }
 
         resolvedAddress = address;
+        form.dataset.addressVerified = 'true';
+        form.dataset.distanceSource = result.distanceSource;
         travelBandInput.value = feeApplied ? 'beyond50' : 'within50';
         travelDistanceInput.value = String(distanceKm);
         travelFeeInput.value = feeApplied ? '50' : '0';
@@ -1740,10 +1750,10 @@
     };
 
     addressInput.addEventListener('input', () => {
+      ++requestId; // Invalidate an in-flight lookup immediately when the address changes.
+      resolvedAddress = '';
       window.clearTimeout(debounceId);
-      if (toText(addressInput.value) !== resolvedAddress) {
-        setUnverified();
-      }
+      setUnverified();
       if (toText(addressInput.value).length >= 4) {
         debounceId = window.setTimeout(() => resolveAddress(), 850);
       } else {
@@ -1775,15 +1785,19 @@
       storeys: toText(formData.get('storeys')),
       rooms: toText(formData.get('rooms')),
       serviceArea: toText(formData.get('serviceArea')),
-      scopeQuantity: Math.max(0, Math.round(Number(formData.get('scopeQuantity') || 0))),
+      scopeQuantity: Math.max(0, Number(formData.get('scopeQuantity') || 0)),
       scopeUnit: toText(formData.get('scopeUnit')),
       scopeDetail: toText(formData.get('scopeDetail')),
       accessDifficulty: toText(formData.get('accessDifficulty')),
+      allGlassGroundAccessible: Boolean(formData.get('allGlassGroundAccessible')),
       conditionLevel: toText(formData.get('conditionLevel')),
       recurringFrequency: toText(formData.get('recurringFrequency')) || 'one_off',
       timingLoading: toText(formData.get('timingLoading')) || 'standard',
       travelBand: toText(formData.get('travelBand')) || 'unverified',
-      travelDistanceKm: Math.max(0, Number(formData.get('travelDistanceKm') || 0)),
+      addressVerified: form.dataset.addressVerified === 'true',
+      distanceSource: form.dataset.distanceSource || '',
+      travelStatus: form.dataset.addressVerified === 'true' ? 'verified' : 'requires address confirmation',
+      travelDistanceKm: formData.get('travelDistanceKm') === '' ? null : Math.max(0, Number(formData.get('travelDistanceKm'))),
       travelFeeIncGst: Math.max(0, Number(formData.get('travelFeeIncGst') || 0)),
       discountEligibility: toText(formData.get('discountEligibility')) || 'None',
       parking: toText(formData.get('parking')),
@@ -2019,11 +2033,13 @@
         }
         return;
       }
-      const isFixed = entry.mode === 'fixed' || entry.manual;
+      const isFixed = entry.mode === 'fixed';
       if (isFixed) quantityInput.value = '1';
-      quantityInput.min = '1';
-      quantityInput.step = '1';
-      quantityInput.inputMode = 'numeric';
+      quantityInput.min = isPrimaryItem ? '1' : '0';
+      quantityInput.required = true;
+      const measured = ['square-metres', 'linear-metres', 'labour-hours'].includes(entry.unit);
+      quantityInput.step = measured ? '0.1' : '1';
+      quantityInput.inputMode = measured ? 'decimal' : 'numeric';
       quantityInput.placeholder = `Enter ${engine.unitLabel(entry.unit, 2)}`;
       if (unitNode instanceof HTMLInputElement) unitNode.value = entry.unit;
       else if (unitNode) unitNode.textContent = engine.unitLabel(entry.unit, 2);
@@ -2032,7 +2048,15 @@
         if (unitSummary instanceof HTMLElement) unitSummary.hidden = isFixed;
         if (scopeMeasurement instanceof HTMLElement) scopeMeasurement.classList.toggle('is-fixed', isFixed);
         if (unitLabel) unitLabel.textContent = engine.unitLabel(entry.unit, 2);
-        if (quantityHelp) quantityHelp.textContent = `Enter the approximate number of ${engine.unitLabel(entry.unit, 2)}.`;
+        if (quantityHelp) quantityHelp.textContent = entry.unit === 'windows'
+          ? 'Count each complete window unit, not each individual pane of glass. A double-hung window is one complete unit.'
+          : entry.unit === 'glass-panels'
+            ? 'This category is priced per glass panel. Count each separate large glass panel once; do not count both sides separately.'
+            : `Enter the approximate number of ${engine.unitLabel(entry.unit, 2)}. Zero optional quantities are excluded.`;
+        const area = form.querySelector('#serviceArea');
+        if (area instanceof HTMLSelectElement && /_(both|exterior|interior)$/.test(entry.code)) {
+          area.value = entry.code.endsWith('_both') ? 'Both' : entry.code.endsWith('_exterior') ? 'Exterior' : 'Interior';
+        }
       }
     };
 
@@ -2054,7 +2078,7 @@
       const quantityInput = document.createElement('input');
       quantityInput.className = 'additional-service-quantity';
       quantityInput.type = 'number';
-      quantityInput.min = '1';
+      quantityInput.min = '0';
       quantityInput.step = '1';
       quantityInput.inputMode = 'numeric';
       quantityInput.placeholder = 'Quantity';
@@ -2116,7 +2140,7 @@
     const normalizeWholeNumber = (input) => {
       if (!(input instanceof HTMLInputElement) || !input.value) return;
       const value = Number(input.value);
-      if (Number.isFinite(value)) input.value = String(Math.max(1, Math.round(value)));
+      if (Number.isFinite(value) && value < 0) input.value = '0';
     };
 
     quantity.addEventListener('change', () => normalizeWholeNumber(quantity));
@@ -2396,12 +2420,14 @@
     const lines = [];
     const primaryCode = toText(form.querySelector('#pricingItemCode')?.value);
     if (primaryCode) {
-      lines.push({ code: primaryCode, quantity: Math.max(0, Math.round(Number(form.querySelector('#scopeQuantity')?.value) || 0)) });
+      const value = form.querySelector('#scopeQuantity')?.value;
+      lines.push({ code: primaryCode, quantity: value === '' ? null : Number(value), selected: true });
     }
     form.querySelectorAll('.additional-service-row').forEach((row) => {
       const code = toText(row.querySelector('.additional-service-item')?.value);
-      const quantity = Math.max(0, Math.round(Number(row.querySelector('.additional-service-quantity')?.value) || 0));
-      if (code) lines.push({ code, quantity });
+      const value = row.querySelector('.additional-service-quantity')?.value;
+      const quantity = value === '' ? null : Number(value);
+      if (code) lines.push({ code, quantity, selected: true });
     });
     return lines;
   }
@@ -3309,6 +3335,12 @@
     if (window.TAPricing && typeof window.TAPricing.calculateEstimate === 'function') {
       return window.TAPricing.calculateEstimate(lead);
     }
+    // Never fall back to the retired per-pane/range calculator when the master fails to load.
+    return { estimateMin: 0, estimateMax: 0, recommendedEstimate: 0, recommendedEstimateIncGst: 0,
+      recommendedEstimateLabel: 'Price requires team confirmation', estimateLabel: 'Price requires team confirmation',
+      manualReviewRequired: true, tailoredQuoteRecommended: true, accuracyLevel: 'Low', eligibleForGiveaway: false,
+      estimateReasons: ['Pricing could not be loaded. Your enquiry can still be reviewed by the team.'],
+      estimateGuidance: 'The team will confirm your price before booking.', estimatedJobType: 'Manual Review' };
     const service = toText(lead.service);
     const addons = normalizeAddons(lead.addons);
     const serviceProfile = resolveServiceProfile(service);

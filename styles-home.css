@@ -3445,6 +3445,7 @@ body.gallery-lightbox-open {
 }
 
 .address-travel-status {
+  min-height: 5em;
   position: relative;
   margin: 8px 0 0;
   padding-left: 18px;
@@ -3452,6 +3453,11 @@ body.gallery-lightbox-open {
   font-size: 0.78rem;
   font-weight: 600;
   line-height: 1.45;
+}
+
+.address-travel-status[hidden] {
+  display: block !important;
+  visibility: hidden;
 }
 
 .address-travel-status::before {
@@ -7363,7 +7369,7 @@ body.premium-home {
 
   .estimate-preview .estimate-calculation,
   .estimate-preview > ul {
-    display: none;
+    display: block;
   }
 
   .estimate-preview .group-copy {

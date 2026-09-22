@@ -1,8 +1,8 @@
 (function initTAPricing(root, factory) {
-  const api = factory();
+  const api = factory(typeof module === 'object' && module.exports ? require('./money.js') : root.TAMoney);
   if (typeof module === 'object' && module.exports) module.exports = api;
   if (root) root.TAPricing = api;
-})(typeof globalThis !== 'undefined' ? globalThis : this, function createTAPricing() {
+})(typeof globalThis !== 'undefined' ? globalThis : this, function createTAPricing(Money) {
   'use strict';
 
   const item = (code, label, unit, rate, minimum = 0, options = {}) => ({
@@ -30,9 +30,9 @@
           item('window_standard_exterior', 'Standard window exterior', 'windows', 11, 180),
           item('window_standard_interior', 'Standard window interior', 'windows', 11, 180),
           item('window_standard_both', 'Standard window interior and exterior', 'windows', 19, 220),
-          item('window_large_exterior', 'Large window exterior', 'glass-panels', 16, 180),
-          item('window_large_interior', 'Large window interior', 'glass-panels', 16, 180),
-          item('window_large_both', 'Large window interior and exterior', 'glass-panels', 28, 220),
+          item('window_large_exterior', 'Large glass panel exterior', 'glass-panels', 16, 180),
+          item('window_large_interior', 'Large glass panel interior', 'glass-panels', 16, 180),
+          item('window_large_both', 'Large glass panel interior and exterior', 'glass-panels', 28, 220),
           item('window_sliding_door_both', 'Sliding glass door, both sides', 'door-sets', 42, 220),
           item('window_stacker_bifold', 'Stacker or bi-fold glass door', 'glass-panels', 30, 220),
           item('window_louvre', 'Louvre window', 'windows', 35, 180),
@@ -329,7 +329,7 @@
   }
 
   function roundMoney(value) {
-    return Math.round((number(value) + Number.EPSILON) * 100) / 100;
+    return Money.toCents(number(value)) / 100;
   }
 
   function unitLabel(unit, quantity = 2) {
@@ -339,8 +339,9 @@
 
   function calculateRaw(entry, quantity) {
     const qty = Math.max(0, number(quantity));
+    if (qty <= 0) return { raw: 0, unitRate: number(entry.rate) };
     if (entry.mode === 'manual') return { raw: 0, unitRate: 0 };
-    if (entry.mode === 'fixed') return { raw: number(entry.rate) * Math.max(1, qty || 1), unitRate: number(entry.rate) };
+    if (entry.mode === 'fixed') return { raw: number(entry.rate) * qty, unitRate: number(entry.rate) };
     if (entry.mode === 'tiered-rate') {
       const tier = entry.tiers.find((candidate) => candidate.max === null || qty <= candidate.max) || entry.tiers.at(-1);
       return { raw: qty * number(tier.rate), unitRate: number(tier.rate) };
@@ -359,9 +360,65 @@
   }
 
   function normalizeLineItems(input) {
-    if (Array.isArray(input.lineItems) && input.lineItems.length) return input.lineItems;
-    if (input.pricingItemCode) return [{ code: input.pricingItemCode, quantity: input.scopeQuantity || 1 }];
+    if (Array.isArray(input.lineItems)) return input.lineItems;
+    if (input.pricingItemCode) return [{ code: input.pricingItemCode, quantity: input.scopeQuantity, selected: true }];
     return [];
+  }
+
+  function lineQuantity(line, entry) {
+    const missing = line.quantity === '' || line.quantity === null || line.quantity === undefined;
+    return missing && entry.mode === 'fixed' ? 1 : number(line.quantity);
+  }
+
+  // Pricing and customer scope must use exactly the same validated selections.
+  function resolveLineItems(input) {
+    const issues = [];
+    const resolved = [];
+    const seenCodes = new Set();
+    normalizeLineItems(input).forEach((line, index) => {
+      if (!line || typeof line !== 'object') {
+        issues.push(`Priced service item ${index + 1} is not recognised.`);
+        return;
+      }
+      const missing = line.quantity === '' || line.quantity === null || line.quantity === undefined;
+      const suppliedQuantity = Number(line.quantity);
+      // An explicit nonpositive quantity means this service does not exist.
+      if (!missing && Number.isFinite(suppliedQuantity) && suppliedQuantity <= 0) return;
+      const entry = itemByCode.get(String(line.code || ''));
+      if (!entry) {
+        issues.push(`Priced service item ${index + 1} is not recognised.`);
+        return;
+      }
+      if (missing && entry.mode !== 'fixed') {
+        if (line.selected === true) issues.push(`Enter a positive quantity for ${entry.label}, or remove the service.`);
+        return;
+      }
+      const quantity = lineQuantity(line, entry);
+      const permitsFraction = ['square-metres', 'linear-metres', 'labour-hours'].includes(entry.unit);
+      if ((!missing && !Number.isFinite(suppliedQuantity)) || quantity <= 0 || quantity > 100000 || (!permitsFraction && !Number.isInteger(quantity))) {
+        issues.push(`Confirm a valid quantity for ${entry.label}.`);
+        return;
+      }
+      if (seenCodes.has(entry.code)) issues.push(`${entry.label} appears more than once. Confirm these quantities represent separate work before booking.`);
+      seenCodes.add(entry.code);
+      const raw = calculateRaw(entry, quantity);
+      resolved.push({ ...entry, quantity, unitRate: raw.unitRate, rawSubtotalExGst: roundMoney(raw.raw), pricingNote: raw.pricingNote || '' });
+    });
+
+    const mattressCount = resolved.filter(line => line.groupId === 'mattress-cleaning' && !line.addonOnly && line.rawSubtotalExGst > 0)
+      .reduce((sum, line) => sum + line.quantity, 0);
+    const oneSideCount = resolved.filter(line => line.code === 'mattress_one_side').reduce((sum, line) => sum + line.quantity, 0);
+    const invalidReduction = oneSideCount > mattressCount;
+    if (invalidReduction) issues.push('One-side mattress reductions cannot exceed the number of purchased mattresses. Confirm the mattress count before applying a reduction.');
+    return { lines: invalidReduction ? resolved.filter(line => line.code !== 'mattress_one_side') : resolved, issues };
+  }
+
+  function windowCoverage(line, input) {
+    if (/_exterior$/.test(line.code)) return 'Exterior';
+    if (/_interior$/.test(line.code) || line.code === 'glass_partitions') return 'Interior';
+    if (/_both$/.test(line.code)) return 'Interior and exterior';
+    const area = String(input.serviceArea || '').toLowerCase();
+    return area === 'exterior' ? 'Exterior' : area === 'interior' ? 'Interior' : area === 'both' ? 'Interior and exterior' : 'Selected';
   }
 
   function adjustmentAmount(base, multiplier) {
@@ -369,35 +426,11 @@
   }
 
   function calculateEstimate(input = {}) {
-    const requestedLines = normalizeLineItems(input);
-    const resolvedLines = [];
-    const issues = [];
-    let manualReviewRequired = false;
-    let photoRequired = false;
-
-    requestedLines.forEach((line, index) => {
-      const entry = itemByCode.get(String(line.code || ''));
-      if (!entry) {
-        issues.push(`Priced service item ${index + 1} is not recognised.`);
-        manualReviewRequired = true;
-        return;
-      }
-      const quantity = entry.mode === 'fixed' ? Math.max(1, number(line.quantity, 1)) : number(line.quantity);
-      if (!entry.manual && quantity <= 0) {
-        issues.push(`Enter a quantity for ${entry.label}.`);
-        manualReviewRequired = true;
-      }
-      if (entry.manual) manualReviewRequired = true;
-      if (entry.requiresPhotos) photoRequired = true;
-      const rawResult = calculateRaw(entry, quantity);
-      resolvedLines.push({
-        ...entry,
-        quantity,
-        unitRate: rawResult.unitRate,
-        rawSubtotalExGst: roundMoney(rawResult.raw),
-        pricingNote: rawResult.pricingNote || '',
-      });
-    });
+    const resolved = resolveLineItems(input);
+    const resolvedLines = resolved.lines;
+    const issues = resolved.issues;
+    let manualReviewRequired = issues.length > 0 || resolvedLines.some(line => line.manual);
+    let photoRequired = resolvedLines.some(line => line.requiresPhotos);
 
     if (!resolvedLines.length) {
       manualReviewRequired = true;
@@ -410,18 +443,18 @@
       const group = grouped.get(line.groupId);
       group.lines.push(line);
       group.raw += line.rawSubtotalExGst;
-      group.minimum = Math.max(group.minimum, number(line.minimum));
-      if (!line.addonOnly) group.hasMain = true;
+      if (line.rawSubtotalExGst > 0) group.minimum = Math.max(group.minimum, number(line.minimum));
+      if (!line.addonOnly && line.rawSubtotalExGst > 0) group.hasMain = true;
     });
 
     const groupSummaries = [];
     let servicesBase = 0;
     let eligibleServiceCount = 0;
     grouped.forEach((group) => {
-      if (!group.hasMain) {
+      if (!group.hasMain && group.lines.some(line => line.addonOnly)) {
         manualReviewRequired = true;
         issues.push(`${group.groupLabel} add-ons require a main service.`);
-      } else {
+      } else if (group.raw > 0) {
         eligibleServiceCount += 1;
       }
       const appliedSubtotal = Math.max(0, group.minimum, roundMoney(group.raw));
@@ -435,43 +468,107 @@
     const access = PRICING_CONFIG.accessAdjustments[String(input.accessDifficulty || 'ground').toLowerCase()] || PRICING_CONFIG.accessAdjustments.ground;
     const recurring = PRICING_CONFIG.recurringMultipliers[String(input.recurringFrequency || 'one_off')] || PRICING_CONFIG.recurringMultipliers.one_off;
     const timing = PRICING_CONFIG.timingLoadings[String(input.timingLoading || 'standard')] || PRICING_CONFIG.timingLoadings.standard;
-    const travel = PRICING_CONFIG.travelCharges[String(input.travelBand || 'unverified')] || PRICING_CONFIG.travelCharges.unverified;
+    const suppliedDistance = input.travelDistanceKm ?? input.distanceKm;
+    const verifiedLocation = input.addressVerified === true && input.distanceSource === 'driving-route' && suppliedDistance !== undefined && suppliedDistance !== null && suppliedDistance !== '' && Number.isFinite(Number(suppliedDistance)) && Number(suppliedDistance) >= 0;
+    const travel = verifiedLocation
+      ? PRICING_CONFIG.travelCharges[Number(input.travelDistanceKm ?? input.distanceKm) > 50 ? 'beyond50' : 'within50']
+      : PRICING_CONFIG.travelCharges.unverified;
 
     [condition, access, travel].forEach((rule) => {
       if (rule.manual) manualReviewRequired = true;
       if (rule.requiresPhotos) photoRequired = true;
     });
 
+    const windowLines = resolvedLines.filter(line => line.groupId === 'window-cleaning' && !line.addonOnly);
+    const storeys = parseInt(input.storeys, 10) || (/three|high/i.test(input.storeys || '') ? 3 : /double/i.test(input.storeys || '') ? 2 : 0);
+    const confirm = (reason, photos = false) => { issues.push(reason); manualReviewRequired = true; if (photos) photoRequired = true; };
+    for (const [field, choices, label] of [
+      ['conditionLevel', PRICING_CONFIG.conditionAdjustments, 'condition'],
+      ['accessDifficulty', PRICING_CONFIG.accessAdjustments, 'access'],
+      ['recurringFrequency', PRICING_CONFIG.recurringMultipliers, 'recurring frequency'],
+      ['timingLoading', PRICING_CONFIG.timingLoadings, 'timing'],
+    ]) {
+      if (input[field] && !Object.hasOwn(choices, String(input[field]).toLowerCase())) confirm(`Confirm the selected ${label}; this value is not a recognised pricing option.`);
+    }
+    if (windowLines.length) {
+      const count = windowLines.filter(line => line.unit === 'windows').reduce((sum, line) => sum + line.quantity, 0);
+      if (count >= 40 && (/apartment|unit/i.test(input.propertyType || '') || /^1\D+2$/.test(input.rooms || ''))) confirm('Large window count for selected property type — confirm complete window units, not individual panes.', true);
+      if (count >= 100 || windowLines.some(line => line.unit === 'glass-panels' && line.quantity >= 30)) confirm('Large glass quantity — confirm panel count and supply photos.', true);
+      if (storeys > 1 && (!input.accessDifficulty || input.accessDifficulty === 'ground') && input.allGlassGroundAccessible !== true) confirm('Confirm whether all requested glass is safely accessible from ground level; multi-storey access requires review.', true);
+      if (windowLines.some(line => line.code.startsWith('window_package_')) && windowLines.some(line => !line.code.startsWith('window_package_'))) confirm('Window package and measured glass may overlap — team must confirm quantities before a final price.', true);
+      if (windowLines.filter(line => line.code.startsWith('window_package_')).length > 1) confirm('Multiple whole-property window packages may overlap — confirm separate properties before booking.', true);
+      if (windowLines.some(line => line.code.startsWith('window_package_')) && resolvedLines.some(line => ['window_flyscreen', 'window_screen_door', 'window_deep_track'].includes(line.code))) confirm('The window package includes screens and tracks; confirm separately selected add-ons are additional work.', true);
+      for (const family of ['window_standard', 'window_large', 'window_skylight']) {
+        if (windowLines.some(line => line.code === `${family}_both`) && windowLines.some(line => line.code === `${family}_interior` || line.code === `${family}_exterior`)) confirm('Both-sides window cleaning and a separate single-side selection may cover the same glass. Confirm separate units before booking.', true);
+      }
+      if (windowLines.some(line => /_(both|interior|exterior)$/.test(line.code) && String(input.serviceArea || '').toLowerCase() && windowCoverage(line, input).toLowerCase() !== (String(input.serviceArea).toLowerCase() === 'both' ? 'interior and exterior' : String(input.serviceArea).toLowerCase()))) confirm('Window job type and requested sides differ — scope follows the priced job; confirm the intended sides.');
+    }
+    if (/rope/i.test(input.accessDifficulty || '') || /rope.only/i.test(input.notes || '')) confirm('Rope-only access is not provided. An alternative safe access method must be confirmed.', true);
+    if (resolvedLines.some(line => /^house_wash_/.test(line.code)) && /apartment|unit/i.test(input.propertyType || '')) confirm('Confirm house-washing scope for this apartment/unit before booking.');
+    const fixedStoreys = { window_package_single: 1, window_package_double: 2, house_wash_single: 1, house_wash_double: 2, house_wash_three: 3, gutter_package_single: 1, gutter_package_double: 2 };
+    if (storeys && resolvedLines.some(line => fixedStoreys[line.code] && fixedStoreys[line.code] !== storeys)) confirm('Selected storey-specific package differs from the property details. Confirm which parts of the property are included; no automatic storey uplift has been added.');
+    if (!input.propertyType || !storeys || !input.accessDifficulty || !input.conditionLevel) confirm('Confirm property, storeys, condition and access before booking.');
+    if (photoRequired) manualReviewRequired = true;
+
     const conditionAmount = adjustmentAmount(servicesBase, condition.multiplier);
     const afterCondition = roundMoney(servicesBase + conditionAmount);
-    const accessAmount = adjustmentAmount(afterCondition, access.multiplier);
+    const accessIncluded = new Set(['window_package_double', 'gutter_package_double', 'gutter_double', 'house_wash_double', 'house_wash_three', 'building_walls_double']);
+    const accessKey = String(input.accessDifficulty || 'ground').toLowerCase();
+    const accessBase = groupSummaries.reduce((sum, group) => {
+      if (!['double', 'three', 'harness'].includes(accessKey)) return sum + group.subtotalExGst;
+      if (group.lines.some(line => line.accessAllowance)) {
+        // An explicit roof-access allowance covers its roof job. A second
+        // percentage for the same access must not be charged automatically.
+        confirm('A roof-access allowance is already selected; confirm that it covers the requested access before booking.', true);
+        return sum;
+      }
+      const includedLines = group.lines.filter(line => accessIncluded.has(line.code));
+      if (!includedLines.length) return sum + group.subtotalExGst;
+      const otherLines = group.lines.filter(line => !accessIncluded.has(line.code) && line.rawSubtotalExGst > 0);
+      if (otherLines.length) confirm('Some selected items include storey access and others do not; confirm the access allowance for the additional work.');
+      if (includedLines.some(line => (line.code === 'house_wash_three' ? accessKey !== 'three' : accessKey !== 'double'))) {
+        confirm('Requested access differs from the storey access included in the selected package. Confirm the required access before booking.', true);
+      }
+      if (!otherLines.length) return sum;
+      const includedAmount = includedLines.reduce((subtotal, line) => subtotal + Math.max(0, line.rawSubtotalExGst), 0);
+      // Apply the percentage only to remaining work, preserving the existing
+      // category minimum while avoiding an exemption for the whole category.
+      return sum + Math.max(0, group.subtotalExGst - includedAmount);
+    }, 0);
+    const accessAmount = adjustmentAmount(roundMoney(accessBase * number(condition.multiplier, 1)), access.multiplier);
     const afterAccess = roundMoney(afterCondition + accessAmount);
-    const recurringAmount = adjustmentAmount(afterAccess, recurring.multiplier);
+    const recurringAmount = adjustmentAmount(afterAccess, Math.max(1, number(recurring.multiplier, 1)));
     const afterRecurring = roundMoney(afterAccess + recurringAmount);
     const timingAmount = roundMoney(afterRecurring * number(timing.rate));
     const afterTiming = roundMoney(afterRecurring + timingAmount);
-    const bundleRate = eligibleServiceCount >= 3 ? PRICING_CONFIG.bundleDiscounts.threePlus : eligibleServiceCount === 2 ? PRICING_CONFIG.bundleDiscounts.two : 0;
+    const bundleRate = 0; // The approved campaign replaces legacy discounts; stacking is not authorised.
     const bundleDiscount = roundMoney(afterTiming * bundleRate);
     const servicesAfterDiscount = roundMoney(afterTiming - bundleDiscount);
-    const travelCharge = roundMoney(number(travel.amount));
-    const subtotalExGst = roundMoney(servicesAfterDiscount + travelCharge);
-    const gst = roundMoney(subtotalExGst * PRICING_CONFIG.gstRate);
-    const totalIncGst = roundMoney(subtotalExGst + gst);
+    if (eligibleServiceCount > 1 || number(recurring.multiplier, 1) < 1) confirm('25% service promotion applied once; legacy bundle/maintenance discounts are not stacked. Team confirmation required.');
+    const promotion = Money.promotion(Money.toCents(Math.max(0, servicesAfterDiscount)), 'one_off_service');
+    // Travel is already a GST-inclusive fee and is excluded from the service promotion.
+    const travelFeeIncGst = servicesBase > 0 && verifiedLocation ? (number(travel.amount) > 0 ? 50 : 0) : 0;
+    const travelCharge = roundMoney(travelFeeIncGst / 1.1);
+    const travelGst = roundMoney(travelFeeIncGst - travelCharge);
+    const subtotalExGst = roundMoney(promotion.subtotalExGst + travelCharge);
+    const gst = roundMoney(promotion.gst + travelGst);
+    const totalIncGst = roundMoney(promotion.totalIncGst + travelFeeIncGst);
 
     const hasPrice = subtotalExGst > 0;
     const fromPrice = resolvedLines.some((line) => line.fromPrice) || manualReviewRequired;
     const estimateLabel = hasPrice
-      ? `${fromPrice ? 'From ' : ''}${money(totalIncGst)} incl. GST${manualReviewRequired ? ' - review required' : ''}`
+      ? `${fromPrice ? 'Provisional ' : ''}${money(totalIncGst)} incl. GST${manualReviewRequired ? ' - review required' : ''}`
       : 'Inspection required';
     const reasons = [
       `${PRICING_CONFIG.version} rates used`,
       ...groupSummaries.filter((group) => group.minimumAdjustmentExGst > 0).map((group) => `${group.groupLabel} minimum applied once`),
       condition.multiplier !== 1 ? `${condition.label} allowance included` : condition.label,
       access.multiplier !== 1 ? `${access.label} allowance included` : access.label,
-      recurring.multiplier !== 1 ? `${recurring.label} pricing applied` : recurring.label,
+      number(recurring.multiplier, 1) > 1 ? `${recurring.label} pricing applied` : recurring.label,
       timing.rate ? `${timing.label} loading included` : timing.label,
       bundleRate ? `${eligibleServiceCount >= 3 ? 'Three-service' : 'Two-service'} bundle discount included` : '',
       travel.label,
+      promotion.campaign.label + ' applied before GST; travel excluded',
       'GST added once at 10%',
       photoRequired ? 'Photographs are required before confirmation' : '',
       manualReviewRequired ? 'Team review or inspection required before final confirmation' : '',
@@ -480,6 +577,9 @@
     ].filter(Boolean);
 
     const calculationBreakdown = {
+      ...promotion,
+      travelFeeIncGst,
+      travelGst,
       lines: resolvedLines.map((line) => ({
         code: line.code,
         group: line.groupLabel,
@@ -504,6 +604,7 @@
         { label: 'Recurring maintenance adjustment', amountExGst: recurringAmount },
         { label: 'Timing loading', amountExGst: timingAmount },
         { label: 'Bundle discount', amountExGst: -bundleDiscount },
+        { label: promotion.campaign.label, amountExGst: -promotion.discount },
         { label: 'Travel from Biggera Waters', amountExGst: travelCharge },
       ].filter((entry) => entry.amountExGst !== 0),
       servicesSubtotalExGst: servicesBase,
@@ -523,6 +624,7 @@
       estimateLabel,
       internalEstimateLabel: `${money(subtotalExGst)} ex GST + ${money(gst)} GST = ${money(totalIncGst)} incl. GST`,
       pricingMethod: PRICING_CONFIG.version,
+      pricingPolicyVersion: 'T&A-PRICING-FIX-2026-09-23',
       estimateReasons: reasons,
       estimatedJobType: manualReviewRequired ? 'Manual Review' : eligibleServiceCount > 1 ? 'Bundled Services' : 'Priced Service',
       tailoredQuoteRecommended: manualReviewRequired,
@@ -532,13 +634,18 @@
         ? 'This is a starting estimate only. Photographs or inspection and team confirmation are required.'
         : 'Calculated from the selected service, quantity and master price list. Final scope is confirmed before work starts.',
       accuracyLevel: manualReviewRequired ? 'Low' : photoRequired ? 'Medium' : 'High',
-      eligibleForGiveaway: subtotalExGst >= 495,
+      eligibleForGiveaway: totalIncGst >= 495,
+      depositIncGst: Money.scaleCents(Money.toCents(totalIncGst), 0.5) / 100,
+      afterpayFullPaymentIncGst: totalIncGst,
+      travelStatus: verifiedLocation ? 'verified' : 'requires address confirmation',
+      travelFeeIncGst,
+      promotion: promotion.campaign,
       calculationBreakdown,
       internalCalculation: {
         pricingVersion: PRICING_CONFIG.version,
         conditionMultiplier: number(condition.multiplier, 1),
         accessMultiplier: number(access.multiplier, 1),
-        recurringMultiplier: number(recurring.multiplier, 1),
+        recurringMultiplier: Math.max(1, number(recurring.multiplier, 1)),
         timingRate: number(timing.rate),
         bundleRate,
         eligibleServiceCount,
@@ -552,43 +659,34 @@
   }
 
   function buildServiceScope(input = {}) {
-    const requestedLines = normalizeLineItems(input);
-    const resolvedLines = requestedLines
-      .map((line) => {
-        const entry = itemByCode.get(String(line.code || ''));
-        if (!entry) return null;
-        return {
-          ...entry,
-          quantity: entry.mode === 'fixed' ? Math.max(1, number(line.quantity, 1)) : Math.max(0, number(line.quantity)),
-        };
-      })
-      .filter(Boolean);
+    const resolvedLines = resolveLineItems(input).lines;
 
     if (!resolvedLines.length) return [];
 
-    const areaValue = String(input.serviceArea || '').trim().toLowerCase();
-    const areaLabel = areaValue === 'interior'
-      ? 'Interior'
-      : areaValue === 'exterior'
-        ? 'Exterior'
-        : areaValue === 'both'
-          ? 'Interior and exterior'
-          : 'Selected';
     const scope = [];
+    const oneSideMattresses = resolvedLines.filter(line => line.code === 'mattress_one_side').reduce((sum, line) => sum + line.quantity, 0);
+    const totalMattresses = resolvedLines.filter(line => line.groupId === 'mattress-cleaning' && !line.addonOnly).reduce((sum, line) => sum + line.quantity, 0);
 
     resolvedLines.forEach((line) => {
-      const quantity = line.quantity || 1;
-      scope.push(`${quantity} ${unitLabel(line.unit, quantity)} - ${line.label}`);
+      const quantity = line.quantity;
+      const label = oneSideMattresses > 0 && line.groupId === 'mattress-cleaning' && !line.addonOnly
+        ? line.label.replace(/, both sides$/i, '') : line.label;
+      scope.push(`${quantity} ${unitLabel(line.unit, quantity)} - ${label}`);
     });
+    if (oneSideMattresses > 0) {
+      scope.push(`${oneSideMattresses} ${unitLabel('mattresses', oneSideMattresses)} cleaned on one side only`);
+      if (totalMattresses > oneSideMattresses) scope.push(`${totalMattresses - oneSideMattresses} remaining ${unitLabel('mattresses', totalMattresses - oneSideMattresses)} cleaned on both sides; confirm which mattresses use each option`);
+    }
 
     const windowLines = resolvedLines.filter((line) => line.groupId === 'window-cleaning');
     if (windowLines.length) {
       const codes = new Set(windowLines.map((line) => line.code));
       const hasPackage = windowLines.some((line) => line.code.startsWith('window_package_'));
-      const hasMainGlass = windowLines.some((line) => !line.addonOnly);
-
-      if (hasMainGlass) scope.push(`${areaLabel} window glass cleaned`);
-      if (hasMainGlass || hasPackage) scope.push(`${areaLabel} window frames and sills detailed`);
+      const normalWindows = windowLines.filter(line => /^window_(package_|standard_|large_|double_hung|louvre|sliding_door|stacker_bifold|skylight)/.test(line.code));
+      for (const side of new Set(normalWindows.map(line => windowCoverage(line, input)))) {
+        scope.push(`${side} window glass cleaned`);
+        scope.push(`${side} window frames and sills detailed where applicable to the selected job`);
+      }
       if (hasPackage || codes.has('window_flyscreen') || codes.has('window_screen_door')) {
         scope.push('Selected fly screens and screen doors cleaned');
       }
