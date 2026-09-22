@@ -1,0 +1,10 @@
+{
+  "name": "tanda-service-cta-checks",
+  "private": true,
+  "scripts": {
+    "generate:ctas": "node scripts/render-service-ctas.cjs",
+    "preview:ctas": "node scripts/preview-service-ctas.cjs",
+    "test": "node scripts/render-service-ctas.cjs --check && playwright test"
+  },
+  "devDependencies": {"@playwright/test":"1.63.0"}
+}
