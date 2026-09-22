@@ -85,15 +85,21 @@ window.gtag('consent', 'default', {
           "@type": "OfferCatalog",
           "name": "Property Care Subscriptions",
           "itemListElement": [
-            { "@type": "Offer", "name": "Bronze", "price": "399", "priceCurrency": "AUD", "description": "Entry-level recurring property upkeep. First clean from 599 plus GST." },
-            { "@type": "Offer", "name": "Silver", "price": "549", "priceCurrency": "AUD", "description": "Balanced recurring property care. First clean from 799 plus GST." },
-            { "@type": "Offer", "name": "Gold", "price": "749", "priceCurrency": "AUD", "description": "Managed recurring property maintenance. First clean from 1099 plus GST." },
-            { "@type": "Offer", "name": "Platinum", "price": "1199", "priceCurrency": "AUD", "description": "Premium hands-off property care. First clean from 1599 plus GST." }
+            { "@type": "Offer", "name": "Bronze", "price": "395.01", "priceCurrency": "AUD", "description": "Entry-level recurring property upkeep. First clean from 593.01 incl GST after 10% subscription discount, subject to scope and access." },
+            { "@type": "Offer", "name": "Silver", "price": "543.51", "priceCurrency": "AUD", "description": "Balanced recurring property care. First clean from 791.01 incl GST after 10% subscription discount, subject to scope and access." },
+            { "@type": "Offer", "name": "Gold", "price": "741.51", "priceCurrency": "AUD", "description": "Managed recurring property maintenance. First clean from 1088.01 incl GST after 10% subscription discount, subject to scope and access." },
+            { "@type": "Offer", "name": "Platinum", "price": "1187.01", "priceCurrency": "AUD", "description": "Premium hands-off property care. First clean from 1583.01 incl GST after 10% subscription discount, subject to scope and access." }
           ]
         }
       }
     </script>
     <style>
+      .subscription-price-breakdown { font-size: 13px; margin: 10px 0 16px; }
+      .subscription-price-breakdown > div { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; margin: 8px 0; }
+      .subscription-price-breakdown dd { margin: 0; text-align: right; font-weight: 700; }
+      #livePriceBreakdown h3 { font-size: 16px; margin-top: 22px; }
+      #livePriceBreakdown details { font-size: 13px; overflow-wrap: anywhere; }
+      #livePriceBreakdown details ul { padding-left: 18px; }
       .builder-page {
         background: #f2f6fb;
         padding: 40px 0 80px;
@@ -680,11 +686,11 @@ window.gtag('consent', 'default', {
         <div class="builder-top">
           <h1>Build Your Property Care Subscription</h1>
           <p>
-            Choose your plan, property type, services, access details, and recurring schedule to generate an exact first-clean
+            Choose your plan, property type, services, access details, and recurring schedule to generate an estimated first-clean
             and monthly subscription price. This dedicated builder stays separate from the standard free quote form.
           </p>
           <div class="builder-pill-row" aria-label="Subscription builder highlights">
-            <span class="builder-pill">Exact subscription pricing</span>
+            <span class="builder-pill">Transparent subscription pricing</span>
             <span class="builder-pill">Houses, apartments, high-rise &amp; strata</span>
             <span class="builder-pill">Fixed service frequencies</span>
             <span class="builder-pill">Built around access and parking</span>
@@ -785,14 +791,14 @@ window.gtag('consent', 'default', {
                       <input type="number" id="houseStoreys" name="houseStoreys" min="1" value="1" />
                     </div>
                     <div class="field">
-                      <label for="housePool">Pool</label>
+                      <label for="housePool">Include Pool Cleaning</label>
                       <select id="housePool" name="housePool">
                         <option value="no">No</option>
                         <option value="yes">Yes</option>
                       </select>
                     </div>
                     <div class="field">
-                      <label for="houseBalcony">Balcony</label>
+                      <label for="houseBalcony">Include Balcony Cleaning</label>
                       <select id="houseBalcony" name="houseBalcony">
                         <option value="no">No</option>
                         <option value="yes">Yes</option>
@@ -806,14 +812,14 @@ window.gtag('consent', 'default', {
                       </select>
                     </div>
                     <div class="field">
-                      <label for="houseOutdoor">Outdoor Area</label>
+                      <label for="houseOutdoor">Include Outdoor Area Cleaning</label>
                       <select id="houseOutdoor" name="houseOutdoor">
-                        <option value="yes">Yes</option>
                         <option value="no">No</option>
+                        <option value="yes">Yes</option>
                       </select>
                     </div>
                     <div class="field">
-                      <label for="houseGarage">Garage / Carport</label>
+                      <label for="houseGarage">Include Garage / Carport Cleaning</label>
                       <select id="houseGarage" name="houseGarage">
                         <option value="no">No</option>
                         <option value="yes">Yes</option>
@@ -867,11 +873,12 @@ window.gtag('consent', 'default', {
                     </div>
                     <div class="field">
                       <label for="balconyPanels">Balcony Glass Panels</label>
-                      <input type="number" id="balconyPanels" name="balconyPanels" min="0" value="10" />
+                      <input type="number" id="balconyPanels" name="balconyPanels" min="0" value="0" />
+                      <p class="builder-step-note">Count the glass panels to be cleaned. Zero means no panels; up to 10 panels are covered by the selected balcony allowance.</p>
                     </div>
                     <div class="field">
                       <label for="glassDoors">Glass Doors</label>
-                      <input type="number" id="glassDoors" name="glassDoors" min="0" value="1" />
+                      <input type="number" id="glassDoors" name="glassDoors" min="0" value="0" />
                     </div>
                     <div class="field">
                       <label for="interiorOnlyWindows">Interior Windows Only</label>
@@ -881,10 +888,10 @@ window.gtag('consent', 'default', {
                       </select>
                     </div>
                     <div class="field">
-                      <label for="accessibleBalconyGlass">Accessible Balcony Glass Included</label>
+                      <label for="accessibleBalconyGlass">Add Accessible Balcony Glass Cleaning</label>
                       <select id="accessibleBalconyGlass" name="accessibleBalconyGlass">
-                        <option value="yes">Yes</option>
                         <option value="no">No</option>
+                        <option value="yes">Yes</option>
                       </select>
                     </div>
                   </div>
@@ -1294,7 +1301,7 @@ window.gtag('consent', 'default', {
                 <h2>Final Output</h2>
                 <p class="builder-step-note">
                   The summary includes selected plan, property type, services with fixed frequencies, worker structure,
-                  access logistics, exact first clean price, and exact recurring monthly price.
+                  access logistics, estimated first clean price, and estimated recurring monthly price.
                 </p>
                 <label class="check-tile" for="giveawayConsideration">
                   <input type="checkbox" id="giveawayConsideration" name="giveawayConsideration" />
@@ -1315,18 +1322,19 @@ window.gtag('consent', 'default', {
               <h3>Subscription Summary</h3>
               <div class="result-pricing">
                 <div class="result-pill">
-                  <strong>Exact First Clean Price</strong>
-                  <span id="resultFirstClean">$0 + GST</span>
+                  <strong>Estimated First Clean Price</strong>
+                  <span id="resultFirstClean">$0 incl GST</span>
                 </div>
                 <div class="result-pill">
-                  <strong>Exact Recurring Monthly Price</strong>
-                  <span id="resultRecurring">$0/month + GST</span>
+                  <strong>Estimated Recurring Monthly Price</strong>
+                  <span id="resultRecurring">$0/month incl GST</span>
                 </div>
                 <div class="result-pill">
                   <strong>Annual Recurring Total</strong>
-                  <span id="resultAnnual">$0/year + GST</span>
+                  <span id="resultAnnual">$0/year incl GST</span>
                 </div>
               </div>
+              <div id="resultPriceBreakdown"></div>
               <p><strong>Selected plan:</strong> <span id="resultPlan"></span></p>
               <p><strong>Property type:</strong> <span id="resultPropertyType"></span></p>
               <p><strong>Worker structure:</strong> <span id="resultWorkerStructure"></span></p>
@@ -1344,15 +1352,16 @@ window.gtag('consent', 'default', {
             <span class="summary-chip">Subscription Builder</span>
             <h2>Live Pricing</h2>
             <div class="price-block">
-              <p class="price-label">Exact First Clean</p>
+              <p class="price-label">Estimated First Clean</p>
               <p id="liveFirstClean" class="price-value">$0</p>
-              <p class="price-sub">Ex GST calculated price</p>
+              <p class="price-sub">Includes GST after the 10% subscription discount</p>
             </div>
             <div class="price-block">
-              <p class="price-label">Exact Recurring / Month</p>
+              <p class="price-label">Estimated Recurring / Month</p>
               <p id="liveRecurring" class="price-value">$0</p>
-              <p id="liveAnnual" class="price-sub">$0/year + GST</p>
+              <p id="liveAnnual" class="price-sub">$0/year incl GST</p>
             </div>
+            <div id="livePriceBreakdown" aria-live="polite"></div>
             <ul id="liveSummaryList" class="summary-list">
               <li>Plan: Bronze</li>
               <li>Property: House</li>
@@ -1360,8 +1369,7 @@ window.gtag('consent', 'default', {
               <li>Monthly labour: 0.0 hours</li>
             </ul>
             <p class="summary-note">
-              GST is added to the exact ex-GST values shown in this builder. Final confirmation occurs on first service
-              if submitted details materially differ from site conditions.
+              Prices include GST after the 10% subscription discount. The general 25% service promotion does not apply. Scope, access and any review items must be confirmed before booking.
             </p>
           </aside>
         </div>
@@ -1416,7 +1424,9 @@ window.gtag('consent', 'default', {
         window.__API_BASE__ = 'https://tanda-pro-cleaning-api.onrender.com';
       }
     </script>
-    <script src="subscription-builder.js?v=20260723-progressive-flow" defer></script>
+    <script src="money.js?v=20260923-pricing" defer></script>
+    <script src="subscription-pricing.js?v=20260923-pricing" defer></script>
+    <script src="subscription-builder.js?v=20260923-pricing" defer></script>
   <script defer src="messenger-button.js?v=20260830-contact"></script>
   </body>
 </html>

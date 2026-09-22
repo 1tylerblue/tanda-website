@@ -19,7 +19,7 @@ export function generateServiceScope(lead = {}) {
   return buildServiceScope(lead);
 }
 
-export function scoreLeadQuality(lead = {}) {
+export function scoreLeadQuality(lead = {}, estimate = null) {
   const coreFields = [
     lead.firstName,
     lead.phone,
@@ -31,10 +31,12 @@ export function scoreLeadQuality(lead = {}) {
     toText(lead.travelBand) && toText(lead.travelBand) !== 'unverified' ? lead.travelBand : '',
   ];
   const completed = coreFields.filter((value) => toText(value)).length;
-  const hasQuantity = Number(lead.scopeQuantity || 0) > 0 || (Array.isArray(lead.lineItems) && lead.lineItems.every((line) => Number(line.quantity) > 0));
+  const activeLines = Array.isArray(lead.lineItems) ? lead.lineItems.filter((line) => Number.isFinite(Number(line.quantity)) && Number(line.quantity) > 0) : [];
+  const hasQuantity = Number(lead.scopeQuantity || 0) > 0 || activeLines.length > 0;
   const hasPhotos = Number(lead.photoUploadCount || 0) > 0 || (Array.isArray(lead.photoUploads) && lead.photoUploads.length > 0);
   const hasUsefulNotes = toText(lead.notes).length >= 30;
 
+  if (lead.addressVerified !== true || (estimate && (estimate.manualReviewRequired || estimate.tailoredQuoteRecommended))) return 'low';
   if (completed >= 7 && hasQuantity && (hasPhotos || hasUsefulNotes)) return 'high';
   if (completed >= 6 && hasQuantity) return 'medium';
   return 'low';

@@ -172,7 +172,7 @@ async function sendEmailViaWebhook({ subject, text, photoUploads, replyTo }) {
   }
 }
 
-function buildLeadText(lead) {
+export function buildLeadText(lead) {
   const addons = toList(lead?.addons);
   const reasons = toList(lead?.estimateReasons);
   const customerScope = toList(lead?.customerScope);
@@ -205,11 +205,12 @@ function buildLeadText(lead) {
     `- Measured quantity: ${Number(lead?.scopeQuantity || 0) > 0 ? `${Number(lead.scopeQuantity)} ${toText(lead?.scopeUnit)}` : 'Not supplied'}`,
     `- Surface/scope detail: ${toText(lead?.scopeDetail) || 'Not supplied'}`,
     `- Access: ${toText(lead?.accessDifficulty)}`,
+    `- All requested glass confirmed safely ground-accessible: ${boolLabel(lead?.allGlassGroundAccessible === true)}`,
     `- Condition: ${toText(lead?.conditionLevel)}`,
     `- Recurring frequency: ${toText(lead?.recurringFrequency)}`,
     `- Timing loading: ${toText(lead?.timingLoading)}`,
-    `- Travel: ${Number(lead?.travelDistanceKm || 0) > 0 ? `${lead.travelDistanceKm} km from Biggera Waters` : 'Distance requires confirmation'}`,
-    `- Travel fee: ${toText(lead?.travelBand) === 'unverified' ? 'Requires confirmation' : Number(lead?.travelFeeIncGst || 0) > 0 ? `$${lead.travelFeeIncGst} incl. GST` : 'No travel fee added'}`,
+    `- Travel: ${lead?.addressVerified === true && Number.isFinite(lead?.travelDistanceKm) ? `${lead.travelDistanceKm} km from Biggera Waters` : 'Distance requires confirmation'}`,
+    `- Travel fee: ${lead?.addressVerified !== true ? '$0 incl. GST added; requires address confirmation' : Number(lead?.travelFeeIncGst || 0) > 0 ? '$' + lead.travelFeeIncGst + ' incl. GST' : 'No travel fee added'}`,
     `- Last cleaned: ${toText(lead?.lastCleaned)}`,
     `- Parking: ${toText(lead?.parking)}`,
     `- Payment preference: ${toText(lead?.paymentPreference)}`,
@@ -229,9 +230,15 @@ function buildLeadText(lead) {
     `- Recommended estimate: ${toText(lead?.recommendedEstimateLabel || lead?.estimateLabel)}`,
     `- Internal confidence band: ${toText(lead?.internalEstimateLabel)}`,
     `- Pricing method: ${toText(lead?.pricingMethod)}`,
+    `- Pricing policy version: ${toText(lead?.pricingPolicyVersion)}`,
+    `- Normal service subtotal ex GST: ${formatStructuredValue(calculation.normalExGst)}`,
+    `- Promotion (${toText(calculation.campaign?.label)}), deducted before GST: ${formatStructuredValue(calculation.discount)} ex GST`,
+    `- Travel included: ${formatStructuredValue(calculation.travelFeeIncGst)} incl. GST`,
     `- Subtotal ex GST: ${formatStructuredValue(calculation.subtotalExGst)}`,
     `- GST: ${formatStructuredValue(calculation.gst)}`,
     `- Total incl. GST: ${formatStructuredValue(calculation.totalIncGst)}`,
+    `- Normal booking deposit (50%, incl. GST): ${formatStructuredValue(lead?.depositIncGst)}`,
+    `- Afterpay full-payment amount (incl. GST): ${formatStructuredValue(lead?.afterpayFullPaymentIncGst)}`,
     `- Manual review required: ${boolLabel(Boolean(lead?.manualReviewRequired))}`,
     `- Photos required: ${boolLabel(Boolean(lead?.photoRequired))}`,
     `- Accuracy level: ${toText(lead?.accuracyLevel)}`,

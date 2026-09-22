@@ -1,0 +1,10 @@
+{
+  "name": "tanda-production-pricing-regression",
+  "private": true,
+  "scripts": {
+    "test": "node --test tests/*.test.cjs && npm --prefix backend test",
+    "test:browser": "playwright test",
+    "preview": "node scripts/preview-pricing.cjs"
+  },
+  "devDependencies": { "@playwright/test": "1.63.0" }
+}
