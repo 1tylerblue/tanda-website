@@ -134,7 +134,7 @@ test('invalid/duplicate services, invalid plans, non-finite quantities and promo
   assert.throws(()=>calculate('gold',{houseStoreys:Infinity}),/whole quantity/);
   assert.throws(()=>calculate('gold',{},'house',[...defaults('gold'),defaults('gold')[0]]),/duplicate/i);
   assert.throws(()=>calculate('gold',{},'house',[{serviceId:'carpet-cleaning',frequency:'Daily'}]),/Invalid subscription/);
-  assert.throws(()=>Pricing.calculatePricing({planKey:'gold',propertyType:'house',promoCode:'GENERAL25'}),/cannot be combined/);
+  assert.throws(()=>Pricing.calculatePricing({planKey:'gold',propertyType:'house',promoCode:'GENERAL15'}),/cannot be combined/);
 });
 test('every adjustment sums exactly to the undiscounted reported amount', () => {
   const r=calculate('gold',{houseBedrooms:6,houseStoreys:2,housePool:'yes',houseGarage:'yes',extraGeneralClean:true,conditionLevel:'heavy'});

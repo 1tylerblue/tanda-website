@@ -544,7 +544,7 @@
     const bundleRate = 0; // The approved campaign replaces legacy discounts; stacking is not authorised.
     const bundleDiscount = roundMoney(afterTiming * bundleRate);
     const servicesAfterDiscount = roundMoney(afterTiming - bundleDiscount);
-    if (eligibleServiceCount > 1 || number(recurring.multiplier, 1) < 1) confirm('25% service promotion applied once; legacy bundle/maintenance discounts are not stacked. Team confirmation required.');
+    if (eligibleServiceCount > 1 || number(recurring.multiplier, 1) < 1) confirm('15% service promotion applied once; legacy bundle/maintenance discounts are not stacked. Team confirmation required.');
     const promotion = Money.promotion(Money.toCents(Math.max(0, servicesAfterDiscount)), 'one_off_service');
     // Travel is already a GST-inclusive fee and is excluded from the service promotion.
     const travelFeeIncGst = servicesBase > 0 && verifiedLocation ? (number(travel.amount) > 0 ? 50 : 0) : 0;

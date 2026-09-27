@@ -34,9 +34,9 @@ for(const width of [320,375,390,768,1440])test('40-window quote, invalid travel,
   await start(page,width);await choose(page,['window_standard_both']);
   await page.locator('#scopeQuantity').fill('40');await page.locator('#scopeQuantity').blur();
   if(width<760)await page.locator('[data-mobile-quote-next="3"]').click();
-  await expect(page.locator('[data-preview-range]')).toContainText('$627');
+  await expect(page.locator('[data-preview-range]')).toContainText('$710.60');
   await expect(page.locator('[data-preview-accuracy]')).not.toContainText('High');
-  await expect(page.locator('[data-preview-breakdown]')).toContainText('25% off');
+  await expect(page.locator('[data-preview-breakdown]')).toContainText('15% off');
   await expect(page.locator('[data-preview-breakdown]')).toBeVisible();
   await expect(page.locator('[data-preview-reasons]')).toBeVisible();
   await expect(page.locator('[data-quote-inclusions-list]')).toContainText('Interior and exterior window glass cleaned');
@@ -44,7 +44,7 @@ for(const width of [320,375,390,768,1440])test('40-window quote, invalid travel,
   fs.mkdirSync('output/playwright',{recursive:true});await page.locator('[data-estimate-preview]').screenshot({path:`output/playwright/windows40-${width}.png`});
   await page.locator('[name="agree"]').check();await page.locator('#quoteForm button[type="submit"]').click();
   await expect(page.locator('#formMessage')).toContainText('has been sent');
-  await expect(page.locator('[data-result-range]')).toContainText('$627');
+  await expect(page.locator('[data-result-range]')).toContainText('$710.60');
   expect(payload.lineItems).toEqual([{code:'window_standard_both',quantity:40,selected:true}]);
   expect(payload.travelFeeIncGst).toBe(0);expect(payload.addressVerified).toBe(false);
   expect(await page.evaluate(()=>dataLayer.some(e=>e[0]==='event'&&e[1]==='conversion'&&e[2]?.send_to==='AW-11132030271/8PYfCNyuw9QcEL-albwp'))).toBe(true);
@@ -54,7 +54,7 @@ test('zero optional pressure surfaces remain zero and disappear from scope/minim
   await start(page,1440,'pressure-cleaning');await choose(page,['pressure_concrete','pressure_exterior_walls','pressure_retaining_walls']);
   await page.locator('#scopeQuantity').fill('20');await page.locator('#serviceArea').selectOption('Exterior');
   for(const input of await page.locator('.additional-service-quantity').all()){await input.fill('0');await input.blur();await expect(input).toHaveValue('0');}
-  await expect(page.locator('[data-preview-range]')).toContainText('$206.25');
+  await expect(page.locator('[data-preview-range]')).toContainText('$233.75');
   await expect(page.locator('[data-quote-inclusions-list]')).not.toContainText('Exterior walls');
   await expect(page.locator('[data-quote-inclusions-list]')).not.toContainText('Retaining walls');
   await expect(page.locator('[data-preview-breakdown]')).not.toContainText('Exterior walls');
@@ -87,7 +87,7 @@ test('late address result cannot charge a newly edited invalid address',async({p
   await page.locator('#address').fill('');release();
   await expect(page.locator('#travelBand')).toHaveValue('unverified');
   await expect(page.locator('#travelFeeIncGst')).toHaveValue('0');
-  await expect(page.locator('[data-preview-range]')).toContainText('$627');
+  await expect(page.locator('[data-preview-range]')).toContainText('$710.60');
 });
 test('missing master engine cannot expose retired per-pane prices',async({page})=>{
   await start(page);await choose(page,['window_standard_both']);

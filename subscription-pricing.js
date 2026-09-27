@@ -527,7 +527,7 @@
       annualRecurringIncGst: annualRecurringIncGstCents / 100,
       annualGst: recurringBreakdown.gstCents * 12 / 100,
       worker,
-      gstNote: '10% subscription discount applied once before GST. Totals labelled incl GST include GST exactly once. The general 25% service promotion does not apply to subscriptions. Annual recurring is 12 discounted monthly payments and excludes the first clean.'
+      gstNote: '10% subscription discount applied once before GST. Totals labelled incl GST include GST exactly once. The general 15% service promotion does not apply to subscriptions. Annual recurring is 12 discounted monthly payments and excludes the first clean.'
     };
   }
 

@@ -5,7 +5,7 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
   const ACTIVE_PROMOTIONS = Object.freeze({
-    one_off_service: Object.freeze({ rate: 0.25, basisPoints: 2500, label: '25% off one-off cleaning services', startsAt: null, endsAt: null }),
+    one_off_service: Object.freeze({ rate: 0.15, basisPoints: 1500, label: '15% off one-off cleaning services', startsAt: null, endsAt: null }),
     subscription: Object.freeze({ rate: 0.10, basisPoints: 1000, label: '10% off subscriptions', startsAt: null, endsAt: null }),
   });
   function fraction(value) {

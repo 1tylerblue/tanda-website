@@ -28,20 +28,20 @@ test('verified travel adds $50 once and clearing address immediately removes it'
   await start(page,1440,'Brisbane QLD 4000');
   await expect(page.locator('#travelFeeIncGst')).toHaveValue('50');
   await choose(page,'window_standard_both',40);
-  await expect(page.locator('[data-preview-range]')).toContainText('$677');
+  await expect(page.locator('[data-preview-range]')).toContainText('$760.60');
   const breakdown=page.locator('[data-preview-breakdown]');
   await expect(breakdown).toContainText('Travel incl. GST (not discounted)');
   const text=await breakdown.innerText();
-  expect(text.indexOf('Normal service price')).toBeLessThan(text.indexOf('25% off'));
-  await expect(breakdown.locator('.estimate-calc-row').filter({hasText:'GST (10%)'})).toContainText('$61.55');
+  expect(text.indexOf('Normal service price')).toBeLessThan(text.indexOf('15% off'));
+  await expect(breakdown.locator('.estimate-calc-row').filter({hasText:'GST (10%)'})).toContainText('$69.15');
   await page.locator('#address').fill('');
   // Verify before blur: the old verified location must no longer contribute any price or confidence.
   await expect(page.locator('#travelFeeIncGst')).toHaveValue('0');
   await expect(page.locator('#quoteForm')).toHaveAttribute('data-address-verified','false');
-  await expect(page.locator('[data-preview-range]')).toContainText('$627');
+  await expect(page.locator('[data-preview-range]')).toContainText('$710.60');
   await expect(page.locator('[data-preview-accuracy]')).not.toContainText('High');
 });
-test('30 large panels on mobile use panel wording and $693 incl GST',async({page})=>{
+test('30 large panels on mobile use panel wording and $785.40 incl GST',async({page})=>{
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await start(page,390,'test');
   await choose(page,'window_large_both',30);
@@ -49,12 +49,12 @@ test('30 large panels on mobile use panel wording and $693 incl GST',async({page
   await expect(page.locator('[data-quantity-help]')).toContainText('do not count both sides separately');
   await expect(page.locator('#serviceArea')).toHaveValue('Both');
   await page.locator('[data-mobile-quote-next="3"]').click();
-  await expect(page.locator('[data-preview-range]')).toContainText('$693');
+  await expect(page.locator('[data-preview-range]')).toContainText('$785.40');
   const breakdown=page.locator('[data-preview-breakdown]');
   await expect(breakdown).toBeVisible();
   await expect(breakdown).toContainText('30 glass panels x $28 ex GST');
-  await expect(breakdown.locator('.estimate-calc-row').filter({hasText:'25% off'})).toContainText('-$210');
-  await expect(breakdown.locator('.estimate-calc-row').filter({hasText:'GST (10%)'})).toContainText('$63');
+  await expect(breakdown.locator('.estimate-calc-row').filter({hasText:'15% off'})).toContainText('-$126');
+  await expect(breakdown.locator('.estimate-calc-row').filter({hasText:'GST (10%)'})).toContainText('$71.40');
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
   fs.mkdirSync('output/playwright',{recursive:true});
   await page.locator('[data-estimate-preview]').screenshot({path:'output/playwright/review-large-panels-390.png'});
@@ -68,7 +68,7 @@ test('measured decimal pressure area remains 20.5 square metres after blur',asyn
   await expect(page.locator('#scopeQuantity')).toHaveValue('20.5');
   await expect(page.locator('#scopeQuantity')).toHaveAttribute('step','0.1');
   await page.locator('[data-mobile-quote-next="3"]').click();
-  await expect(page.locator('[data-preview-range]')).toContainText('$206.25');
+  await expect(page.locator('[data-preview-range]')).toContainText('$233.75');
   await expect(page.locator('[data-preview-breakdown]')).toContainText('20.5 m2 x $7 ex GST');
   await expect(page.locator('[data-quote-inclusions-list]')).toContainText('20.5 m2');
 });

@@ -13,11 +13,11 @@ test('standard service estimate includes GST once', () => {
     lineItems: [{ code: 'pressure_concrete', quantity: 50 }],
     travelBand: 'within50',
   });
-  assert.equal(estimate.recommendedEstimate, 262.5);
-  assert.equal(estimate.recommendedEstimateIncGst, 288.75);
+  assert.equal(estimate.recommendedEstimate, 297.5);
+  assert.equal(estimate.recommendedEstimateIncGst, 327.25);
 });
 
-test('two-service estimates receive 25% promotion without legacy bundle stacking', () => {
+test('two-service estimates receive 15% promotion without legacy bundle stacking', () => {
   const estimate = estimateLead({
     lineItems: [
       { code: 'window_package_single', quantity: 1 },
@@ -25,9 +25,10 @@ test('two-service estimates receive 25% promotion without legacy bundle stacking
     ],
     travelBand: 'within50',
   });
-  assert.equal(estimate.recommendedEstimate, 600);
+  assert.equal(estimate.recommendedEstimate, 680);
+  assert.equal(estimate.recommendedEstimateIncGst, 748);
   assert.equal(estimate.internalCalculation.bundleRate, 0);
-  assert.equal(estimate.calculationBreakdown.campaign.rate, 0.25);
+  assert.equal(estimate.calculationBreakdown.campaign.rate, 0.15);
 });
 
 test('travel above 50 kilometres adds exactly 50 dollars including GST', () => {

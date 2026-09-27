@@ -43,19 +43,19 @@ test('production master: 19 categories, 161 codes; per-window and package rates 
 });
 
 for (const [description, code, quantity, expected] of [
-  ['10 standard exterior, legitimate minimum', 'window_standard_exterior', 10, 148.50],
-  ['10 standard both, legitimate minimum', 'window_standard_both', 10, 181.50],
-  ['20 standard both', 'window_standard_both', 20, 313.50],
-  ['30 standard both — YourDigital regression', 'window_standard_both', 30, 470.25],
-  ['40 standard both — YourDigital Test A', 'window_standard_both', 40, 627],
-  ['30 large glass panels — YourDigital Test C', 'window_large_both', 30, 693],
+  ['10 standard exterior, legitimate minimum', 'window_standard_exterior', 10, 168.30],
+  ['10 standard both, legitimate minimum', 'window_standard_both', 10, 205.70],
+  ['20 standard both', 'window_standard_both', 20, 355.30],
+  ['30 standard both — YourDigital regression', 'window_standard_both', 30, 532.95],
+  ['40 standard both — YourDigital Test A', 'window_standard_both', 40, 710.60],
+  ['30 large glass panels — YourDigital Test C', 'window_large_both', 30, 785.40],
 ]) {
-  test(description + ': 25% before one GST application', () => assertMoney(estimate([line(code, quantity)]), expected));
+  test(description + ': 15% before one GST application', () => assertMoney(estimate([line(code, quantity)]), expected));
 }
 
 test('15 double-hung windows plus two exterior skylights: no duplicate minimum', () => {
   const result = estimate([line('window_double_hung', 15), line('window_skylight_exterior', 2)]);
-  assertMoney(result, 371.25);
+  assertMoney(result, 420.75);
   assert.equal(result.calculationBreakdown.groups.length, 1);
   assert.equal(result.internalCalculation.eligibleServiceCount, 1);
 });
@@ -64,34 +64,34 @@ for (const propertyType of ['Residential', 'Apartment / Unit', 'Commercial']) {
   for (const storeys of ['1', '2']) {
     test(propertyType + ' ' + storeys + ' storey: confirmed ground-access scope adds no hidden property/storey multiplier', () => {
       const result = estimate([line('window_standard_both', 20)], { propertyType, storeys, allGlassGroundAccessible: true });
-      assertMoney(result, 313.50);
+      assertMoney(result, 355.30);
     });
   }
 }
 
 test('YourDigital Test B: small apartment and 40 complete windows warns without changing arithmetic', () => {
   const result = estimate([line('window_standard_both', 40)], { propertyType: 'Apartment / Unit', rooms: '1-2' });
-  assertMoney(result, 627);
+  assertMoney(result, 710.60);
   assertReview(result);
   assert.match(result.estimateReasons.join(' '), /count|quantity|confirm|unusual/i);
 });
 
 test('YourDigital Test D: three-storey commercial with default ground access requires review and photos', () => {
   const result = estimate([line('window_standard_both', 30)], { propertyType: 'Commercial', storeys: '3' });
-  assertMoney(result, 470.25);
+  assertMoney(result, 532.95);
   assertReview(result);
   assert.equal(result.photoRequired, true);
 });
 
 test('three-storey commercial explicitly confirms all requested glass is ground-accessible', () => {
   const result = estimate([line('window_standard_both', 30)], { propertyType: 'Commercial', storeys: '3', allGlassGroundAccessible: true });
-  assertMoney(result, 470.25);
+  assertMoney(result, 532.95);
   assert.equal(result.manualReviewRequired, false);
 });
 
 test('very large window count requires confirmation/photos without an arbitrary price increase', () => {
   const result = estimate([line('window_large_both', 100)], { propertyType: 'Commercial', rooms: '7+' });
-  assertMoney(result, 2310);
+  assertMoney(result, 2618);
   assertReview(result);
 });
 
@@ -106,17 +106,17 @@ for (const [description, address, verified, band, source] of [
     const result = estimate([line('window_standard_both', 40)], {
       address, addressVerified: verified, travelBand: band, distanceSource: source, travelDistanceKm: 238.9,
     });
-    assertMoney(result, 627);
+    assertMoney(result, 710.60);
     assert.equal(travelFee(result), 0);
     assertReview(result);
   });
 }
 
 for (const [address, distance, expected] of [
-  ['Biggera Waters QLD 4216', 2, 627],
-  ['Brisbane QLD 4000', 80, 677],
-  ['Logan Central QLD 4114', 55, 677],
-  ['Ipswich QLD 4305', 115, 677],
+  ['Biggera Waters QLD 4216', 2, 710.60],
+  ['Brisbane QLD 4000', 80, 760.60],
+  ['Logan Central QLD 4114', 55, 760.60],
+  ['Ipswich QLD 4305', 115, 760.60],
 ]) {
   test('verified route: ' + address + ' keeps legitimate service-area travel policy', () => {
     const beyond = distance > 50;
@@ -129,7 +129,7 @@ for (const [address, distance, expected] of [
 }
 
 test('verified travel threshold is free at exactly 50 kilometres', () => {
-  assertMoney(estimate([line('window_standard_both', 40)], { travelDistanceKm: 50 }), 627);
+  assertMoney(estimate([line('window_standard_both', 40)], { travelDistanceKm: 50 }), 710.60);
 });
 
 test('YourDigital Test E: optional zero pavers/walls do not add scope, minima, discounts or confidence flags', () => {
@@ -137,7 +137,7 @@ test('YourDigital Test E: optional zero pavers/walls do not add scope, minima, d
   const optional = [...active, line('pressure_pavers', 0), line('pressure_exterior_walls', 0)];
   const base = estimate(active, { propertyType: 'Commercial', storeys: '2', allGlassGroundAccessible: true });
   const result = estimate(optional, { propertyType: 'Commercial', storeys: '2', allGlassGroundAccessible: true });
-  assertMoney(result, 272.25);
+  assertMoney(result, 308.55);
   assert.equal(result.internalCalculation.eligibleServiceCount, 1);
   assert.equal(result.internalCalculation.bundleRate, 0);
   assert.deepEqual(result.calculationBreakdown.lines, base.calculationBreakdown.lines);
@@ -205,7 +205,7 @@ test('legacy single-item interface does not turn scopeQuantity 0 into one', () =
 
 test('deliberately selected measured job with missing quantity requests review without billing it', () => {
   const result = estimate([line('window_standard_both', 20), { code: 'pressure_concrete', selected: true }]);
-  assertMoney(result, 313.5);
+  assertMoney(result, 355.3);
   assertReview(result);
   assert.equal(result.calculationBreakdown.lines.length, 1);
 });
@@ -226,7 +226,7 @@ for (const [code, side, excluded] of [
 
 test('20m² concrete alone applies the actual $250 ex-GST minimum once', () => {
   const result = estimate([line('pressure_concrete', 20)]);
-  assertMoney(result, 206.25);
+  assertMoney(result, 233.75);
   assert.equal(result.calculationBreakdown.lines[0].subtotalExGst, 140);
   assert.equal(result.calculationBreakdown.groups[0].minimumAdjustmentExGst, 110);
 });
@@ -234,27 +234,27 @@ test('20m² concrete alone applies the actual $250 ex-GST minimum once', () => {
 test('YourDigital pressure regression: zero exterior/retaining walls cannot raise the concrete minimum', () => {
   const lines = [line('pressure_concrete', 20), line('pressure_exterior_walls', 0), line('pressure_retaining_walls', 0)];
   const result = estimate(lines);
-  assertMoney(result, 206.25);
+  assertMoney(result, 233.75);
   assert.equal(result.calculationBreakdown.groups.length, 1);
   assert.doesNotMatch(buildServiceScope(input(lines)).join(' '), /Exterior walls|Retaining walls/);
 });
 
 test('positive concrete+pavers+wall surfaces apply greatest legitimate category minimum once', () => {
   const result = estimate([line('pressure_concrete', 20), line('pressure_pavers', 10), line('pressure_exterior_walls', 2)]);
-  assertMoney(result, 247.5);
+  assertMoney(result, 280.5);
   assert.equal(result.calculationBreakdown.groups[0].minimumAdjustmentExGst, 67);
   assert.equal(result.internalCalculation.eligibleServiceCount, 1);
 });
 
 test('measured area preserves legitimate fractions instead of silently rounding upwards', () => {
   const result = estimate([line('pressure_exterior_walls', 40.5)]);
-  assertMoney(result, 300.71);
+  assertMoney(result, 340.80);
   assert.equal(result.calculationBreakdown.lines[0].quantity, 40.5);
 });
 
-for (const [code, storeys, expected] of [['house_wash_single', '1', 453.75], ['house_wash_double', '2', 726]]) {
+for (const [code, storeys, expected] of [['house_wash_single', '1', 514.25], ['house_wash_double', '2', 822.80]]) {
   for (const verified of [true, false]) {
-    test(code + ': 25% promotion, ' + (verified ? 'valid local address' : 'invalid address'), () => {
+    test(code + ': 15% promotion, ' + (verified ? 'valid local address' : 'invalid address'), () => {
       const result = estimate([line(code, 1)], { storeys, addressVerified: verified, address: verified ? local.address : 'test', travelBand: verified ? 'within50' : 'unverified' });
       assertMoney(result, expected);
       if (!verified) assertReview(result);
@@ -264,33 +264,33 @@ for (const [code, storeys, expected] of [['house_wash_single', '1', 453.75], ['h
 
 test('apartment + double-storey whole-house wash gets compatibility review without changing the price', () => {
   const result = estimate([line('house_wash_double', 1)], { propertyType: 'Apartment / Unit', storeys: '2' });
-  assertMoney(result, 726);
+  assertMoney(result, 822.80);
   assertReview(result);
 });
 
-test('two legitimate services get 25% once and no legacy bundle stacking', () => {
+test('two legitimate services get 15% once and no legacy bundle stacking', () => {
   const result = estimate([line('window_package_single', 1), line('gutter_package_single', 1)]);
-  assertMoney(result, 660);
+  assertMoney(result, 748);
   assert.equal(result.internalCalculation.eligibleServiceCount, 2);
   assert.equal(result.internalCalculation.bundleRate, 0);
   assertReview(result);
 });
 
-test('three legitimate services get 25% once and no legacy bundle stacking', () => {
+test('three legitimate services get 15% once and no legacy bundle stacking', () => {
   const result = estimate([line('window_package_single', 1), line('gutter_package_single', 1), line('house_wash_single', 1)]);
-  assertMoney(result, 1113.75);
+  assertMoney(result, 1262.25);
   assert.equal(result.internalCalculation.eligibleServiceCount, 3);
   assert.equal(result.internalCalculation.bundleRate, 0);
 });
 
 test('legacy monthly service discount cannot silently stack with the campaign', () => {
   const result = estimate([line('window_standard_both', 40)], { recurringFrequency: 'monthly' });
-  assertMoney(result, 627);
+  assertMoney(result, 710.60);
   assertReview(result);
 });
 
 test('valid negative mattress one-side reduction remains a legitimate adjustment', () => {
-  assertMoney(estimate([line('mattress_queen', 1), line('mattress_one_side', 1)]), 99);
+  assertMoney(estimate([line('mattress_queen', 1), line('mattress_one_side', 1)]), 112.20);
 });
 
 test('invalid item code cannot produce a confident price or service minimum', () => {
@@ -304,10 +304,11 @@ test('package plus separately counted standard windows requires review of possib
 });
 
 test('giveaway threshold uses post-promotion qualifying service total including GST', () => {
-  const below = estimate([line('window_standard_both', 30)]);
-  assertMoney(below, 470.25);
+  const below = estimate([line('window_standard_both', 27)]);
+  assertMoney(below, 479.66);
   assert.equal(below.eligibleForGiveaway, false);
-  const exact = estimate([line('mattress_queen', 4)]);
+  // Cent-rounding boundary: 58.823m² × unchanged $9/m² = $529.41 ex GST; 15% off leaves $450 + $45 GST.
+  const exact = estimate([line('pressure_exterior_walls', 58.823)]);
   assertMoney(exact, 495);
   assert.equal(exact.eligibleForGiveaway, true);
   const above = estimate([line('window_standard_both', 40)]);
@@ -315,27 +316,27 @@ test('giveaway threshold uses post-promotion qualifying service total including 
 });
 
 test('legitimate travel remains part of final job spend under the existing giveaway rule', () => {
-  const result = estimate([line('window_standard_both', 30)], {
+  const result = estimate([line('window_standard_both', 27)], {
     address: 'Brisbane QLD 4000', travelBand: 'beyond50', travelDistanceKm: 80,
   });
-  assertMoney(result, 520.25);
+  assertMoney(result, 529.66);
   assert.equal(result.eligibleForGiveaway, true);
 });
 
 test('50% normal deposit and Afterpay full amount use exactly the displayed inclusive total', () => {
   const result = estimate([line('window_standard_both', 30)]);
-  assertMoney(result, 470.25);
-  assert.equal(result.depositIncGst, 235.13);
-  assert.equal(result.afterpayFullPaymentIncGst, 470.25);
+  assertMoney(result, 532.95);
+  assert.equal(result.depositIncGst, 266.48);
+  assert.equal(result.afterpayFullPaymentIncGst, 532.95);
   assert.equal(result.afterpayFullPaymentIncGst, result.calculationBreakdown.totalIncGst);
 });
 
 
 test('invalid travel never makes a below-$495 promotional estimate giveaway eligible', () => {
-  const result = estimate([line('window_standard_both', 30)], {
+  const result = estimate([line('window_standard_both', 27)], {
     address: 'test', addressVerified: false, travelBand: 'beyond50', travelDistanceKm: 238.9,
   });
-  assertMoney(result, 470.25);
+  assertMoney(result, 479.66);
   assert.equal(result.eligibleForGiveaway, false);
 });
 
@@ -362,7 +363,7 @@ test('manual measured builders item requires actual measured quantity; unknown q
   assert.equal(total(empty), 0);
   assertReview(empty);
   const measured = estimate([line('builders_final', 250)]);
-  assertMoney(measured, 1340.63);
+  assertMoney(measured, 1519.38);
   assert.equal(measured.calculationBreakdown.lines[0].quantity, 250);
   assertReview(measured);
 });
@@ -370,7 +371,7 @@ test('manual measured builders item requires actual measured quantity; unknown q
 
 test('selected non-numeric measured quantity is excluded but explicitly requires review', () => {
   const result = estimate([line('window_standard_both', 20), { code: 'pressure_concrete', quantity: 'not-a-number', selected: true }]);
-  assertMoney(result, 313.5);
+  assertMoney(result, 355.3);
   assertReview(result);
   assert.equal(result.calculationBreakdown.lines.length, 1);
 });
@@ -416,30 +417,30 @@ test('orphan negative mattress allowance cannot discount unrelated work or creat
   assert.equal(alone.calculationBreakdown.lines.length, 0);
   assertReview(alone);
   const other = estimate([line('window_standard_both', 40), line('mattress_one_side', 5)]);
-  assertMoney(other, 627);
+  assertMoney(other, 710.60);
   assertReview(other);
   assert.doesNotMatch(buildServiceScope(input([line('window_standard_both', 40), line('mattress_one_side', 5)])).join(' '), /One-side-only reduction/);
 });
 
 test('one-side reductions cannot outnumber the positively priced mattresses', () => {
   const result = estimate([line('mattress_queen', 1), line('mattress_one_side', 2)]);
-  assertMoney(result, 123.75);
+  assertMoney(result, 140.25);
   assertReview(result);
   assert.equal(result.calculationBreakdown.lines.length, 1);
   const valid = estimate([line('mattress_queen', 2), line('mattress_one_side', 2)]);
-  assertMoney(valid, 198);
+  assertMoney(valid, 224.40);
 });
 
 test('duplicated mattress reductions are checked as a combined count', () => {
   const result = estimate([line('mattress_queen', 1), line('mattress_one_side', 1), line('mattress_one_side', 1)]);
-  assertMoney(result, 123.75);
+  assertMoney(result, 140.25);
   assertReview(result);
   assert.equal(result.calculationBreakdown.lines.length, 1);
 });
 
 test('double-storey package rates do not incur a second double-storey access percentage', () => {
   for (const [code, expected] of [
-    ['window_package_double', 536.25], ['gutter_package_double', 408.38], ['house_wash_double', 726],
+    ['window_package_double', 607.75], ['gutter_package_double', 462.83], ['house_wash_double', 822.80],
   ]) {
     const result = estimate([line(code, 1)], { storeys: '2', accessDifficulty: 'double' });
     assertMoney(result, expected);
@@ -449,14 +450,14 @@ test('double-storey package rates do not incur a second double-storey access per
 
 test('one access-included item cannot exempt separate measured work from the entire category', () => {
   const result = estimate([line('window_package_double', 1), line('window_standard_both', 20)], { storeys: '2', accessDifficulty: 'double' });
-  assertMoney(result, 896.78);
+  assertMoney(result, 1016.35);
   assertReview(result);
   assert.equal(result.calculationBreakdown.adjustments.find(a => a.label === 'Access allowance').amountExGst, 57);
 });
 
 test('a named roof-access allowance does not silently stack with another percentage for that roof', () => {
   const result = estimate([line('roof_metal_single', 100), line('roof_access_double', 1)], { storeys: '2', accessDifficulty: 'double' });
-  assertMoney(result, 907.5);
+  assertMoney(result, 1028.50);
   assertReview(result);
   assert.equal(result.calculationBreakdown.adjustments.some(a => a.label === 'Access allowance'), false);
 });
@@ -464,7 +465,7 @@ test('a named roof-access allowance does not silently stack with another percent
 test('a null or empty distance cannot be presented as verified zero-distance travel', () => {
   for (const travelDistanceKm of [null, '']) {
     const result = estimate([line('window_standard_both', 40)], { addressVerified: true, travelDistanceKm });
-    assertMoney(result, 627);
+    assertMoney(result, 710.60);
     assertReview(result);
     assert.equal(result.travelStatus, 'requires address confirmation');
   }
@@ -482,6 +483,18 @@ test('mattress one-side purchase cannot promise both sides in the customer scope
 
 test('contradictory fixed package/storey selection requires review without increasing rates',()=>{
   const value=estimate([line('house_wash_double',1)],{storeys:'1'});
-  assertMoney(value,726); assertReview(value);
+  assertMoney(value,822.80); assertReview(value);
   assert.match(value.estimateReasons.join(' '),/storey-specific package/);
+});
+
+
+test('approved campaign is 15% services and separate 10% subscriptions', () => {
+  const money = require('../money.js');
+  assert.equal(money.ACTIVE_PROMOTIONS.one_off_service.rate, 0.15);
+  assert.equal(money.ACTIVE_PROMOTIONS.one_off_service.basisPoints, 1500);
+  const service = money.promotion(76000, 'one_off_service');
+  assert.deepEqual([service.normalExGstCents, service.discountCents, service.subtotalExGstCents, service.gstCents, service.totalIncGstCents], [76000, 11400, 64600, 6460, 71060]);
+  const subscription = money.promotion(76000, 'subscription');
+  assert.equal(subscription.campaign.rate, 0.1);
+  assert.equal(subscription.discountCents, 7600);
 });

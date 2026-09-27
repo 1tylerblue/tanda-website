@@ -65,14 +65,15 @@ window.gtag('consent', 'default', {
     <link rel="canonical" href="https://www.tandaprocleaning.com.au/" />
     <link rel="icon" href="assets/images/logo.jpeg" />
     <link rel="manifest" href="manifest.json" />
-    <link rel="preload" as="image" href="assets/images/hero-house-van-1920.webp" media="(min-width: 761px)" fetchpriority="high" />
-    <link rel="preload" as="image" href="assets/images/hero-house-van-900.webp" media="(max-width: 760px)" fetchpriority="high" />
+    <link rel="preload" as="image" href="assets/images/hero-house-van-1920.webp?v=ford-badge" media="(min-width: 761px)" fetchpriority="high" />
+    <link rel="preload" as="image" href="assets/images/hero-house-van-900.webp?v=ford-badge" media="(max-width: 760px)" fetchpriority="high" />
     <script>
       if ('scrollRestoration' in history) {
         history.scrollRestoration = 'manual';
       }
     </script>
-  <link rel="stylesheet" href="styles-home.css?v=20260923-pricing" />
+  <link rel="stylesheet" href="styles-home.css?v=20260927-restored" />
+  <link rel="stylesheet" href="promotions.css?v=20260927-restored" />
 <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -222,6 +223,9 @@ window.gtag('consent', 'default', {
     </header>
 
     <main id="main-content">
+      <!-- PROMOTION:START -->
+      <aside class="promotion-panel promotion-banner" aria-label="Cleaning promotions"><div class="promotion-banner-offer"><h2>15% OFF</h2><p>September Spring Cleaning <span>Storewide*</span></p></div><a class="promotion-banner-cta" href="#quote">Get a free quote <span aria-hidden="true">&rarr;</span></a><p class="promotion-banner-terms">*Subscriptions save 10%. <a href="#promotion-terms">Offer terms</a></p></aside>
+      <!-- PROMOTION:END -->
     <section class="hero">
       <div class="hero-content">
         <h1>Premium Property Cleaning &amp; Presentation</h1>
@@ -262,7 +266,7 @@ window.gtag('consent', 'default', {
         </div>
         <div class="commercial-trust-panel" aria-label="Client types serviced">
           <article>
-            <img class="commercial-trust-photo" src="assets/images/builders-clean-1600.webp" alt="Commercial gym interior serviced by T and A Pro Cleaning" loading="lazy" decoding="async" />
+            <img class="commercial-trust-photo" src="assets/images/builders-clean-1600.webp?v=anytime-upright" alt="Commercial gym interior serviced by T and A Pro Cleaning" loading="lazy" decoding="async" />
             <div class="commercial-trust-card-copy">
               <span class="commercial-trust-mark">10+</span>
               <strong>Anytime Fitness Locations Serviced</strong>
@@ -413,7 +417,7 @@ window.gtag('consent', 'default', {
             </div>
           </div>
           <div class="service-card">
-            <img src="assets/images/builders-clean-1600.webp" alt="Builder Clean" loading="lazy" decoding="async" />
+            <img src="assets/images/builders-clean-1600.webp?v=anytime-upright" alt="Builder Clean" loading="lazy" decoding="async" />
             <div class="service-content">
               <h3>Builder Clean</h3>
               <p>Detailed post-build cleaning that prepares sites for handover and presentation.</p>
@@ -785,7 +789,7 @@ window.gtag('consent', 'default', {
       <div class="container">
         <div class="quote-intro">
           <h2>Request Your Free Quote</h2>
-          <p>Get a provisional estimate based on your selected service, quantities, access and condition. Eligible service charges receive 25% off before GST; verified travel is excluded. Subscriptions receive their separate 10% discount only.</p>
+          <p id="promotion-terms">Get a provisional estimate based on your selected service, quantities, access and condition. Eligible service charges receive 15% off before GST; verified travel is excluded. Subscriptions receive their separate 10% discount only. Promotions cannot be combined with other promotional codes or bundle discounts. Final pricing is subject to confirmed scope, access and condition.</p>
           <p class="group-copy">What happens next: 1. Submit details 2. Receive your estimated price 3. We confirm scope 4. Book your job.</p>
         </div>
         <div class="quote-layout">
@@ -1243,9 +1247,9 @@ window.gtag('consent', 'default', {
     window.__API_BASE__ = 'https://tanda-pro-cleaning-api.onrender.com';
   }
 </script>
-<script defer src="money.js?v=20260923-pricing"></script>
-<script defer src="pricing-engine.js?v=20260923-pricing"></script>
-  <script defer src="app.js?v=20260923-pricing"></script>
+<script defer src="money.js?v=20260927-promotion"></script>
+<script defer src="pricing-engine.js?v=20260927-promotion"></script>
+  <script defer src="app.js?v=20260927-promotion"></script>
 <script defer src="gallery.js"></script>
 <script defer src="reviews.js?v=20260710-carousel-2"></script>
   <script defer src="messenger-button.js?v=20260830-contact"></script>
