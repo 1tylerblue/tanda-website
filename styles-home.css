@@ -3674,6 +3674,41 @@ body.gallery-lightbox-open {
   color: #102b47;
 }
 
+.estimate-calc-row.estimate-calc-promotion {
+  padding: 9px 10px;
+  border-radius: 6px;
+  background: #fff4f4;
+  color: #b31b24;
+  font-weight: 800;
+}
+
+.estimate-calc-promotion b {
+  color: inherit;
+}
+
+.estimate-preview .estimate-promotion,
+.result-panel .estimate-promotion {
+  margin: 0 0 16px;
+  padding: 10px 12px;
+  border: 1px solid #efb5bb;
+  border-left: 4px solid #bd2026;
+  border-radius: 8px;
+  background: #fff4f4;
+  color: #b31b24;
+  font-size: .9rem;
+  line-height: 1.5;
+}
+
+.estimate-promotion strong {
+  display: block;
+  color: inherit;
+  font-weight: 800;
+}
+
+.estimate-promotion[hidden] {
+  display: none;
+}
+
 .estimate-calc-minimum {
   margin: -3px 0 5px;
   color: #58708a;

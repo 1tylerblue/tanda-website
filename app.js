@@ -1440,6 +1440,7 @@
     typeNode.textContent = String(result.estimatedJobType || 'Standard');
     accuracyNode.textContent = `Pricing Confidence: ${toText(result.accuracyLevel || 'Medium')}`;
     noteNode.textContent = String(result.estimateGuidance || 'Final pricing confirmed after site inspection.');
+    renderEstimatePromotion(document.querySelector('[data-preview-promotion]'), result.calculationBreakdown);
     renderCalculationBreakdown(breakdownNode, result.calculationBreakdown);
 
     applyJobTypeBadge(typeNode, result.estimatedJobType);
@@ -1492,6 +1493,7 @@
 
     noteNode.textContent = String(result.estimateGuidance || 'Final pricing confirmed after site inspection.');
     renderScopeItems(inclusionsNode, result.customerScope);
+    renderEstimatePromotion(document.querySelector('[data-result-promotion]'), result.calculationBreakdown);
     renderCalculationBreakdown(breakdownNode, result.calculationBreakdown);
 
     reasonsNode.innerHTML = '';
@@ -1543,6 +1545,23 @@
     });
   }
 
+  function renderEstimatePromotion(node, breakdown) {
+    if (!(node instanceof HTMLElement)) return;
+    node.replaceChildren();
+    node.hidden = true;
+    const discount = Number(breakdown?.discount);
+    const rate = Number(breakdown?.campaign?.rate);
+    const hasPricedWork = Array.isArray(breakdown?.lines) && breakdown.lines.some(line => Number(line.subtotalExGst) > 0);
+    if (!hasPricedWork || !Number.isFinite(discount) || discount <= 0 || !Number.isFinite(rate) || rate <= 0 || !window.TAPricing?.money) return;
+
+    const label = document.createElement('strong');
+    label.textContent = String(breakdown.campaign.label) + ' applied';
+    const saving = document.createElement('span');
+    saving.textContent = 'You save ' + window.TAPricing.money(discount) + ' ex GST. Already included in your total.';
+    node.append(label, saving);
+    node.hidden = false;
+  }
+
   function renderCalculationBreakdown(container, breakdown) {
     if (!(container instanceof HTMLElement)) return;
     container.replaceChildren();
@@ -1583,7 +1602,7 @@
     ];
     calculationRows.forEach((adjustment) => {
       const row = document.createElement('div');
-      row.className = 'estimate-calc-row';
+      row.className = 'estimate-calc-row' + (isPromotion(adjustment) && Number(adjustment.amountExGst) < 0 ? ' estimate-calc-promotion' : '');
       const label = document.createElement('span');
       label.textContent = adjustment.label;
       const amount = document.createElement('b');
