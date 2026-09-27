@@ -1,0 +1,49 @@
+/* Restored September banner; deliberately scoped to the promotion. */
+.promotion-banner{box-sizing:border-box}
+.promotion-banner a{font-weight:700;text-decoration:underline}
+.promotion-panel.promotion-banner{max-width:none;margin:0;padding:1rem clamp(1rem,4vw,4rem);border:0;border-radius:0;background:#bd2026;color:#fff;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:.65rem 2rem}
+.promotion-banner-offer{display:flex;align-items:center;gap:1.25rem}
+.promotion-banner h2{margin:0;color:#fff;font-size:clamp(1.8rem,4vw,2.6rem);font-weight:800;line-height:1.1;white-space:nowrap}
+.promotion-banner .promotion-banner-offer p{margin:0;font-size:1rem;font-weight:700;line-height:1.35}
+.promotion-banner-offer span{display:block;font-size:.9rem;font-weight:400}
+.promotion-banner a.promotion-banner-cta{padding:.65rem 1rem;border:1px solid #fff;border-radius:6px;color:#fff;text-decoration:none;white-space:nowrap;font-size:.95rem}
+.promotion-banner a.promotion-banner-cta:hover{background:#fff;color:#a31b20}
+.promotion-banner a:focus-visible{outline-color:#fff}
+.promotion-banner p.promotion-banner-terms{flex-basis:100%;margin:0;text-align:center;font-size:.75rem;line-height:1.45;color:#fff}
+.promotion-banner .promotion-banner-terms a{color:#fff}
+#promotion-terms{scroll-margin-top:8rem}
+@media(max-width:600px){.promotion-panel.promotion-banner{padding:.85rem 1rem;gap:.65rem}.promotion-banner-offer{gap:.85rem}.promotion-banner .promotion-banner-offer p{font-size:.95rem}.promotion-banner a.promotion-banner-cta{padding:.4rem .8rem;font-size:.85rem}}
+
+
+/* Static decorative confetti stays at the edges and never intercepts clicks. */
+.promotion-panel.promotion-banner {
+  position: relative;
+  isolation: isolate;
+}
+.promotion-banner::before,
+.promotion-banner::after {
+  content: "";
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  width: min(22%, 280px);
+  pointer-events: none;
+  z-index: -1;
+  opacity: .72;
+  background:
+    linear-gradient(24deg, transparent 30%, #ffe098 31% 69%, transparent 70%) 12% 20% / 7px 12px,
+    linear-gradient(-35deg, transparent 30%, #fff 31% 69%, transparent 70%) 40% 78% / 11px 7px,
+    linear-gradient(32deg, transparent 30%, #ffc7d2 31% 69%, transparent 70%) 73% 28% / 7px 11px,
+    linear-gradient(-22deg, transparent 30%, #ffe098 31% 69%, transparent 70%) 90% 82% / 10px 6px,
+    radial-gradient(circle, #fff 48%, transparent 52%) 56% 10% / 5px 5px,
+    radial-gradient(circle, #ffc7d2 48%, transparent 52%) 22% 90% / 4px 4px;
+  background-repeat: no-repeat;
+}
+.promotion-banner::before { left: 8px; }
+.promotion-banner::after { right: 8px; transform: scaleX(-1); }
+@media (max-width: 900px) {
+  .promotion-banner::before,
+  .promotion-banner::after { width: 12px; opacity: .6; }
+  .promotion-banner::before { left: 3px; }
+  .promotion-banner::after { right: 3px; }
+}

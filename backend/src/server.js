@@ -3,11 +3,13 @@ import express from 'express';
 import cors from 'cors';
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'node:url';
+import subscriptionPricing from '../../subscription-pricing.js';
 import { readLeads, writeLeads } from './db.js';
 import { estimateLead, generateAISummary, generateServiceScope, scoreLeadQuality } from './ai.js';
 import { sendLeadEmail, sendReferralEmail, sendSubscriptionEmail } from './mailer.js';
 import { startDailyBackupScheduler } from './backup.js';
-import { getCachedTravelPricing, resolveTravelPricing } from './travel.js';
+import { getCachedTravelPricing, resolveTravelPricing, unverifiedTravel } from './travel.js';
 
 const app = express();
 
@@ -199,12 +201,14 @@ function normalizeAddons(value) {
   return value.map((item) => toSafeString(item)).filter(Boolean);
 }
 
-function normalizeLineItems(value) {
+export function normalizeLineItems(value) {
   if (!Array.isArray(value)) return [];
   return value
     .map((line) => ({
       code: toSafeString(line?.code),
-      quantity: Math.max(0, Number(line?.quantity) || 0),
+      quantity: line?.quantity === null || line?.quantity === undefined || String(line.quantity).trim() === ''
+        ? null : Number.isFinite(Number(line.quantity)) ? Math.max(0, Number(line.quantity)) : 'invalid',
+      selected: [true, 'true', 'on'].includes(line?.selected),
     }))
     .filter((line) => line.code)
     .slice(0, 12);
@@ -445,18 +449,13 @@ app.get('/api/giveaway/status', (_req, res) => {
 
 app.get('/api/travel-distance', travelRateLimit, async (req, res) => {
   const address = toSafeString(req.query.address).slice(0, 180);
-  if (address.length < 4) {
-    return res.status(400).json({ error: 'Enter a complete address or suburb.' });
-  }
 
   try {
     const travel = await resolveTravelPricing(address);
     return res.json(travel);
   } catch (error) {
     console.error(`[travel] Address lookup failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    return res.status(422).json({
-      error: 'We could not verify travel distance for that address. The team will confirm it before booking.',
-    });
+    return res.json(unverifiedTravel('We could not verify travel distance for that address. The team will confirm it before booking.'));
   }
 });
 
@@ -478,7 +477,7 @@ app.post('/api/leads', leadRateLimit, async (req, res) => {
     storeys: toSafeString(body.storeys),
     rooms: toSafeString(body.rooms),
     serviceArea: toSafeString(body.serviceArea),
-    scopeQuantity: Math.max(0, Number(body.scopeQuantity) || 0),
+    scopeQuantity: Number.isFinite(Number(body.scopeQuantity)) ? Math.max(0, Number(body.scopeQuantity)) : 0,
     scopeUnit: toSafeString(body.scopeUnit),
     scopeDetail: toSafeString(body.scopeDetail),
     accessDifficulty: toSafeString(body.accessDifficulty),
@@ -486,7 +485,13 @@ app.post('/api/leads', leadRateLimit, async (req, res) => {
     recurringFrequency: toSafeString(body.recurringFrequency) || 'one_off',
     timingLoading: toSafeString(body.timingLoading) || 'standard',
     travelBand: verifiedTravel?.travelBand || 'unverified',
-    travelDistanceKm: verifiedTravel?.distanceKm || 0,
+    travelDistanceKm: verifiedTravel?.addressVerified ? verifiedTravel.distanceKm : null,
+    addressVerified: verifiedTravel?.addressVerified === true,
+    travelStatus: verifiedTravel?.addressVerified ? 'verified' : 'requires address confirmation',
+    travelDistanceSource: verifiedTravel?.addressVerified ? verifiedTravel.distanceSource : null,
+    distanceSource: verifiedTravel?.addressVerified ? verifiedTravel.distanceSource : null,
+    travelMatchedAddress: verifiedTravel?.addressVerified ? verifiedTravel.matchedAddress : '',
+    allGlassGroundAccessible: [true, 'true', 'on'].includes(body.allGlassGroundAccessible),
     travelFeeIncGst: verifiedTravel?.travelFeeIncGst || 0,
     discountEligibility: toSafeString(body.discountEligibility) || 'None',
     parking: toSafeString(body.parking),
@@ -532,8 +537,8 @@ app.post('/api/leads', leadRateLimit, async (req, res) => {
   const estimate = estimateLead(cleanLead);
   const customerScope = generateServiceScope(cleanLead);
   const aiSummary = generateAISummary(cleanLead, estimate);
-  const leadQuality = scoreLeadQuality(cleanLead);
-  const eligibleForGiveaway = isWithinGiveawayCampaign() && estimate.recommendedEstimate >= GIVEAWAY_MIN_ESTIMATE;
+  const leadQuality = scoreLeadQuality(cleanLead, estimate);
+  const eligibleForGiveaway = isWithinGiveawayCampaign() && estimate.recommendedEstimateIncGst >= GIVEAWAY_MIN_ESTIMATE;
   const leadId = `${Date.now()}-${Math.floor(Math.random() * 1000)}`;
   const savedPhotos = savePhotoUploads(leadId, photoUploads);
 
@@ -549,9 +554,13 @@ app.post('/api/leads', leadRateLimit, async (req, res) => {
     estimateMaxIncGst: estimate.estimateMaxIncGst,
     recommendedEstimate: estimate.recommendedEstimate,
     recommendedEstimateIncGst: estimate.recommendedEstimateIncGst,
+    depositIncGst: estimate.depositIncGst,
+    afterpayFullPaymentIncGst: estimate.afterpayFullPaymentIncGst,
+    promotion: estimate.promotion,
     recommendedEstimateLabel: estimate.recommendedEstimateLabel,
     internalEstimateLabel: estimate.internalEstimateLabel,
     pricingMethod: estimate.pricingMethod,
+    pricingPolicyVersion: estimate.pricingPolicyVersion,
     estimateLabel: estimate.estimateLabel,
     estimateReasons: estimate.estimateReasons,
     estimatedJobType: estimate.estimatedJobType,
@@ -594,9 +603,13 @@ app.post('/api/leads', leadRateLimit, async (req, res) => {
     estimateMaxIncGst: estimate.estimateMaxIncGst,
     recommendedEstimate: estimate.recommendedEstimate,
     recommendedEstimateIncGst: estimate.recommendedEstimateIncGst,
+    depositIncGst: estimate.depositIncGst,
+    afterpayFullPaymentIncGst: estimate.afterpayFullPaymentIncGst,
+    promotion: estimate.promotion,
     recommendedEstimateLabel: estimate.recommendedEstimateLabel,
     internalEstimateLabel: estimate.internalEstimateLabel,
     pricingMethod: estimate.pricingMethod,
+    pricingPolicyVersion: estimate.pricingPolicyVersion,
     estimateLabel: estimate.estimateLabel,
     estimateReasons: estimate.estimateReasons,
     estimatedJobType: estimate.estimatedJobType,
@@ -708,15 +721,41 @@ app.post('/api/referrals', leadRateLimit, async (req, res) => {
 app.post('/api/subscriptions', leadRateLimit, async (req, res) => {
   const body = parsePayload(req.body || {});
   const photoUploads = normalizePhotoUploads(body.photoUploads);
+  let pricing;
+  try {
+    if (!body.pricingInput || typeof body.pricingInput !== 'object') throw new Error('Please refresh and recalculate your subscription before submitting.');
+    pricing = subscriptionPricing.calculatePricing(body.pricingInput);
+  } catch (error) {
+    return res.status(400).json({ error: error instanceof Error ? error.message : 'Please recalculate your subscription.' });
+  }
 
   const subscription = {
     id: makeSubmissionId('subscription'),
     type: 'subscription_builder',
-    plan: body.plan && typeof body.plan === 'object' ? body.plan : {},
+    pricingInput: body.pricingInput,
+    plan: {
+      selectedPlan: pricing.plan.label,
+      workers: pricing.worker.workerText,
+      visits: pricing.worker.visits,
+      firstCleanPrice: pricing.firstBreakdown.totalIncGst,
+      recurringMonthlyPrice: pricing.recurringBreakdown.totalIncGst,
+      annualRecurringPrice: pricing.annualRecurringIncGst,
+      firstCleanExGst: pricing.firstClean,
+      recurringMonthlyExGst: pricing.recurring,
+      annualRecurringExGst: pricing.annualRecurring,
+      firstBreakdown: pricing.firstBreakdown,
+      recurringBreakdown: pricing.recurringBreakdown,
+      annualGst: pricing.annualGst,
+      adjustments: pricing.adjustments,
+      requiresReview: pricing.requiresReview,
+      reviewReasons: pricing.reviewReasons,
+      pricingVersion: pricing.pricingVersion,
+      gstNote: pricing.gstNote,
+    },
     customer: body.customer && typeof body.customer === 'object' ? body.customer : {},
     property: body.property && typeof body.property === 'object' ? body.property : {},
     access: body.access && typeof body.access === 'object' ? body.access : {},
-    services: Array.isArray(body.services) ? body.services : [],
+    services: pricing.services.map(({ serviceName, included, frequency, notes }) => ({ serviceName, included, frequency, notes })),
     addOns: body.addOns && typeof body.addOns === 'object' ? body.addOns : {},
     apartmentBalcony: body.apartmentBalcony && typeof body.apartmentBalcony === 'object' ? body.apartmentBalcony : {},
     scheduling: body.scheduling && typeof body.scheduling === 'object' ? body.scheduling : {},
@@ -768,8 +807,13 @@ app.post('/api/subscriptions', leadRateLimit, async (req, res) => {
   });
 });
 
-const port = Number(process.env.PORT || 3000);
-app.listen(port, () => {
-  startDailyBackupScheduler(readLeads);
-  console.log(`Backend running on http://localhost:${port}`);
-});
+export { app };
+
+// Importing the app for regression tests must not start listeners or backup jobs.
+if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
+  const port = Number(process.env.PORT || 3000);
+  app.listen(port, () => {
+    startDailyBackupScheduler(readLeads);
+    console.log(`Backend running on http://localhost:${port}`);
+  });
+}

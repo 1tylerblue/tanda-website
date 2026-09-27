@@ -129,7 +129,7 @@
 
       /* Hero section */
       .hero {
-        background-image: url('assets/images/hero-house-van-1920.webp');
+        background-image: url('assets/images/hero-house-van-1920.webp?v=ford-front-repair');
         background-size: cover;
         background-position: center;
         padding: 160px 0;
@@ -2120,7 +2120,7 @@ summary:focus-visible {
   padding: 0;
   background:
     linear-gradient(135deg, rgba(8,17,31,0.72), rgba(0,127,190,0.34)),
-    url("assets/images/hero-house-van-1920.webp"),
+    url("assets/images/hero-house-van-1920.webp?v=ford-front-repair"),
     linear-gradient(135deg, #0b1630, #00a6ef);
   background-size: cover;
   background-position: center;
@@ -2152,7 +2152,7 @@ summary:focus-visible {
 .hero h1,
 .hero-content h1 {
   max-width: 12ch;
-  margin: 0 auto 20px;
+  margin: 0 auto clamp(28px, 3vw, 40px);
   font-size: clamp(2.8rem, 6.5vw, 5.8rem);
   line-height: 0.98;
   letter-spacing: -0.06em;
@@ -2162,7 +2162,8 @@ summary:focus-visible {
 .hero p,
 .hero-content p {
   max-width: 72ch;
-  margin: 0 auto 28px;
+  margin: 0 auto clamp(32px, 3vw, 44px);
+  line-height: 1.55;
   color: rgba(255, 255, 255, 0.88);
   font-size: clamp(1rem, 2vw, 1.25rem);
 }
@@ -2172,6 +2173,7 @@ summary:focus-visible {
   flex-wrap: wrap;
   justify-content: center;
   gap: 14px;
+  margin-bottom: 24px;
 }
 
 .hero-secondary-links {
@@ -2195,7 +2197,7 @@ summary:focus-visible {
 }
 
 .hero-trustline {
-  margin-top: 24px !important;
+  margin-top: 36px !important;
   margin-bottom: 0 !important;
   font-size: 0.98rem !important;
   font-weight: 800;
@@ -2230,7 +2232,7 @@ summary:focus-visible {
 }
 
 .hero-area-links {
-  margin-top: 18px !important;
+  margin-top: 32px !important;
   margin-bottom: 0 !important;
   font-size: 0.9rem !important;
 }
@@ -3445,6 +3447,7 @@ body.gallery-lightbox-open {
 }
 
 .address-travel-status {
+  min-height: 5em;
   position: relative;
   margin: 8px 0 0;
   padding-left: 18px;
@@ -3452,6 +3455,11 @@ body.gallery-lightbox-open {
   font-size: 0.78rem;
   font-weight: 600;
   line-height: 1.45;
+}
+
+.address-travel-status[hidden] {
+  display: block !important;
+  visibility: hidden;
 }
 
 .address-travel-status::before {
@@ -3664,6 +3672,41 @@ body.gallery-lightbox-open {
 .estimate-calc-service strong,
 .estimate-calc-row b {
   color: #102b47;
+}
+
+.estimate-calc-row.estimate-calc-promotion {
+  padding: 9px 10px;
+  border-radius: 6px;
+  background: #fff4f4;
+  color: #b31b24;
+  font-weight: 800;
+}
+
+.estimate-calc-promotion b {
+  color: inherit;
+}
+
+.estimate-preview .estimate-promotion,
+.result-panel .estimate-promotion {
+  margin: 0 0 16px;
+  padding: 10px 12px;
+  border: 1px solid #efb5bb;
+  border-left: 4px solid #bd2026;
+  border-radius: 8px;
+  background: #fff4f4;
+  color: #b31b24;
+  font-size: .9rem;
+  line-height: 1.5;
+}
+
+.estimate-promotion strong {
+  display: block;
+  color: inherit;
+  font-weight: 800;
+}
+
+.estimate-promotion[hidden] {
+  display: none;
 }
 
 .estimate-calc-minimum {
@@ -6687,7 +6730,7 @@ body.premium-home {
 
 /* ===== Guided quote service scope ===== */
 .commercial-trust-panel article:first-child .commercial-trust-photo {
-  object-position: center 42%;
+  object-position: right top;
 }
 
 .service-scope-card {
@@ -7363,7 +7406,7 @@ body.premium-home {
 
   .estimate-preview .estimate-calculation,
   .estimate-preview > ul {
-    display: none;
+    display: block;
   }
 
   .estimate-preview .group-copy {
@@ -7683,7 +7726,7 @@ body.premium-home {
   .hero {
     background:
       linear-gradient(135deg, rgba(8,17,31,0.76), rgba(0,127,190,0.38)),
-      url("assets/images/hero-house-van-900.webp"),
+      url("assets/images/hero-house-van-900.webp?v=ford-front-repair"),
       linear-gradient(135deg, #0b1630, #00a6ef);
     background-position: center;
     background-size: cover;
