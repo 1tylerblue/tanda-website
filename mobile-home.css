@@ -1,0 +1,372 @@
+/* Mobile layout only: shared edges, readable controls and consistent card spacing. */
+@media (max-width: 760px) {
+  .premium-home {
+    --mobile-gutter: clamp(16px, 4vw, 24px);
+  }
+
+  .premium-home .container,
+  .premium-home .hero-content {
+    box-sizing: border-box;
+    width: calc(100% - var(--mobile-gutter) * 2);
+    max-width: 640px;
+    margin-inline: auto;
+  }
+
+  .premium-home main > section:not(.hero) {
+    padding-block: 48px;
+  }
+
+  .premium-home .section-head {
+    margin-bottom: 24px;
+  }
+
+  .premium-home .section-head h2,
+  .premium-home .commercial-trust-copy h2,
+  .premium-home .home-showcase-head h2,
+  .premium-home .giveaway-promo-copy h2,
+  .premium-home .quote-intro h2 {
+    font-size: clamp(1.7rem, 6.8vw, 2.2rem);
+    line-height: 1.2;
+    text-wrap: balance;
+  }
+
+  .premium-home .section-head p:not(.eyebrow),
+  .premium-home .commercial-trust-copy > p:not(.eyebrow) {
+    font-size: 1rem;
+    line-height: 1.6;
+    text-wrap: pretty;
+  }
+
+  /* Give the main action and its supporting links their own space. */
+  .premium-home .hero {
+    min-height: 0;
+    height: auto;
+  }
+
+  .premium-home .hero-content {
+    padding-block: 52px;
+  }
+
+  .premium-home .hero h1 {
+    max-width: 14ch;
+    margin: 0 auto 24px;
+    font-size: clamp(2.15rem, 8.6vw, 3.2rem);
+    line-height: 1.08;
+    text-wrap: balance;
+  }
+
+  .premium-home .hero-content > p:first-of-type {
+    max-width: 38ch;
+    margin: 0 auto 28px;
+    font-size: 1rem;
+    line-height: 1.6;
+    text-wrap: pretty;
+  }
+
+  .premium-home .hero-buttons {
+    margin: 0;
+  }
+
+  .premium-home .hero-buttons .btn-primary,
+  .premium-home .service-content .btn-service,
+  .premium-home .package-body .btn-package,
+  .premium-home .giveaway-promo-copy .btn-primary,
+  .premium-home .commercial-trust-actions > a {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 16px;
+    border-radius: 12px;
+    text-align: center;
+  }
+
+  .premium-home .hero-secondary-links {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin: 16px 0 0;
+  }
+
+  .premium-home .hero-secondary-links a {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    padding: 8px;
+    border: 1px solid rgba(255, 255, 255, .35);
+    border-radius: 12px;
+    font-size: .875rem;
+    line-height: 1.4;
+  }
+
+  .premium-home .hero-content .hero-trustline {
+    /* Override the legacy hero declarations that also use !important. */
+    margin: 24px 0 !important;
+    font-size: .825rem !important;
+    line-height: 1.6;
+    text-wrap: balance;
+  }
+
+  .premium-home .hero-trust-pills {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-rows: 1fr;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+  }
+
+  .premium-home .hero-trust-pills li {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 64px;
+    padding: 12px;
+    border-radius: 12px;
+    font-size: .8rem;
+    line-height: 1.45;
+    text-wrap: balance;
+  }
+
+  .premium-home .hero-content .hero-area-links {
+    margin: 24px 0 0 !important;
+    font-size: .825rem !important;
+    line-height: 1.8;
+    text-wrap: balance;
+  }
+
+  .premium-home .promotion-panel.promotion-banner {
+    padding: 20px var(--mobile-gutter);
+    gap: 14px;
+  }
+
+  .premium-home .promotion-banner-offer {
+    justify-content: center;
+    gap: 16px;
+  }
+
+  .premium-home .promotion-banner-offer p {
+    max-width: 18ch;
+  }
+
+  .premium-home .promotion-banner a.promotion-banner-cta {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 640px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 12px;
+  }
+
+  /* Use the same inset inside every service and information card. */
+  .premium-home .service-grid,
+  .premium-home .commercial-trust-panel,
+  .premium-home .feature-list,
+  .premium-home .package-grid {
+    gap: 20px;
+  }
+
+  .premium-home .service-card,
+  .premium-home .commercial-trust-panel article,
+  .premium-home .feature-item,
+  .premium-home .package-card,
+  .premium-home .about-story,
+  .premium-home .about-proof-card {
+    border-radius: 18px;
+  }
+
+  .premium-home .service-content,
+  .premium-home .feature-item-copy,
+  .premium-home .about-story,
+  .premium-home .about-proof-content {
+    padding: 18px;
+  }
+
+  .premium-home .service-content h3,
+  .premium-home .service-content p,
+  .premium-home .feature-item-copy h3 {
+    margin: 0;
+  }
+
+  .premium-home .service-content p,
+  .premium-home .feature-item-copy p {
+    font-size: .9375rem;
+    line-height: 1.6;
+  }
+
+  .premium-home .commercial-trust-panel article,
+  .premium-home .feature-item {
+    min-height: 0;
+  }
+
+  .premium-home .commercial-trust-card-copy {
+    padding: 36px 18px 18px;
+  }
+
+  .premium-home .commercial-trust-panel strong {
+    min-height: 0;
+  }
+
+  .premium-home .commercial-trust-strip {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .premium-home .commercial-trust-strip span {
+    box-sizing: border-box;
+    min-height: 56px;
+    padding: 10px;
+    border-radius: 12px;
+    font-size: .8rem;
+    line-height: 1.45;
+  }
+
+  .premium-home .package-card {
+    padding: 0;
+  }
+
+  .premium-home .package-header {
+    padding: 18px 18px 0;
+  }
+
+  .premium-home .package-header h3 {
+    margin: 0;
+  }
+
+  .premium-home .package-body {
+    padding: 18px;
+    gap: 16px;
+  }
+
+  .premium-home .package-body > p,
+  .premium-home .package-body ul {
+    margin: 0;
+    text-align: left;
+  }
+
+  .premium-home .package-body ul {
+    width: 100%;
+    padding-left: 0;
+  }
+
+  .premium-home .package-pricing {
+    margin: 0;
+    padding: 14px;
+    text-align: left;
+  }
+
+  .premium-home .gallery-preview-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .premium-home .gallery-preview-grid .gallery-card-button {
+    grid-template-rows: auto 1fr;
+    border-radius: 18px;
+  }
+
+  .premium-home .giveaway-promo-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+    padding: 18px;
+    border-radius: 18px;
+  }
+
+  .premium-home .giveaway-promo-layout > * {
+    min-width: 0;
+  }
+
+  .premium-home .gallery-preview-grid img {
+    min-height: 0;
+    height: auto;
+    aspect-ratio: 4 / 3;
+  }
+
+  .premium-home .footer-links {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px 16px;
+  }
+
+  .premium-home .footer-links a {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    margin: 0;
+    padding-block: 6px;
+    overflow-wrap: anywhere;
+  }
+
+  /* Remove redundant outer boxes; keep every quote step on shared edges. */
+  .premium-home .quote-form-shell {
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .premium-home .quote-form {
+    padding: 0;
+    gap: 16px;
+  }
+
+  .premium-home .form-card,
+  .premium-home .quote-mobile-review,
+  .premium-home .estimate-preview,
+  .premium-home .quote-inclusions-card {
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .premium-home .property-details-card .field-grid,
+  .premium-home .quote-form .field-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  .premium-home .quote-form .field-grid > .span-2 {
+    grid-column: 1 / -1;
+  }
+
+  .premium-home .quote-form .field {
+    min-width: 0;
+  }
+
+  .premium-home .quote-form .field label {
+    font-size: .875rem;
+    line-height: 1.45;
+  }
+
+  .premium-home .quote-form input:is([type="text"], [type="email"], [type="tel"], [type="number"], [type="date"]),
+  .premium-home .quote-form select,
+  .premium-home .quote-form textarea {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    min-height: 48px;
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 16px;
+    line-height: 1.4;
+  }
+
+  .premium-home .scope-measurement {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    gap: 16px;
+  }
+
+  .premium-home .estimate-preview .estimate-calculation {
+    display: grid;
+    gap: 10px;
+  }
+}
