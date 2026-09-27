@@ -129,7 +129,7 @@
 
       /* Hero section */
       .hero {
-        background-image: url('assets/images/hero-house-van-1920.webp');
+        background-image: url('assets/images/hero-house-van-1920.webp?v=ford-front-repair');
         background-size: cover;
         background-position: center;
         padding: 160px 0;
@@ -2120,7 +2120,7 @@ summary:focus-visible {
   padding: 0;
   background:
     linear-gradient(135deg, rgba(8,17,31,0.72), rgba(0,127,190,0.34)),
-    url("assets/images/hero-house-van-1920.webp?v=ford-badge"),
+    url("assets/images/hero-house-van-1920.webp?v=ford-front-repair"),
     linear-gradient(135deg, #0b1630, #00a6ef);
   background-size: cover;
   background-position: center;
@@ -7726,7 +7726,7 @@ body.premium-home {
   .hero {
     background:
       linear-gradient(135deg, rgba(8,17,31,0.76), rgba(0,127,190,0.38)),
-      url("assets/images/hero-house-van-900.webp?v=ford-badge"),
+      url("assets/images/hero-house-van-900.webp?v=ford-front-repair"),
       linear-gradient(135deg, #0b1630, #00a6ef);
     background-position: center;
     background-size: cover;
