@@ -15,7 +15,8 @@
 @media(max-width:600px){.promotion-panel.promotion-banner{padding:.85rem 1rem;gap:.65rem}.promotion-banner-offer{gap:.85rem}.promotion-banner .promotion-banner-offer p{font-size:.95rem}.promotion-banner a.promotion-banner-cta{padding:.4rem .8rem;font-size:.85rem}}
 
 
-/* Static decorative confetti stays at the edges and never intercepts clicks. */
+/* Resolution-independent CSS confetti stays crisp at 4K and on high-DPI phones.
+   Keep it static, inside the banner edges, and clear of the central offer. */
 .promotion-panel.promotion-banner {
   position: relative;
   isolation: isolate;
@@ -26,24 +27,28 @@
   position: absolute;
   top: 8px;
   bottom: 8px;
-  width: min(22%, 280px);
+  width: clamp(14px, calc(50% - 356px), 900px);
   pointer-events: none;
   z-index: -1;
-  opacity: .72;
+  opacity: .85;
   background:
     linear-gradient(24deg, transparent 30%, #ffe098 31% 69%, transparent 70%) 12% 20% / 7px 12px,
     linear-gradient(-35deg, transparent 30%, #fff 31% 69%, transparent 70%) 40% 78% / 11px 7px,
     linear-gradient(32deg, transparent 30%, #ffc7d2 31% 69%, transparent 70%) 73% 28% / 7px 11px,
     linear-gradient(-22deg, transparent 30%, #ffe098 31% 69%, transparent 70%) 90% 82% / 10px 6px,
     radial-gradient(circle, #fff 48%, transparent 52%) 56% 10% / 5px 5px,
-    radial-gradient(circle, #ffc7d2 48%, transparent 52%) 22% 90% / 4px 4px;
+    radial-gradient(circle, #ffc7d2 48%, transparent 52%) 22% 90% / 4px 4px,
+    linear-gradient(-18deg, transparent 30%, #d9c5ff 31% 69%, transparent 70%) 28% 46% / 7px 11px,
+    linear-gradient(48deg, transparent 30%, #ffe098 31% 69%, transparent 70%) 84% 54% / 6px 12px,
+    linear-gradient(-24deg, transparent 30%, #fff 31% 69%, transparent 70%) 53% 64% / 10px 6px,
+    radial-gradient(circle, #ffe098 48%, transparent 52%) 7% 70% / 5px 5px;
   background-repeat: no-repeat;
 }
 .promotion-banner::before { left: 8px; }
 .promotion-banner::after { right: 8px; transform: scaleX(-1); }
 @media (max-width: 900px) {
   .promotion-banner::before,
-  .promotion-banner::after { width: 12px; opacity: .6; }
-  .promotion-banner::before { left: 3px; }
-  .promotion-banner::after { right: 3px; }
+  .promotion-banner::after { width: 14px; opacity: .74; }
+  .promotion-banner::before { left: 1px; }
+  .promotion-banner::after { right: 1px; }
 }
