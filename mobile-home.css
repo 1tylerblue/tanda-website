@@ -1,372 +1,266 @@
-/* Mobile layout only: shared edges, readable controls and consistent card spacing. */
+/* Mobile homepage layout. Component rules replace the previous spacious mobile layout. */
+.home-showcase-counter { display: none; }
+@media (min-width: 761px) {
+  .premium-home [data-mobile-disclosure],
+  .premium-home .content-disclosure-body { display: contents; }
+  .premium-home [data-mobile-disclosure] > summary { display: none; }
+  .premium-home .service-disclosure { display: block; grid-column: 1 / -1; }
+  .premium-home .service-disclosure-items { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 34px; }
+}
+@media (min-width: 761px) and (max-width: 1080px) {
+  .premium-home .service-disclosure-items { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 @media (max-width: 760px) {
-  .premium-home {
-    --mobile-gutter: clamp(16px, 4vw, 24px);
+  .premium-home { --mobile-gutter: 16px; }
+  .premium-home .container, .premium-home .hero-content {
+    box-sizing: border-box; width: calc(100% - 32px); max-width: 640px; min-width: 0; margin-inline: auto;
   }
-
-  .premium-home .container,
-  .premium-home .hero-content {
-    box-sizing: border-box;
-    width: calc(100% - var(--mobile-gutter) * 2);
-    max-width: 640px;
-    margin-inline: auto;
+  .premium-home main > section:not(.hero) { padding-block: 28px; }
+  .premium-home .section-head { margin-bottom: 16px; }
+  .premium-home .section-head h2, .premium-home .commercial-trust-copy h2,
+  .premium-home .home-showcase-head h2, .premium-home .giveaway-promo-copy h2,
+  .premium-home .gallery-preview-copy h2, .premium-home .quote-intro h2 {
+    margin: 0 0 12px; font-size: clamp(1.5rem, 6.2vw, 1.8rem); line-height: 1.2;
+    text-wrap: balance; letter-spacing: -.02em;
   }
-
-  .premium-home main > section:not(.hero) {
-    padding-block: 48px;
+  .premium-home .section-head p:not(.eyebrow), .premium-home .commercial-trust-copy > p:not(.eyebrow) {
+    margin: 0; font-size: 1rem; line-height: 1.5; text-wrap: pretty;
   }
-
-  .premium-home .section-head {
-    margin-bottom: 24px;
-  }
-
-  .premium-home .section-head h2,
-  .premium-home .commercial-trust-copy h2,
-  .premium-home .home-showcase-head h2,
-  .premium-home .giveaway-promo-copy h2,
-  .premium-home .quote-intro h2 {
-    font-size: clamp(1.7rem, 6.8vw, 2.2rem);
-    line-height: 1.2;
-    text-wrap: balance;
-  }
-
-  .premium-home .section-head p:not(.eyebrow),
-  .premium-home .commercial-trust-copy > p:not(.eyebrow) {
-    font-size: 1rem;
-    line-height: 1.6;
-    text-wrap: pretty;
-  }
-
-  /* Give the main action and its supporting links their own space. */
-  .premium-home .hero {
-    min-height: 0;
-    height: auto;
-  }
-
-  .premium-home .hero-content {
-    padding-block: 52px;
-  }
-
+  .premium-home .eyebrow { margin: 0 0 8px; font-size: .8125rem; line-height: 1.4; }
+  .premium-home .hero { min-height: 0; height: auto; }
+  .premium-home .hero-content { padding-block: 28px; }
   .premium-home .hero h1 {
-    max-width: 14ch;
-    margin: 0 auto 24px;
-    font-size: clamp(2.15rem, 8.6vw, 3.2rem);
-    line-height: 1.08;
-    text-wrap: balance;
+    max-width: 16ch; margin: 0 auto 14px; font-size: clamp(2rem, 8vw, 2.6rem); line-height: 1.08; text-wrap: balance; overflow-wrap: anywhere;
   }
-
-  .premium-home .hero-content > p:first-of-type {
-    max-width: 38ch;
-    margin: 0 auto 28px;
-    font-size: 1rem;
-    line-height: 1.6;
-    text-wrap: pretty;
+  .premium-home .hero-content > p:first-of-type { max-width: 40ch; margin: 0 auto 18px; font-size: 1rem; line-height: 1.5; text-wrap: pretty; }
+  .premium-home .hero-buttons { margin: 0; }
+  .premium-home .hero-buttons .btn-primary, .premium-home .package-body .btn-package,
+  .premium-home .giveaway-promo-copy .btn-primary, .premium-home .commercial-trust-actions > a {
+    box-sizing: border-box; width: 100%; min-height: 48px; display: flex; align-items: center;
+    justify-content: center; padding: 10px 12px; border-radius: 10px; text-align: center; line-height: 1.4;
   }
-
-  .premium-home .hero-buttons {
-    margin: 0;
-  }
-
-  .premium-home .hero-buttons .btn-primary,
-  .premium-home .service-content .btn-service,
-  .premium-home .package-body .btn-package,
-  .premium-home .giveaway-promo-copy .btn-primary,
-  .premium-home .commercial-trust-actions > a {
-    box-sizing: border-box;
-    width: 100%;
-    min-height: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 12px 16px;
-    border-radius: 12px;
-    text-align: center;
-  }
-
-  .premium-home .hero-secondary-links {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-    margin: 16px 0 0;
-  }
-
-  .premium-home .hero-secondary-links a {
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 48px;
-    padding: 8px;
-    border: 1px solid rgba(255, 255, 255, .35);
-    border-radius: 12px;
-    font-size: .875rem;
-    line-height: 1.4;
-  }
-
+  .premium-home .hero-secondary-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 16px; margin: 8px 0 0; }
+  .premium-home .hero-secondary-links a { display: flex; align-items: center; justify-content: center;
+    min-width: 0; max-width: 100%; min-height: 44px; padding: 2px 0; border: 0; font-size: .9375rem; line-height: 1.4; overflow-wrap: anywhere; }
   .premium-home .hero-content .hero-trustline {
-    /* Override the legacy hero declarations that also use !important. */
-    margin: 24px 0 !important;
-    font-size: .825rem !important;
-    line-height: 1.6;
-    text-wrap: balance;
+    /* Replace the legacy important hero spacing without changing the shared desktop styles. */
+    margin: 10px 0 0 !important; font-size: .875rem !important; line-height: 1.5; text-wrap: balance;
+    text-shadow: none; color: #dcf4ff !important;
   }
-
-  .premium-home .hero-trust-pills {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-auto-rows: 1fr;
-    gap: 12px;
-    margin: 0;
-    padding: 0;
+  /* These repeat the description, commercial proof, service standards and plan information below. */
+  .premium-home .hero-trust-pills { display: none; }
+  .premium-home .hero-content .hero-area-links { display: none; }
+  .premium-home .promotion-panel.promotion-banner { padding: 12px 16px; gap: 8px 12px; }
+  .premium-home .promotion-banner-offer { min-width: 0; max-width: 100%; flex-wrap: wrap; justify-content: center; gap: 8px 12px; }
+  .premium-home .promotion-banner h2 { max-width: 100%; font-size: 1.8rem; white-space: normal; overflow-wrap: anywhere; }
+  .premium-home .promotion-banner-offer p { min-width: 0; max-width: min(19ch, 100%); font-size: .875rem; overflow-wrap: anywhere; }
+  .premium-home .promotion-banner-offer span { font-size: .8125rem; }
+  .premium-home .promotion-banner a.promotion-banner-cta { box-sizing: border-box; display: flex; align-items: center;
+    justify-content: center; gap: 8px; min-width: 0; max-width: 100%; min-height: 44px; padding: 8px 12px; font-size: .9375rem; border-radius: 8px; white-space: normal; overflow-wrap: anywhere; }
+  .premium-home .promotion-banner p.promotion-banner-terms { font-size: .8125rem; line-height: 1.4; }
+  .premium-home .service-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .premium-home .service-card { display: grid; grid-template-columns: 80px minmax(0, 1fr);
+    grid-template-rows: auto; gap: 12px; padding: 12px; height: auto; min-height: 0;
+    border-radius: 14px; box-shadow: none; align-items: start; }
+  .premium-home .service-card > img { width: 80px; height: 80px; min-height: 0; aspect-ratio: 1;
+    object-fit: cover; border-radius: 8px; }
+  .premium-home img[src*="builders-clean"] { object-position: right top; }
+  .premium-home .service-card > img[src*="builders-clean"] { object-fit: contain; background: #0b1e35; }
+  .premium-home .service-content { min-width: 0; padding: 0; display: grid; grid-template-rows: auto auto auto; gap: 6px; overflow-wrap: anywhere; }
+  .premium-home .service-content h3 { margin: 0; font-size: 1.0625rem; line-height: 1.3; }
+  .premium-home .service-content p { margin: 0; font-size: 1rem; line-height: 1.45; }
+  .premium-home .service-content .btn-service { box-sizing: border-box; min-height: 44px; width: 100%;
+    padding: 8px; border-radius: 8px; font-size: .9375rem; line-height: 1.4; text-align: center;
+    display: flex; align-items: center; justify-content: center; text-decoration: none; }
+  .premium-home .service-disclosure { grid-column: 1 / -1; }
+  .premium-home .service-disclosure-items { display: grid; gap: 12px; padding-top: 12px; }
+  .premium-home .service-disclosure > summary { padding: 12px; border: 1px solid #cbdfea; border-radius: 10px; background: #fff; }
+  .premium-home .footer-links { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 16px; }
+  .premium-home .footer-links a { display: flex; align-items: center; min-height: 44px; margin: 0;
+    padding-block: 6px; overflow-wrap: anywhere; }
+  .premium-home .footer-top { gap: 24px; }
+  .premium-home .quote-form-shell { border: 0; background: transparent; box-shadow: none; }
+  .premium-home .quote-form { padding: 0; gap: 12px; }
+  .premium-home .quote-intro { margin-bottom: 16px; }
+  .premium-home .quote-intro > p:not(.group-copy) { font-size: 1rem; line-height: 1.5; }
+  .premium-home .form-card, .premium-home .quote-mobile-review, .premium-home .estimate-preview,
+  .premium-home .quote-inclusions-card { padding: 14px; border-radius: 14px; }
+  .premium-home .property-details-card .field-grid, .premium-home .quote-form .field-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .premium-home .quote-form .field-grid > .span-2 { grid-column: 1 / -1; }
+  .premium-home .quote-form .field { min-width: 0; }
+  .premium-home .quote-form .field label { font-size: 1rem; line-height: 1.4; margin-bottom: 6px; }
+  .premium-home .quote-form input:is([type="text"], [type="email"], [type="tel"], [type="number"], [type="date"]),
+  .premium-home .quote-form select, .premium-home .quote-form textarea {
+    box-sizing: border-box; width: 100%; min-width: 0; min-height: 48px; padding: 11px 12px;
+    border-radius: 10px; font-size: 16px; line-height: 1.4;
   }
+  .premium-home .scope-measurement { padding: 0; border: 0; background: transparent; gap: 12px; }
+  .premium-home .estimate-preview .estimate-calculation { display: grid; gap: 10px; }
+  .premium-home .address-travel-status { min-height: 0; font-size: .875rem; }
+  .premium-home .address-travel-status[hidden] { display: none !important; }
+  .premium-home .quote-form .field-help { font-size: .875rem; line-height: 1.5; }
+  .premium-home .quote-mobile-progress span { font-size: .8125rem; }
+  .premium-home .quote-mobile-next, .premium-home .quote-mobile-back, .premium-home .quote-submit { font-size: 1rem; }
+  .premium-home:has(#quoteForm input:focus, #quoteForm textarea:focus, #quoteForm select:focus) .tanda-messenger-contact { visibility: hidden; pointer-events: none; }
+}
 
-  .premium-home .hero-trust-pills li {
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 64px;
-    padding: 12px;
-    border-radius: 12px;
-    font-size: .8rem;
-    line-height: 1.45;
-    text-wrap: balance;
-  }
-
-  .premium-home .hero-content .hero-area-links {
-    margin: 24px 0 0 !important;
-    font-size: .825rem !important;
-    line-height: 1.8;
-    text-wrap: balance;
-  }
-
-  .premium-home .promotion-panel.promotion-banner {
-    padding: 20px var(--mobile-gutter);
-    gap: 14px;
-  }
-
-  .premium-home .promotion-banner-offer {
-    justify-content: center;
-    gap: 16px;
-  }
-
-  .premium-home .promotion-banner-offer p {
-    max-width: 18ch;
-  }
-
-  .premium-home .promotion-banner a.promotion-banner-cta {
-    box-sizing: border-box;
-    width: 100%;
-    max-width: 640px;
-    min-height: 44px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 10px 16px;
-    border-radius: 12px;
-  }
-
-  /* Use the same inset inside every service and information card. */
-  .premium-home .service-grid,
-  .premium-home .commercial-trust-panel,
-  .premium-home .feature-list,
-  .premium-home .package-grid {
-    gap: 20px;
-  }
-
-  .premium-home .service-card,
-  .premium-home .commercial-trust-panel article,
-  .premium-home .feature-item,
-  .premium-home .package-card,
-  .premium-home .about-story,
-  .premium-home .about-proof-card {
-    border-radius: 18px;
-  }
-
-  .premium-home .service-content,
-  .premium-home .feature-item-copy,
-  .premium-home .about-story,
-  .premium-home .about-proof-content {
-    padding: 18px;
-  }
-
-  .premium-home .service-content h3,
-  .premium-home .service-content p,
-  .premium-home .feature-item-copy h3 {
-    margin: 0;
-  }
-
-  .premium-home .service-content p,
-  .premium-home .feature-item-copy p {
-    font-size: .9375rem;
-    line-height: 1.6;
-  }
-
-  .premium-home .commercial-trust-panel article,
-  .premium-home .feature-item {
-    min-height: 0;
-  }
-
-  .premium-home .commercial-trust-card-copy {
-    padding: 36px 18px 18px;
-  }
-
-  .premium-home .commercial-trust-panel strong {
-    min-height: 0;
-  }
-
-  .premium-home .commercial-trust-strip {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-  }
-
-  .premium-home .commercial-trust-strip span {
-    box-sizing: border-box;
-    min-height: 56px;
-    padding: 10px;
-    border-radius: 12px;
-    font-size: .8rem;
-    line-height: 1.45;
-  }
-
-  .premium-home .package-card {
-    padding: 0;
-  }
-
-  .premium-home .package-header {
-    padding: 18px 18px 0;
-  }
-
-  .premium-home .package-header h3 {
-    margin: 0;
-  }
-
-  .premium-home .package-body {
-    padding: 18px;
-    gap: 16px;
-  }
-
-  .premium-home .package-body > p,
-  .premium-home .package-body ul {
-    margin: 0;
-    text-align: left;
-  }
-
-  .premium-home .package-body ul {
-    width: 100%;
-    padding-left: 0;
-  }
-
-  .premium-home .package-pricing {
-    margin: 0;
-    padding: 14px;
-    text-align: left;
-  }
-
-  .premium-home .gallery-preview-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-  }
-
-  .premium-home .gallery-preview-grid .gallery-card-button {
-    grid-template-rows: auto 1fr;
-    border-radius: 18px;
-  }
-
-  .premium-home .giveaway-promo-layout {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 24px;
-    padding: 18px;
-    border-radius: 18px;
-  }
-
-  .premium-home .giveaway-promo-layout > * {
+/* Compact supporting sections. */
+@media (max-width: 760px) {
+  .premium-home .content-disclosure {
     min-width: 0;
+    border-top: 1px solid #d8e7f1;
+    color: inherit;
   }
-
-  .premium-home .gallery-preview-grid img {
-    min-height: 0;
-    height: auto;
-    aspect-ratio: 4 / 3;
-  }
-
-  .premium-home .footer-links {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 24px 16px;
-  }
-
-  .premium-home .footer-links a {
-    display: flex;
-    align-items: center;
-    min-height: 44px;
-    margin: 0;
-    padding-block: 6px;
+  .premium-home [data-mobile-disclosure] > summary {
+    min-height: 48px;
+    padding: 12px 4px;
+    box-sizing: border-box;
+    font-size: 1rem;
+    font-weight: 800;
+    line-height: 1.45;
+    cursor: pointer;
     overflow-wrap: anywhere;
   }
-
-  /* Remove redundant outer boxes; keep every quote step on shared edges. */
-  .premium-home .quote-form-shell {
-    border: 0;
-    background: transparent;
+  .premium-home [data-mobile-disclosure] > summary:focus-visible {
+    outline: 3px solid #0878dc;
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+  .premium-home .content-disclosure-body { padding-block: 8px; }
+  .premium-home .content-disclosure-body > p { margin: 0 0 10px; }
+  .premium-home .commercial-trust-layout { grid-template-columns: minmax(0,1fr); gap: 16px; }
+  .premium-home .commercial-trust-layout > * { min-width: 0; }
+  .premium-home .commercial-trust-copy { overflow-wrap: anywhere; }
+  .premium-home .commercial-trust-copy p { margin: 10px 0 12px; }
+  .premium-home .commercial-review-proof { margin: 12px 0; padding: 10px 12px; box-shadow: none; }
+  .premium-home .commercial-trust-actions { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+  .premium-home .commercial-trust-panel { grid-template-columns: minmax(0,1fr); gap: 10px; }
+  .premium-home .commercial-trust-panel article {
+    display: grid;
+    grid-template-columns: 80px minmax(0,1fr);
+    align-items: center;
+    min-height: 0;
+    padding: 10px;
+    gap: 12px;
+    border-radius: 14px;
     box-shadow: none;
   }
-
-  .premium-home .quote-form {
-    padding: 0;
-    gap: 16px;
-  }
-
-  .premium-home .form-card,
-  .premium-home .quote-mobile-review,
-  .premium-home .estimate-preview,
-  .premium-home .quote-inclusions-card {
-    padding: 16px;
-    border-radius: 16px;
-  }
-
-  .premium-home .property-details-card .field-grid,
-  .premium-home .quote-form .field-grid {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 16px;
-  }
-
-  .premium-home .quote-form .field-grid > .span-2 {
-    grid-column: 1 / -1;
-  }
-
-  .premium-home .quote-form .field {
-    min-width: 0;
-  }
-
-  .premium-home .quote-form .field label {
-    font-size: .875rem;
-    line-height: 1.45;
-  }
-
-  .premium-home .quote-form input:is([type="text"], [type="email"], [type="tel"], [type="number"], [type="date"]),
-  .premium-home .quote-form select,
-  .premium-home .quote-form textarea {
-    box-sizing: border-box;
-    width: 100%;
-    min-width: 0;
-    min-height: 48px;
-    padding: 12px;
-    border-radius: 10px;
-    font-size: 16px;
-    line-height: 1.4;
-  }
-
-  .premium-home .scope-measurement {
+  .premium-home .commercial-trust-panel article::after { content: none; }
+  .premium-home .commercial-trust-photo { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; }
+  .premium-home .commercial-trust-card-copy { min-width: 0; overflow-wrap: anywhere; padding: 0; gap: 4px; }
+  .premium-home .commercial-trust-card-copy .commercial-trust-mark {
+    position: static;
+    width: auto;
+    height: auto;
+    display: block;
     padding: 0;
     border: 0;
-    background: transparent;
-    gap: 16px;
+    background: none;
+    color: #0878dc;
+    box-shadow: none;
+    font-size: 1rem;
   }
+  .premium-home .commercial-trust-card-copy strong { min-height: 0; font-size: 1rem; line-height: 1.3; }
+  .premium-home .commercial-trust-card-copy small { font-size: 1rem; line-height: 1.4; }
+  .premium-home .commercial-trust-strip { display: flex; gap: 8px 16px; padding-top: 0; }
+  .premium-home .commercial-trust-strip span { min-height: 0; padding: 0; border: 0; background: none; box-shadow: none; font-size: 1rem; line-height: 1.5; }
 
-  .premium-home .estimate-preview .estimate-calculation {
-    display: grid;
-    gap: 10px;
-  }
+  .premium-home .home-showcase-head { gap: 12px; margin-bottom: 12px; }
+  .premium-home .home-showcase-shell { border-radius: 16px; box-shadow: none; }
+  .premium-home .home-showcase-slide,
+  .premium-home .home-showcase-image,
+  .premium-home .home-showcase-image img { min-height: 0; }
+  .premium-home .home-showcase-image img { display: block; height: auto; max-height: none; aspect-ratio: 4 / 3; object-fit: contain; }
+  .premium-home .home-showcase-caption { position: static; max-width: none; padding: 12px; border: 0; border-radius: 0; box-shadow: none; }
+  .premium-home .home-showcase-caption strong { margin-top: 4px; font-size: 1.15rem; }
+  .premium-home .home-showcase-caption p { margin-top: 6px; font-size: 1rem; line-height: 1.5; }
+  .premium-home .home-showcase-controls { position: static; display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); align-items: center; gap: 12px; padding: 0 12px 12px; }
+  .premium-home .home-showcase-controls button { min-width: 0; overflow-wrap: anywhere; min-height: 44px; padding: 8px 12px; font-size: 1rem; box-shadow: none; }
+  .premium-home .home-showcase-dots { display: none; }
+  .premium-home .home-showcase-counter { display: block; color: #fff; font-size: 1rem; font-variant-numeric: tabular-nums; text-align: center; }
+
+  .premium-home .giveaway-promo-layout { grid-template-columns: minmax(0, 1fr); gap: 14px; padding: 16px; border-radius: 16px; box-shadow: none; }
+  .premium-home .giveaway-promo-layout > * { min-width: 0; }
+  .premium-home .giveaway-promo-copy { gap: 10px; }
+  .premium-home .giveaway-promo-copy .referral-kicker { border: 0; padding: 0; border-radius: 0; background: none; box-shadow: none; }
+  .premium-home .giveaway-promo-copy p { margin: 0; font-size: 1rem; line-height: 1.5; }
+  .premium-home .giveaway-celebration-pills { gap: 6px 12px; margin: 0; }
+  .premium-home .giveaway-celebration-pills span { padding: 0; border: 0; background: none; box-shadow: none; font-size: 1rem; line-height: 1.4; }
+  .premium-home .giveaway-celebration-note { padding: 0; border: 0; background: none; border-radius: 0; font-weight: 600; }
+  .premium-home .giveaway-promo-image-link { max-width: 160px; width: 100%; margin-inline: auto; }
+  .premium-home .giveaway-promo-image-link img { width: 100%; height: auto; object-fit: contain; border-radius: 12px; }
+
+  .premium-home .why-showcase { padding: 0; gap: 12px; margin-bottom: 16px; border: 0; box-shadow: none; }
+  .premium-home .why-showcase-media { border-radius: 12px; box-shadow: none; }
+  .premium-home .why-showcase-media img { aspect-ratio: 2 / 1; }
+  .premium-home .why-showcase-media span { left: 8px; right: 8px; bottom: 8px; padding: 8px; font-size: 1rem; border-radius: 8px; }
+  .premium-home .why-showcase-copy h3 { margin-bottom: 8px; font-size: 1.25rem; line-height: 1.3; }
+  .premium-home .why-showcase-copy p { font-size: 1rem; line-height: 1.5; }
+  .premium-home .why-proof-metrics { gap: 8px; margin-top: 12px; }
+  .premium-home .why-proof-metrics div { padding: 8px; border-radius: 10px; }
+  .premium-home .why-proof-metrics dt { font-size: 1.15rem; line-height: 1.3; }
+  .premium-home .why-proof-metrics dd { font-size: 1rem; line-height: 1.4; }
+  .premium-home .feature-list { gap: 10px; }
+  .premium-home .feature-item { display: grid; grid-template-columns: 72px minmax(0,1fr); grid-template-rows: auto; align-items: start; gap: 10px; min-height: 0; padding: 10px; border-radius: 12px; box-shadow: none; }
+  .premium-home .feature-card-image { width: 72px; height: 72px; border-radius: 8px; }
+  .premium-home .feature-item-copy { min-width: 0; overflow-wrap: anywhere; padding: 0; }
+  .premium-home .feature-item-copy::before { content: none; }
+  .premium-home .feature-item-copy h3 { margin: 0 0 6px; font-size: 1rem; line-height: 1.3; }
+  .premium-home .feature-item-copy p { margin: 0; font-size: 1rem; line-height: 1.5; }
+
+  .premium-home .about-layout { gap: 12px; }
+  .premium-home .about-story { padding: 16px; }
+  .premium-home .about-story h2 { margin-bottom: 12px; font-size: 1.7rem; line-height: 1.2; }
+  .premium-home .about-story p { margin: 8px 0 12px; font-size: 1rem; line-height: 1.5; }
+  .premium-home .about-trust-list { grid-template-columns: minmax(0,1fr); gap: 6px; margin-top: 10px; }
+  .premium-home .about-trust-list li { padding: 8px 10px; font-size: 1rem; }
+  .premium-home .about-actions { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; margin-top: 12px; }
+  .premium-home .about-actions a { min-width: 0; padding: 10px; line-height: 1.4; }
+  .premium-home .about-proof-card { gap: 12px; padding: 16px; }
+  .premium-home .about-team-visual { display: grid; grid-template-columns: 88px minmax(0,1fr); align-items: center; gap: 12px; border: 0; border-radius: 0; box-shadow: none; background: none; }
+  .premium-home .about-team-visual img { width: 88px; height: 88px; aspect-ratio: 1; border-radius: 12px; }
+  .premium-home .about-team-visual figcaption { position: static; padding: 0; border: 0; border-radius: 0; background: none; color: inherit; backdrop-filter: none; font-size: 1rem; line-height: 1.5; }
+  .premium-home .about-proof-content { padding: 10px 0 0; }
+  .premium-home .about-proof-content h3 { margin-bottom: 12px; font-size: 1.25rem; }
+  .premium-home .difference-grid { grid-template-columns: minmax(0,1fr); gap: 8px; }
+  .premium-home .difference-grid div { padding: 10px; }
+  .premium-home .difference-grid span { font-size: 1rem; }
+
+  .premium-home .gallery-preview-layout { gap: 16px; }
+  .premium-home .gallery-preview-copy p { margin: 10px 0 12px; font-size: 1rem; line-height: 1.5; }
+  .premium-home .gallery-preview-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+  .premium-home .gallery-preview-grid .gallery-card-button { grid-template-columns: minmax(0,1fr); min-height: 0; grid-template-rows: auto 1fr; border-radius: 12px; }
+  .premium-home .gallery-preview-grid .gallery-card-media { min-height: 0; height: auto; }
+  .premium-home .gallery-preview-grid img { min-height: 0; height: auto; aspect-ratio: 4 / 3; object-fit: cover; }
+  .premium-home .gallery-preview-grid .gallery-card-caption { min-width: 0; overflow-wrap: anywhere; padding: 10px; gap: 4px; }
+  .premium-home .gallery-preview-grid .gallery-card-caption strong { font-size: 1rem; line-height: 1.4; }
+  .premium-home .gallery-preview-grid .gallery-card-caption > span:not(.gallery-card-tags) { font-size: 1rem; }
+  .premium-home .gallery-preview-grid .gallery-card-tags { display: none; }
+
+  .premium-home .packages .section-head { min-width: 0; overflow-wrap: anywhere; }
+  .premium-home .package-grid { gap: 12px; }
+  .premium-home .package-card { grid-template-columns: minmax(0,1fr); min-height: 0; border-radius: 16px; box-shadow: none; }
+  .premium-home .package-card > *,
+  .premium-home .package-body > *,
+  .premium-home .package-inclusions { min-width: 0; overflow-wrap: anywhere; }
+  .premium-home .package-card.featured { transform: none; }
+  .premium-home .package-visual { height: 72px; }
+  .premium-home .package-visual img { min-height: 0; height: 100%; }
+  .premium-home .package-visual span { bottom: 10px; left: 14px; padding: 5px 8px; font-size: .875rem; }
+  .premium-home .package-header { padding: 14px 16px 0; }
+  .premium-home .package-header h3 { font-size: 1.3rem; line-height: 1.3; }
+  .premium-home .package-body { padding: 10px 16px 16px; gap: 10px; }
+  .premium-home .package-body p { margin: 0; font-size: 1rem; line-height: 1.5; }
+  .premium-home .package-pricing { margin: 0; gap: 6px; padding: 10px; border-radius: 10px; }
+  .premium-home .package-inclusions { width: 100%; text-align: left; }
+  .premium-home .package-inclusions .content-disclosure-body { display: grid; gap: 10px; padding-bottom: 12px; }
+  .premium-home .package-inclusions ul { margin: 0; padding: 0; }
+  .premium-home .package-inclusions li { font-size: 1rem; line-height: 1.5; }
+  .premium-home .package-card.builder .content-disclosure { border-color: rgba(255,255,255,.35); }
+}
+/* Keep the existing giveaway artwork inside its container at tablet widths. */
+@media (min-width: 761px) and (max-width: 900px) {
+  .premium-home .giveaway-promo-layout { grid-template-columns: minmax(0, 1fr); }
+  .premium-home .giveaway-promo-layout > * { min-width: 0; }
+  .premium-home .giveaway-promo-image-link { max-width: 360px; justify-self: center; }
 }

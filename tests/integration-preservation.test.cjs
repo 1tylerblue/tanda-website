@@ -46,11 +46,29 @@ test('Google Ads, GA4 and privacy-safe analytics helpers are unchanged', () => {
 });
 
 test('all existing telephone links and Messenger destinations/consent/events are preserved', () => {
-  assert.equal(read('messenger-button.js'), original('messenger-button.js'));
+  const before = original('messenger-button.js'), after = read('messenger-button.js');
+  for (const name of ['MESSENGER_URL', 'ACCESSIBLE_LABEL', 'COOKIE_CONSENT_KEY']) {
+    const expression = new RegExp('const ' + name + ' = [^;]+;');
+    assert.equal(after.match(expression)?.[0], before.match(expression)?.[0], name);
+  }
+  for (const name of ['hasAcceptedAnalyticsConsent', 'captureClick']) {
+    assert.equal(functionBlock(after, name), functionBlock(before, name), name);
+  }
+  // Positioning may change for the menu and keyboard; the destination and tracking binding must not.
+  for (const expression of [/button\.href = [^;]+;/, /button\.addEventListener\('click', captureClick[^;]+;/]) {
+    assert.ok(before.match(expression));
+    assert.equal(after.match(expression)?.[0], before.match(expression)?.[0]);
+  }
   for (const file of htmlFiles) {
     const phones = text => attrValues(text, 'href').filter(value => /^tel:/i.test(value));
-    assert.deepEqual(phones(read(file)), phones(original(file)), file);
-    const messenger = text => attrValues(text, 'src').filter(value => /messenger-button\.js/.test(value));
+    const currentPhones = phones(read(file));
+    for (const prior of phones(original(file))) {
+      const retained = currentPhones.indexOf(prior);
+      assert.ok(retained >= 0, `${file}: existing telephone destination ${prior} retained`);
+      currentPhones.splice(retained, 1);
+    }
+    assert.ok(currentPhones.every(phone => phone === 'tel:0466224927'), `${file}: any added shared navigation call uses the business number`);
+    const messenger = text => attrValues(text, 'src').filter(value => /messenger-button\.js/.test(value)).map(value => value.split('?')[0]);
     assert.deepEqual(messenger(read(file)), messenger(original(file)), file);
   }
 });
@@ -109,10 +127,18 @@ test('all local HTML src/href references resolve to repository files', () => {
   assert.deepEqual(missing, []);
 });
 
-test('production API endpoint and unrelated review/gallery integrations retain their source', () => {
+test('production API endpoint, gallery data handling and review integration retain their source', () => {
   const before = original('app.js'), after = read('app.js');
   assert.equal(functionBlock(after, 'getApiBase'), functionBlock(before, 'getApiBase'));
-  for (const file of ['gallery.js', 'reviews.js']) assert.equal(read(file), original(file), file);
+  assert.equal(read('reviews.js'), original('reviews.js'));
+  const galleryBefore = original('gallery.js'), galleryAfter = read('gallery.js');
+  assert.equal(galleryAfter.split('function getGallerySrc')[0], galleryBefore.split('function getGallerySrc')[0]);
+  for (const name of ['getGallerySrc', 'getDisplayTitle', 'normalizeItem', 'loadGalleryItems', 'getItemsForMode', 'getShowcaseItems']) {
+    const expression = new RegExp('^(?:async )?function ' + name + '\\([^\\n]*\\)[^\\n]*\\{[\\s\\S]*?^}', 'm');
+    assert.ok(galleryBefore.match(expression), name);
+    assert.equal(galleryAfter.match(expression)?.[0], galleryBefore.match(expression)?.[0], name);
+  }
+  assert.equal(read('src/data/gallery.json'), original('src/data/gallery.json'));
   for (const file of ['index.html', 'subscription-builder.html']) {
     const endpoint = /window\.__API_BASE__\s*=\s*[^;]+;/;
     assert.equal(read(file).match(endpoint)?.[0], original(file).match(endpoint)?.[0], file);

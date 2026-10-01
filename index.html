@@ -72,9 +72,9 @@ window.gtag('consent', 'default', {
         history.scrollRestoration = 'manual';
       }
     </script>
-  <link rel="stylesheet" href="styles-home.css?v=20260927-hero-repair" />
+  <link rel="stylesheet" href="styles-home.css?v=20261001-navigation" />
   <link rel="stylesheet" href="promotions.css?v=20260927-confetti-hd" />
-  <link rel="stylesheet" href="mobile-home.css?v=20260927-layout" />
+  <link rel="stylesheet" href="mobile-home.css?v=20261001-compact" />
 <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -181,6 +181,8 @@ window.gtag('consent', 'default', {
         ]
       }
     </script>
+    <link rel="stylesheet" href="site-navigation.css?v=20261001" />
+    <script defer src="site-navigation.js?v=20261001"></script>
   </head>
   <body class="premium-home">
 <!-- Google Tag Manager (noscript) -->
@@ -194,7 +196,7 @@ window.gtag('consent', 'default', {
 </noscript>
 <!-- End Google Tag Manager (noscript) -->
     <a href="#main-content" class="skip-link">Skip to main content</a>
-    <header class="site-header">
+    <header class="site-header" data-site-navigation>
       <div class="container nav-wrap">
         <a class="brand" href="index.html" aria-label="T and A Pro Cleaning home">
           <img class="brand-logo" src="assets/images/logo.jpeg" alt="T and A Pro Cleaning logo" loading="eager" decoding="async" />
@@ -203,23 +205,32 @@ window.gtag('consent', 'default', {
             <small>Property care and presentation</small>
           </span>
         </a>
-        <button class="nav-toggle" aria-expanded="false" aria-controls="siteNav" aria-label="Toggle main navigation" data-nav-toggle>
-          <span></span>
-          <span></span>
-          <span></span>
+        <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="siteNavPanel" aria-label="Open main navigation" data-nav-toggle>
+          <span></span><span></span><span></span>
         </button>
-        <nav class="site-nav" id="siteNav" data-nav>
-          <a href="index.html">Home</a>
-          <a href="#services">Services</a>
-          <a href="gallery.html">Gallery</a>
-          <a href="reviews/">Reviews</a>
-          <a class="nav-giveaway" href="giveaway.html">Giveaway</a>
-          <a class="nav-referrals" href="referrals.html">Get Paid</a>
-          <a href="#about">About</a>
-          <a href="#contact">Contact</a>
-          <a href="#quote">Quote</a>
-          <a class="btn btn-outline nav-call" href="tel:0466224927" aria-label="Call T &amp; A Pro Cleaning on 0466 224 927" title="Call 0466 224 927">Call Now</a>
-        </nav>
+        <div class="site-nav-backdrop" data-nav-backdrop hidden aria-hidden="true"></div>
+        <div class="site-nav-panel" id="siteNavPanel" data-nav-panel>
+          <div class="site-nav-heading"><span id="siteNavTitle">Explore T &amp; A Pro Cleaning</span><button class="site-nav-close" type="button" aria-label="Close main navigation" data-nav-close>Close <span aria-hidden="true">&times;</span></button></div>
+          <nav class="site-nav" id="siteNav" data-nav aria-label="Main navigation">
+            <div class="site-nav-group site-nav-primary">
+              <a href="index.html">Home</a>
+              <a href="#services">Services</a>
+              <a href="gallery.html">Gallery</a>
+              <a href="reviews/">Reviews</a>
+              <a href="#about">About</a>
+              <a href="#contact">Contact</a>
+            </div>
+            <div class="site-nav-group site-nav-secondary">
+              <a href="subscription-builder.html">Property Care Plans</a>
+              <a class="nav-giveaway" href="giveaway.html">Giveaway</a>
+              <a class="nav-referrals" href="referrals.html">Referral Rewards</a>
+            </div>
+            <div class="site-nav-actions">
+              <a class="nav-action nav-quote" href="#quote">Get a Quote</a>
+              <a class="nav-action nav-call" href="tel:0466224927" aria-label="Call T &amp; A Pro Cleaning on 0466 224 927">Call Now</a>
+            </div>
+          </nav>
+        </div>
       </div>
     </header>
 
@@ -245,7 +256,7 @@ window.gtag('consent', 'default', {
           <li>Homes, high-rise, strata and commercial</li>
           <li>Recurring property care systems</li>
         </ul>
-        <p id="areas" class="hero-area-links">Service areas: <a href="areas/gold-coast.html">Gold Coast</a> | <a href="areas/brisbane.html">Brisbane</a> | <a href="areas/logan.html">Logan</a> | <a href="areas/ipswich.html">Ipswich</a></p>
+        <p class="hero-area-links">Service areas: <a href="areas/gold-coast.html">Gold Coast</a> | <a href="areas/brisbane.html">Brisbane</a> | <a href="areas/logan.html">Logan</a> | <a href="areas/ipswich.html">Ipswich</a></p>
       </div>
     </section>
 
@@ -322,6 +333,7 @@ window.gtag('consent', 'default', {
           <div class="home-showcase-controls" aria-label="Before and after showcase controls">
             <button type="button" data-before-after-prev aria-label="Previous project image">Previous</button>
             <div class="home-showcase-dots" data-before-after-dots></div>
+            <span class="home-showcase-counter" data-before-after-counter aria-live="polite" aria-atomic="true"></span>
             <button type="button" data-before-after-next aria-label="Next project image">Next</button>
           </div>
         </div>
@@ -342,7 +354,7 @@ window.gtag('consent', 'default', {
             <div class="service-content">
               <h3>Window Cleaning</h3>
               <p>Interior, exterior, tracks and screens for a cleaner, brighter finish.</p>
-              <button type="button" class="btn-service" onclick="location.href='#quote'">Get a Free Quote</button>
+              <a class="btn-service" href="index.html?service=window-cleaning#quote">Get a Free Quote</a>
             </div>
           </div>
           <div class="service-card">
@@ -350,7 +362,7 @@ window.gtag('consent', 'default', {
             <div class="service-content">
               <h3>Pressure Washing</h3>
               <p>Restore driveways, paths and hard surfaces with visibly cleaner results.</p>
-              <button type="button" class="btn-service" onclick="location.href='#quote'">Get a Free Quote</button>
+              <a class="btn-service" href="index.html?service=pressure-cleaning#quote">Get a Free Quote</a>
             </div>
           </div>
           <div class="service-card">
@@ -358,7 +370,7 @@ window.gtag('consent', 'default', {
             <div class="service-content">
               <h3>Soft Washing</h3>
               <p>Gentle exterior cleaning that protects surfaces while removing dirt and grime.</p>
-              <button type="button" class="btn-service" onclick="location.href='#quote'">Get a Free Quote</button>
+              <a class="btn-service" href="index.html?service=house-building-washing#quote">Get a Free Quote</a>
             </div>
           </div>
           <div class="service-card">
@@ -366,7 +378,7 @@ window.gtag('consent', 'default', {
             <div class="service-content">
               <h3>Roof Cleaning</h3>
               <p>Professional roof washing to remove moss and debris and restore curb appeal.</p>
-              <button type="button" class="btn-service" onclick="location.href='#quote'">Get a Free Quote</button>
+              <a class="btn-service" href="index.html?service=roof-cleaning#quote">Get a Free Quote</a>
             </div>
           </div>
           <div class="service-card">
@@ -374,7 +386,7 @@ window.gtag('consent', 'default', {
             <div class="service-content">
               <h3>Gutter Cleaning</h3>
               <p>Clear gutters and downpipes to prevent blockages and water damage.</p>
-              <button type="button" class="btn-service" onclick="location.href='#quote'">Get a Free Quote</button>
+              <a class="btn-service" href="index.html?service=gutter-cleaning#quote">Get a Free Quote</a>
             </div>
           </div>
           <div class="service-card">
@@ -382,15 +394,18 @@ window.gtag('consent', 'default', {
             <div class="service-content">
               <h3>Solar Panel Cleaning</h3>
               <p>Improve efficiency and extend lifespan with our expert solar panel cleaning.</p>
-              <button type="button" class="btn-service" onclick="location.href='#quote'">Get a Free Quote</button>
+              <a class="btn-service" href="index.html?service=solar-panel-cleaning#quote">Get a Free Quote</a>
             </div>
           </div>
+          <details class="content-disclosure service-disclosure" data-mobile-disclosure open>
+            <summary>View all 12 services</summary>
+            <div class="service-disclosure-items">
           <div class="service-card">
             <img src="assets/images/tile & grout cleaning.jpg" alt="Tile and Grout Cleaning" loading="lazy" decoding="async" />
             <div class="service-content">
               <h3>Tile &amp; Grout Cleaning</h3>
               <p>Restore tiled areas with targeted deep cleaning that leaves surfaces fresh.</p>
-              <button type="button" class="btn-service" onclick="location.href='#quote'">Get a Free Quote</button>
+              <a class="btn-service" href="index.html?service=tile-grout-cleaning#quote">Get a Free Quote</a>
             </div>
           </div>
           <div class="service-card">
@@ -398,7 +413,7 @@ window.gtag('consent', 'default', {
             <div class="service-content">
               <h3>Carpet Cleaning</h3>
               <p>Remove stains, dirt and allergens from carpets for a healthier interior.</p>
-              <button type="button" class="btn-service" onclick="location.href='#quote'">Get a Free Quote</button>
+              <a class="btn-service" href="index.html?service=carpet-cleaning#quote">Get a Free Quote</a>
             </div>
           </div>
           <div class="service-card">
@@ -406,7 +421,7 @@ window.gtag('consent', 'default', {
             <div class="service-content">
               <h3>Upholstery Cleaning</h3>
               <p>Expert upholstery care to refresh and protect your furnishings.</p>
-              <button type="button" class="btn-service" onclick="location.href='#quote'">Get a Free Quote</button>
+              <a class="btn-service" href="index.html?service=upholstery-cleaning#quote">Get a Free Quote</a>
             </div>
           </div>
           <div class="service-card">
@@ -414,7 +429,7 @@ window.gtag('consent', 'default', {
             <div class="service-content">
               <h3>Driveway Cleaning</h3>
               <p>Lift oil marks, grime and weather staining to restore your driveway presentation.</p>
-              <button type="button" class="btn-service" onclick="location.href='#quote'">Get a Free Quote</button>
+              <a class="btn-service" href="index.html?service=pressure-cleaning#quote">Get a Free Quote</a>
             </div>
           </div>
           <div class="service-card">
@@ -422,7 +437,7 @@ window.gtag('consent', 'default', {
             <div class="service-content">
               <h3>Builder Clean</h3>
               <p>Detailed post-build cleaning that prepares sites for handover and presentation.</p>
-              <button type="button" class="btn-service" onclick="location.href='#quote'">Get a Free Quote</button>
+              <a class="btn-service" href="index.html?service=builders-cleaning#quote">Get a Free Quote</a>
             </div>
           </div>
           <div class="service-card">
@@ -430,9 +445,11 @@ window.gtag('consent', 'default', {
             <div class="service-content">
               <h3>Strata / Commercial</h3>
               <p>Comprehensive cleaning for strata and commercial properties, common areas and more.</p>
-              <button type="button" class="btn-service" onclick="location.href='#quote'">Get a Free Quote</button>
+              <a class="btn-service" href="index.html?service=commercial-additions#quote">Get a Free Quote</a>
             </div>
           </div>
+            </div>
+          </details>
         </div>
       </div>
     </section>
@@ -474,6 +491,9 @@ window.gtag('consent', 'default', {
           <h2 id="why-title">A Premium Service Standard From Quote to Finish</h2>
           <p>Built for homeowners, property managers, strata committees and commercial clients who need reliable property care without basic-cleaner uncertainty.</p>
         </div>
+        <details class="content-disclosure standards-disclosure" data-mobile-disclosure open>
+          <summary>Our six service standards &amp; how we work</summary>
+          <div class="content-disclosure-body">
         <div class="why-showcase premium-card">
           <div class="why-showcase-media">
             <img src="assets/images/job-photo-2.jpeg" alt="T and A Pro Cleaning team member completing interior property presentation work" loading="lazy" decoding="async" />
@@ -543,6 +563,8 @@ window.gtag('consent', 'default', {
             </div>
           </div>
         </div>
+          </div>
+        </details>
       </div>
     </section>
 
@@ -552,6 +574,9 @@ window.gtag('consent', 'default', {
           <p class="eyebrow">Owner Operated</p>
           <h2>About T &amp; A Pro Cleaning</h2>
           <p>T &amp; A Pro Cleaning is family owned and owner operated by Tyler and Angel, servicing homes, commercial properties, strata sites and facilities across South East Queensland.</p>
+          <details class="content-disclosure about-approach" data-mobile-disclosure open>
+            <summary>Our approach to property care</summary>
+            <div class="content-disclosure-body">
           <p>We focus on attention to detail, clear communication and long-term client relationships, so each property is treated like presentation matters.</p>
           <ul class="about-trust-list">
             <li>Family owned and local</li>
@@ -560,6 +585,8 @@ window.gtag('consent', 'default', {
             <li>Long-term property care relationships</li>
             <li>Clear scope before work starts</li>
           </ul>
+            </div>
+          </details>
           <div class="about-actions">
             <a class="btn-primary" href="#quote">Get a Free Quote</a>
             <a class="btn-outline" href="gallery.html">View Our Work</a>
@@ -570,6 +597,8 @@ window.gtag('consent', 'default', {
             <img src="assets/images/tyler-angel-1400.webp" alt="Tyler and Angel from T and A Pro Cleaning" loading="lazy" decoding="async" />
             <figcaption>Tyler and Angel, the owner-led team behind T &amp; A Pro Cleaning.</figcaption>
           </figure>
+          <details class="content-disclosure about-philosophy" data-mobile-disclosure open>
+            <summary>Service philosophy: built around repeat trust</summary>
           <div class="about-proof-content">
             <p class="eyebrow">Service Philosophy</p>
             <h3 id="difference-title">Built around repeat trust.</h3>
@@ -592,6 +621,7 @@ window.gtag('consent', 'default', {
               </div>
             </div>
           </div>
+          </details>
         </aside>
       </div>
     </section>
@@ -654,19 +684,24 @@ window.gtag('consent', 'default', {
             </div>
             <div class="package-body">
               <p class="package-tagline">Entry-level recurring property upkeep for smaller homes and straightforward properties.</p>
-              <p class="package-description">A simple recurring upkeep plan designed to keep your property consistently maintained without waiting for large one-off cleans.</p>
               <div class="package-pricing">
                 <p class="package-price-line"><strong>First Clean:</strong> From $593.01 incl. GST after 10% off</p>
                 <p class="package-price-line"><strong>Recurring:</strong> From $395.01/month incl. GST after 10% off</p>
               </div>
               <p class="package-meta"><strong>Workers:</strong> 1 worker<br /><strong>Visits:</strong> 1 visit per month</p>
-              <p class="package-meta"><strong>Best for:</strong> smaller homes, lower-maintenance properties, and clients wanting simple recurring upkeep.</p>
-              <ul>
+              <details class="content-disclosure package-inclusions" data-mobile-disclosure open>
+                <summary>Bronze inclusions &amp; suitability</summary>
+                <div class="content-disclosure-body">
+                  <p class="package-description">A simple recurring upkeep plan designed to keep your property consistently maintained without waiting for large one-off cleans.</p>
+                  <p class="package-meta"><strong>Best for:</strong> smaller homes, lower-maintenance properties, and clients wanting simple recurring upkeep.</p>
+                  <ul>
                 <li>Interior window rotation</li>
                 <li>Bin cleaning</li>
                 <li>Property condition check</li>
                 <li>Light upkeep allocation</li>
               </ul>
+                </div>
+              </details>
               <a class="btn-package" data-package="Bronze Subscription" href="subscription-builder.html?plan=bronze">Choose Bronze</a>
             </div>
           </div>
@@ -680,20 +715,25 @@ window.gtag('consent', 'default', {
             </div>
             <div class="package-body">
               <p class="package-tagline">Balanced recurring property care with broader support than Bronze.</p>
-              <p class="package-description">A stronger recurring plan for properties that need more consistent care, with optional general-cleaning and pool-service support where selected.</p>
               <div class="package-pricing">
                 <p class="package-price-line"><strong>First Clean:</strong> From $791.01 incl. GST after 10% off</p>
                 <p class="package-price-line"><strong>Recurring:</strong> From $543.51/month incl. GST after 10% off</p>
               </div>
               <p class="package-meta"><strong>Workers:</strong> 1-2 workers depending on scope<br /><strong>Visits:</strong> 1-2 visits per month</p>
-              <p class="package-meta"><strong>Best for:</strong> family homes, apartments needing regular interior support, and properties replacing several separate services.</p>
-              <ul>
+              <details class="content-disclosure package-inclusions" data-mobile-disclosure open>
+                <summary>Silver inclusions &amp; suitability</summary>
+                <div class="content-disclosure-body">
+                  <p class="package-description">A stronger recurring plan for properties that need more consistent care, with optional general-cleaning and pool-service support where selected.</p>
+                  <p class="package-meta"><strong>Best for:</strong> family homes, apartments needing regular interior support, and properties replacing several separate services.</p>
+                  <ul>
                 <li>Interior/exterior service rotation</li>
                 <li>General cleaning support where selected</li>
                 <li>Pool service where selected</li>
                 <li>Bin cleaning</li>
                 <li>Window rotation</li>
               </ul>
+                </div>
+              </details>
               <a class="btn-package" data-package="Silver Subscription" href="subscription-builder.html?plan=silver">Choose Silver</a>
             </div>
           </div>
@@ -707,14 +747,17 @@ window.gtag('consent', 'default', {
             </div>
             <div class="package-body">
               <p class="package-tagline">Managed property maintenance for complete care.</p>
-              <p class="package-description">A complete recurring maintenance system designed to keep the property presented, maintained, and under control with minimal client effort.</p>
               <div class="package-pricing">
                 <p class="package-price-line"><strong>First Clean:</strong> From $1,088.01 incl. GST after 10% off</p>
                 <p class="package-price-line"><strong>Recurring:</strong> From $741.51/month incl. GST after 10% off</p>
               </div>
               <p class="package-meta"><strong>Workers:</strong> 2 workers<br /><strong>Visits:</strong> 2 visits per month</p>
-              <p class="package-meta"><strong>Best for:</strong> busy households, larger homes, consistent maintenance, and clients wanting fewer separate service providers.</p>
-              <ul>
+              <details class="content-disclosure package-inclusions" data-mobile-disclosure open>
+                <summary>Gold inclusions &amp; suitability</summary>
+                <div class="content-disclosure-body">
+                  <p class="package-description">A complete recurring maintenance system designed to keep the property presented, maintained, and under control with minimal client effort.</p>
+                  <p class="package-meta"><strong>Best for:</strong> busy households, larger homes, consistent maintenance, and clients wanting fewer separate service providers.</p>
+                  <ul>
                 <li>General cleaning frequency where selected</li>
                 <li>Pool service where selected</li>
                 <li>Exterior cleaning rotation</li>
@@ -722,6 +765,8 @@ window.gtag('consent', 'default', {
                 <li>Window rotation</li>
                 <li>Solar panel cleaning schedule</li>
               </ul>
+                </div>
+              </details>
               <a class="btn-package" data-package="Gold Subscription" href="subscription-builder.html?plan=gold">Choose Gold</a>
             </div>
           </div>
@@ -735,14 +780,17 @@ window.gtag('consent', 'default', {
             </div>
             <div class="package-body">
               <p class="package-tagline">Premium property care with hands-off recurring service.</p>
-              <p class="package-description">The highest level recurring care plan for clients who want the property maintained, protected, and presentation-ready with minimal oversight.</p>
               <div class="package-pricing">
                 <p class="package-price-line"><strong>First Clean:</strong> From $1,583.01 incl. GST after 10% off</p>
                 <p class="package-price-line"><strong>Recurring:</strong> From $1,187.01/month incl. GST after 10% off</p>
               </div>
               <p class="package-meta"><strong>Workers:</strong> 2 workers<br /><strong>Visits:</strong> 2-3 visits per month</p>
-              <p class="package-meta"><strong>Best for:</strong> premium homes, larger properties, high-value clients, and hands-off property care.</p>
-              <ul>
+              <details class="content-disclosure package-inclusions" data-mobile-disclosure open>
+                <summary>Platinum inclusions &amp; suitability</summary>
+                <div class="content-disclosure-body">
+                  <p class="package-description">The highest level recurring care plan for clients who want the property maintained, protected, and presentation-ready with minimal oversight.</p>
+                  <p class="package-meta"><strong>Best for:</strong> premium homes, larger properties, high-value clients, and hands-off property care.</p>
+                  <ul>
                 <li>Premium recurring service schedule</li>
                 <li>General cleaning frequency where selected</li>
                 <li>Pool service where selected</li>
@@ -753,6 +801,8 @@ window.gtag('consent', 'default', {
                 <li>Tile and grout rotation</li>
                 <li>Priority access</li>
               </ul>
+                </div>
+              </details>
               <a class="btn-package" data-package="Platinum Subscription" href="subscription-builder.html?plan=platinum">Choose Platinum</a>
             </div>
           </div>
@@ -766,18 +816,23 @@ window.gtag('consent', 'default', {
             </div>
             <div class="package-body">
               <p class="package-tagline">Custom recurring property care.</p>
-              <p class="package-description">Create a custom plan for houses, high-rise apartments, strata, commercial spaces, access limitations, balcony glass, pool cleaning, general cleaning and recurring service frequencies.</p>
               <div class="package-pricing">
                 <p class="package-price-line"><strong>Pricing:</strong> Exact custom pricing</p>
                 <p class="package-price-line"><strong>Output:</strong> First clean and recurring monthly prices</p>
               </div>
-              <p class="package-meta"><strong>Best for:</strong> mixed scopes, high-rise apartments, strata/body corporate and advanced access requirements.</p>
-              <ul>
+              <details class="content-disclosure package-inclusions" data-mobile-disclosure open>
+                <summary>Custom plan inclusions &amp; suitability</summary>
+                <div class="content-disclosure-body">
+                  <p class="package-description">Create a custom plan for houses, high-rise apartments, strata, commercial spaces, access limitations, balcony glass, pool cleaning, general cleaning and recurring service frequencies.</p>
+                  <p class="package-meta"><strong>Best for:</strong> mixed scopes, high-rise apartments, strata/body corporate and advanced access requirements.</p>
+                  <ul>
                 <li>Houses, apartments, high-rise and strata</li>
                 <li>Exact first clean and recurring prices</li>
                 <li>Add, swap, or remove services</li>
                 <li>Built around property access and service frequency</li>
               </ul>
+                </div>
+              </details>
               <a class="btn-package" href="subscription-builder.html">Build Your Subscription</a>
             </div>
           </div>
@@ -1182,7 +1237,7 @@ window.gtag('consent', 'default', {
             <div class="footer-meta">
               <div><strong>Phone:</strong> <a href="tel:0466224927">0466224927</a></div>
               <div><strong>Email:</strong> <a href="mailto:tandaprocleaning@gmail.com">tandaprocleaning@gmail.com</a></div>
-              <div><strong>Service Areas:</strong> <a href="areas/gold-coast.html">Gold Coast</a>, <a href="areas/brisbane.html">Brisbane</a>, <a href="areas/logan.html">Logan</a>, <a href="areas/ipswich.html">Ipswich</a></div>
+              <div id="areas"><strong>Service Areas:</strong> <a href="areas/gold-coast.html">Gold Coast</a>, <a href="areas/brisbane.html">Brisbane</a>, <a href="areas/logan.html">Logan</a>, <a href="areas/ipswich.html">Ipswich</a></div>
               <div><strong>ABN:</strong> 33 122 902 990</div>
               <div>Fully insured | Family-run local team | Owner-led property care</div>
             </div>
@@ -1252,10 +1307,11 @@ window.gtag('consent', 'default', {
 </script>
 <script defer src="money.js?v=20260927-promotion"></script>
 <script defer src="pricing-engine.js?v=20260927-promotion"></script>
-  <script defer src="app.js?v=20260927-quote-discount"></script>
-<script defer src="gallery.js"></script>
+  <script defer src="app.js?v=20261001-navigation"></script>
+<script defer src="content-disclosures.js?v=20261001-compact"></script>
+<script defer src="gallery.js?v=20261001-counter"></script>
 <script defer src="reviews.js?v=20260710-carousel-2"></script>
-  <script defer src="messenger-button.js?v=20260830-contact"></script>
+  <script defer src="messenger-button.js?v=20261001-navigation"></script>
   </body>
 </html>
 

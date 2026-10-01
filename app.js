@@ -1183,41 +1183,7 @@
   }
 
   function setupMobileNav() {
-    const toggle = document.querySelector('[data-nav-toggle]');
-    const nav = document.querySelector('[data-nav]');
-
-    if (!toggle || !nav) {
-      return;
-    }
-
-    function closeMenu() {
-      nav.classList.remove('is-open');
-      toggle.setAttribute('aria-expanded', 'false');
-    }
-
-    toggle.addEventListener('click', () => {
-      const isOpen = nav.classList.toggle('is-open');
-      toggle.setAttribute('aria-expanded', String(isOpen));
-    });
-
-    nav.querySelectorAll('a').forEach((link) => {
-      link.addEventListener('click', closeMenu);
-    });
-
-    document.addEventListener('click', (event) => {
-      if (!nav.classList.contains('is-open')) {
-        return;
-      }
-
-      const target = event.target;
-      if (!(target instanceof Node)) {
-        return;
-      }
-
-      if (!nav.contains(target) && target !== toggle && !toggle.contains(target)) {
-        closeMenu();
-      }
-    });
+    window.TANavigation?.init();
   }
 
   function setupRevealAnimations() {
@@ -2503,7 +2469,32 @@
     };
 
     form.querySelectorAll('[data-mobile-quote-next]').forEach((button) => {
-      button.addEventListener('click', () => {
+      let press = null;
+      let cancelledPress = false;
+      // Address blur can insert a status row during a press. Keep the native click
+      // on its original button, but allow an intentional drag away to cancel it.
+      button.addEventListener('pointerdown', (event) => {
+        if (!event.isPrimary || event.button !== 0) return;
+        cancelledPress = false;
+        press = { id: event.pointerId, x: event.clientX, y: event.clientY };
+        button.setPointerCapture(event.pointerId);
+      });
+      button.addEventListener('pointermove', (event) => {
+        if (press?.id !== event.pointerId || Math.hypot(event.clientX - press.x, event.clientY - press.y) <= 8) return;
+        cancelledPress = true;
+        press = null;
+        if (button.hasPointerCapture(event.pointerId)) button.releasePointerCapture(event.pointerId);
+      });
+      button.addEventListener('lostpointercapture', () => { press = null; });
+      button.addEventListener('click', (event) => {
+        // WebKit may dispatch a click to the original target after capture releases.
+        const cancelledPointerClick = cancelledPress && event.detail > 0;
+        cancelledPress = false;
+        if (cancelledPointerClick) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          return;
+        }
         const nextStep = Number(button.dataset.mobileQuoteNext);
         const currentStep = Number(form.dataset.mobileStep || 1);
         const currentSection = currentStep === 1 ? propertyCard : serviceCard;
