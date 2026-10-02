@@ -17,7 +17,7 @@ http.createServer(async(req,res)=>{
   let body=fs.readFileSync(file);
   if(path.extname(file)==='.html'){
     body=body.toString().replace('<head>','<head><script>window.__API_BASE__=location.origin;</script>');
-    res.setHeader('Content-Security-Policy',"default-src 'self' data: blob:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self'; frame-src 'none'");
+    res.setHeader('Content-Security-Policy',"default-src 'self' data: blob:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self'; frame-src 'none'");
   }
   res.setHeader('Content-Type',mime[path.extname(file).toLowerCase()]||'application/octet-stream');res.end(body);
 }).listen(4191,'127.0.0.1',()=>console.log('Pricing review preview: http://127.0.0.1:4191 — enquiries disabled.'));

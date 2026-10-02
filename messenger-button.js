@@ -141,7 +141,7 @@
     button.classList.remove('is-compact-placement');
 
     const openMobileNav = document.querySelector('.site-nav.is-open');
-    const shouldHideForNav = isCompact && isVisible(openMobileNav);
+    const shouldHideForNav = isVisible(openMobileNav);
     button.classList.toggle('is-hidden-for-nav', shouldHideForNav);
     if (shouldHideForNav) return;
 

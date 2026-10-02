@@ -202,6 +202,11 @@ function renderBeforeAfterShowcase() {
 
     section.hidden = false;
     activeShowcaseIndex = (activeShowcaseIndex + items.length) % items.length;
+    const counter = section.querySelector("[data-before-after-counter]");
+    if (counter) {
+      counter.textContent = `${activeShowcaseIndex + 1} / ${items.length}`;
+      counter.setAttribute("aria-label", `Project ${activeShowcaseIndex + 1} of ${items.length}`);
+    }
     const item = items[activeShowcaseIndex];
     const galleryIndex = galleryItems.indexOf(item);
     const category = galleryCategoryLabels[item.category] || "Cleaning Work";
