@@ -131,7 +131,8 @@ test('blocked tracking does not stop contact links or count clicks as confirmed 
   expect(errors).toEqual([]);
 });
 
-test('quote conversion follows accepted backend lead exactly once', async ({ page }) => {
+for (const consentChoice of ['Accept all', 'Reject all']) {
+test(`quote conversion follows accepted backend lead exactly once with ${consentChoice}`, async ({ page }) => {
   let accepted = false;
   let postCount = 0;
   await page.route('**/api/leads', async route => {
@@ -145,7 +146,10 @@ test('quote conversion follows accepted backend lead exactly once', async ({ pag
     } });
   });
   await page.goto('/index.html?service=window-cleaning#quote');
-  await page.getByRole('button', { name: 'Accept all' }).click();
+  await expect(page.locator('script[src*="googletagmanager.com/gtm.js?id=GTM-58HPXR72"]')).toHaveCount(1);
+  await expect(page.locator('script[src*="googletagmanager.com/gtag/js?id=AW-11132030271"]')).toHaveCount(1);
+  await page.getByRole('button', { name: consentChoice }).click();
+  expect(states((await consentCalls(page)).at(-1).state)).toEqual(Array(4).fill(consentChoice === 'Accept all' ? 'granted' : 'denied'));
   await page.locator('#quoteForm button[type="submit"]').click();
   expect(postCount).toBe(0);
   expect(await adConversions(page)).toBe(0);
@@ -171,3 +175,4 @@ test('quote conversion follows accepted backend lead exactly once', async ({ pag
   await expect.poll(() => postCount).toBe(3);
   expect(await adConversions(page)).toBe(1);
 });
+}

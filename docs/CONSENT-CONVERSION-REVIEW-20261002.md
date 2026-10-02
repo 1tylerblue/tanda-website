@@ -26,10 +26,11 @@ The old localStorage record was `tac_cookie_consent_v1` with `state: accepted`. 
 ## Local verification
 
 - `npm test`: 138 frontend/integration checks and 55 backend checks passed.
-- `npm run test:browser`: 41 Chromium browser checks passed, including six consent checks and the existing pricing, navigation, and subscription checks. External requests were blocked or intercepted.
+- `npm run test:browser`: 41 Chromium browser checks passed, including six consent checks and the existing pricing, navigation, and subscription checks. Two later targeted quote-choice checks also passed after adding a rejected-consent case. External requests were blocked or intercepted.
 - A separate WebKit 1.58.2 browser smoke check at a 390×844 emulated viewport passed: denied default, all granted after Accept all, saved acceptance restored on reload, advertising denied after custom withdrawal, no page errors. This was browser emulation, not a physical iPhone.
 - Live production's before-click and after-click data-layer values were captured read-only as shown above. On the local preview, browser tests verified all four values grant after Accept all, remain denied after Reject all, and stay denied for advertising with analytics-only selection. The saved update precedes `gtm.js` on reload.
 - The mocked lead test verified form validation made zero POSTs/conversions, an HTTP 503 made zero lead conversions, one accepted backend response made one conversion, and a repeated accepted submission made no second conversion. The phone/Messenger destinations stayed intact and tracking failures did not raise a browser error. These are browser/code checks, **not** proof of email delivery or effective live tag firing.
+- Three isolated live-homepage browser sessions observed HTTP 200 for `GTM-58HPXR72` and the Google Ads base script before any choice, after **Deny Analytics**, and after **Accept Analytics**. The local mocked lead test queued the existing quote conversion once after backend acceptance for both **Accept all** and **Reject all**. With consent denied, Google may use limited cookieless measurements; neither test proves that Ads attributed a real lead.
 
 ## Approval boundary and remaining account verification
 
