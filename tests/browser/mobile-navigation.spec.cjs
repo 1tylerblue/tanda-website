@@ -13,7 +13,7 @@ async function visit(page, { width = 390, height = 844, path = '/', consent = tr
   await page.setViewportSize({ width, height });
   await page.goto(path);
   if (consent) {
-    const deny = page.getByRole('button', { name: 'Deny Analytics', exact: true });
+    const deny = page.getByRole('button', { name: 'Reject all', exact: true });
     if (await deny.isVisible()) await deny.click();
   }
 }
@@ -196,14 +196,14 @@ test('menu temporarily suspends cookie controls without recording a consent choi
   await visit(page, { consent: false });
   const cookies = page.locator('#cookie-consent');
   await expect(cookies).toBeVisible();
-  expect(await page.evaluate(() => localStorage.getItem('tac_cookie_consent_v1'))).toBeNull();
+  expect(await page.evaluate(() => localStorage.getItem('tac_cookie_consent_v2'))).toBeNull();
   await openMenu(page);
   await expect(cookies).toBeHidden();
   await page.keyboard.press('Escape');
   await expectClosed(page);
   await expect(cookies).toBeVisible();
-  expect(await page.evaluate(() => localStorage.getItem('tac_cookie_consent_v1'))).toBeNull();
-  await page.getByRole('button', { name: 'Deny Analytics', exact: true }).click();
+  expect(await page.evaluate(() => localStorage.getItem('tac_cookie_consent_v2'))).toBeNull();
+  await page.getByRole('button', { name: 'Reject all', exact: true }).click();
   await expect(cookies).toBeHidden();
 });
 

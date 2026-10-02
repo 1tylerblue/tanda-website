@@ -5,7 +5,6 @@
   const STYLE_ID = 'tandaMessengerButtonStyles';
   const MESSENGER_URL = 'https://m.me/tandaprocleaningservices';
   const ACCESSIBLE_LABEL = 'Chat with T&A Pro Cleaning on Messenger';
-  const COOKIE_CONSENT_KEY = 'tac_cookie_consent_v1';
 
   function injectStyles() {
     if (document.getElementById(STYLE_ID)) return;
@@ -203,17 +202,7 @@
   }
 
   function hasAcceptedAnalyticsConsent() {
-    if (!(typeof window.localStorage === 'object')) return false;
-
-    try {
-      const raw = window.localStorage.getItem(COOKIE_CONSENT_KEY);
-      if (!raw) return false;
-      const parsed = JSON.parse(raw);
-      if (parsed === 'accepted') return true;
-      return Boolean(parsed && typeof parsed === 'object' && parsed.state === 'accepted');
-    } catch {
-      return false;
-    }
+    return Boolean(window.TandaConsent?.allowsAnalytics());
   }
 
   function captureClick() {
@@ -227,14 +216,14 @@
       device_category: window.matchMedia('(max-width: 620px)').matches ? 'mobile' : 'desktop',
     };
 
-    if (window.TandaAnalytics?.capture) {
-      window.TandaAnalytics.capture('messenger_button_clicked', eventProperties);
-      return;
-    }
-
-    if (hasAcceptedAnalyticsConsent() && typeof window.gtag === 'function') {
-      window.gtag('event', 'messenger_button_clicked', eventProperties);
-    }
+    if (!hasAcceptedAnalyticsConsent()) return;
+    try {
+      if (window.TandaAnalytics?.capture) {
+        window.TandaAnalytics.capture('messenger_button_clicked', eventProperties);
+      } else if (typeof window.gtag === 'function') {
+        window.gtag('event', 'messenger_button_clicked', eventProperties);
+      }
+    } catch { /* Contact navigation must work when tracking is blocked. */ }
   }
 
   function mountButton() {

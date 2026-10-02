@@ -10,7 +10,7 @@ test.beforeEach(async({page})=>{
 async function start(page,width,address,group='window-cleaning'){
   await page.setViewportSize({width,height:900});
   await page.goto('/index.html?service='+group+'#quote');
-  await page.getByRole('button',{name:'Deny Analytics',exact:true}).click();
+  await page.getByRole('button',{name:'Reject all',exact:true}).click();
   for(const [id,value] of Object.entries({firstName:'Synthetic Review QA',phone:'0400000000',email:'review@example.invalid',address}))await page.locator('#'+id).fill(value);
   await page.locator('#address').blur();
   await page.locator('#propertyType').selectOption('Residential');

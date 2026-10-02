@@ -9,7 +9,7 @@ test.beforeEach(async({page})=>{
 async function start(page,width=1440,group='window-cleaning'){
   await page.setViewportSize({width,height:900});
   await page.goto('/index.html?service='+group+'#quote');
-  await page.getByRole('button',{name:'Accept Analytics',exact:true}).click();
+  await page.getByRole('button',{name:'Accept all',exact:true}).click();
   await page.locator('#firstName').fill('Synthetic Pricing QA');
   await page.locator('#phone').fill('0400000000');
   await page.locator('#email').fill('pricing@example.invalid');

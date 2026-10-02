@@ -8,8 +8,7 @@
   const ACCURACY_CLASSES = ['accuracy-high', 'accuracy-medium', 'accuracy-low'];
   const MAX_UPLOAD_FILES = 5;
   const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
-  const COOKIE_CONSENT_KEY = 'tac_cookie_consent_v1';
-  let analyticsEnabled = false;
+  let analyticsEnabled = Boolean(window.TandaConsent?.allowsAnalytics());
   const GA_MEASUREMENT_ID = 'G-GDWFQH85WN';
   const GA_SCRIPT_ATTRIBUTE = 'data-tac-ga';
   const GOOGLE_ADS_CONVERSION_ID = 'AW-11132030271';
@@ -81,26 +80,6 @@
     return /^G-[A-Z0-9]+$/i.test(configuredId) ? configuredId : '';
   }
 
-  function applyDefaultConsent() {
-    const consentConfig =
-      typeof window.__GA_ANALYTICS_CONFIG__ === 'object' && window.__GA_ANALYTICS_CONFIG__ !== null
-        ? window.__GA_ANALYTICS_CONFIG__
-        : (window.__GA_ANALYTICS_CONFIG__ = {});
-
-    if (consentConfig.consentDefaultApplied) {
-      return;
-    }
-
-    ensureGtagFunction();
-    window.gtag('consent', 'default', {
-      analytics_storage: 'denied',
-      ad_storage: 'denied',
-      functionality_storage: 'granted',
-      security_storage: 'granted',
-    });
-    consentConfig.consentDefaultApplied = true;
-  }
-
   function ensureGoogleTagScript(configuredId) {
     if (document.querySelector(`script[${GOOGLE_TAG_SCRIPT_ATTRIBUTE}="true"], script[src^="https://www.googletagmanager.com/gtag/js"]`)) {
       return;
@@ -114,7 +93,6 @@
   }
 
   function loadGoogleAdsTag() {
-    applyDefaultConsent();
     ensureGtagFunction();
     ensureGoogleTagScript(GOOGLE_ADS_CONVERSION_ID);
 
@@ -144,70 +122,6 @@
     gaScriptRequested = true;
   }
 
-  function setCookieConsentState(enabled) {
-    analyticsEnabled = Boolean(enabled);
-    loadGoogleAdsTag();
-    if (typeof window.gtag !== 'function') {
-      return;
-    }
-
-    window.gtag('consent', 'update', {
-      analytics_storage: analyticsEnabled ? 'granted' : 'denied',
-      ad_storage: 'denied',
-      functionality_storage: 'granted',
-      security_storage: 'granted',
-    });
-
-    if (analyticsEnabled) {
-      loadAnalyticsScript();
-      trackFunnelPageView();
-      captureFunnelScrollDepth();
-    }
-  }
-
-  function getCookieConsent() {
-    if (!(typeof localStorage === 'object')) {
-      return null;
-    }
-
-    try {
-      const raw = localStorage.getItem(COOKIE_CONSENT_KEY);
-      if (!raw) {
-        return null;
-      }
-
-      const parsed = JSON.parse(raw);
-      if (parsed === 'accepted' || parsed === 'denied') {
-        return parsed;
-      }
-
-      if (parsed && typeof parsed === 'object' && (parsed.state === 'accepted' || parsed.state === 'denied')) {
-        return parsed.state;
-      }
-      return null;
-    } catch {
-      return null;
-    }
-  }
-
-  function storeCookieConsent(state) {
-    if (!(typeof localStorage === 'object')) {
-      return;
-    }
-
-    try {
-      localStorage.setItem(
-        COOKIE_CONSENT_KEY,
-        JSON.stringify({
-          state,
-          timestamp: Date.now(),
-        })
-      );
-    } catch {
-      // localStorage can fail in restricted environments; proceed without persisting.
-    }
-  }
-
   function trackEvent(eventName, params) {
     if (!analyticsEnabled || typeof window.gtag !== 'function') {
       return;
@@ -222,7 +136,7 @@
       eventParams.send_to = measurementId;
     }
 
-    window.gtag('event', eventName, eventParams);
+    try { window.gtag('event', eventName, eventParams); } catch { /* Tracking cannot block the site. */ }
   }
 
   function getTrackingLocation(element) {
@@ -340,14 +254,15 @@
       return false;
     }
 
-    loadGoogleAdsTag();
+    try { loadGoogleAdsTag(); } catch { return false; }
     const eventParams = {
       send_to: sendTo,
     };
 
+    let finishCallback;
     if (typeof options.eventCallback === 'function') {
       let callbackFinished = false;
-      const finishCallback = () => {
+      finishCallback = () => {
         if (callbackFinished) {
           return;
         }
@@ -356,11 +271,15 @@
       };
       eventParams.event_callback = finishCallback;
       eventParams.event_timeout = Number(options.eventTimeout) || 1500;
-      window.setTimeout(finishCallback, eventParams.event_timeout);
     }
 
-    window.gtag('event', 'conversion', eventParams);
-    return true;
+    try {
+      window.gtag('event', 'conversion', eventParams);
+      if (finishCallback) window.setTimeout(finishCallback, eventParams.event_timeout);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   function trackQuoteSubmittedConversion() {
@@ -368,8 +287,7 @@
       return;
     }
 
-    quoteConversionTracked = true;
-    trackGoogleAdsConversion(GOOGLE_ADS_QUOTE_SEND_TO);
+    quoteConversionTracked = trackGoogleAdsConversion(GOOGLE_ADS_QUOTE_SEND_TO);
   }
 
   function setupPhoneClickConversionTracking() {
@@ -385,13 +303,12 @@
         return;
       }
 
-      trackEvent(`phone_click_${getTrackingLocation(link)}`);
-
       const href = link.getAttribute('href');
       if (!href || event.defaultPrevented) {
-        trackGoogleAdsConversion(GOOGLE_ADS_PHONE_CLICK_SEND_TO);
         return;
       }
+
+      trackEvent(`phone_click_${getTrackingLocation(link)}`);
 
       event.preventDefault();
       const tracked = trackGoogleAdsConversion(GOOGLE_ADS_PHONE_CLICK_SEND_TO, {
@@ -1265,47 +1182,20 @@
   }
 
   function initCookieConsent() {
-    const consentBanner = document.getElementById('cookie-consent');
-    const acceptButton = document.getElementById('cookie-accept');
-    const denyButton = document.getElementById('cookie-decline');
-
-    if (!consentBanner || !acceptButton || !denyButton) {
-      setCookieConsentState(false);
-      return;
+    // The shared manager applies consent before GTM starts and owns all choices.
+    // Keep analytics events in sync without issuing a competing consent update.
+    analyticsEnabled = Boolean(window.TandaConsent?.allowsAnalytics());
+    try { loadGoogleAdsTag(); } catch { /* Enquiries must work if Google is unavailable. */ }
+    if (analyticsEnabled) {
+      try { loadAnalyticsScript(); } catch { /* Same for optional analytics. */ }
     }
-
-    const savedConsent = getCookieConsent();
-    if (savedConsent === 'accepted') {
-      setCookieConsentState(true);
-      consentBanner.setAttribute('hidden', 'hidden');
-      return;
-    }
-
-    if (savedConsent === 'denied') {
-      setCookieConsentState(false);
-      consentBanner.setAttribute('hidden', 'hidden');
-      return;
-    }
-
-    consentBanner.removeAttribute('hidden');
-    setCookieConsentState(false);
-
-    acceptButton.addEventListener('click', () => {
-      setCookieConsentState(true);
-      storeCookieConsent('accepted');
-      consentBanner.setAttribute('hidden', 'hidden');
-      trackEvent('cookie_consent', {
-        consent_state: 'accepted',
-      });
-    });
-
-    denyButton.addEventListener('click', () => {
-      setCookieConsentState(false);
-      storeCookieConsent('denied');
-      consentBanner.setAttribute('hidden', 'hidden');
-      trackEvent('cookie_consent', {
-        consent_state: 'denied',
-      });
+    window.addEventListener('tanda:consent-change', (event) => {
+      analyticsEnabled = Boolean(event.detail?.analytics);
+      if (analyticsEnabled) {
+        try { loadAnalyticsScript(); } catch { /* Keep the chosen state and the site usable. */ }
+        trackFunnelPageView();
+        captureFunnelScrollDepth();
+      }
     });
   }
 

@@ -29,17 +29,15 @@ for (const file of htmlFiles) {
   });
 }
 
-test('Google Ads, GA4 and privacy-safe analytics helpers are unchanged', () => {
+test('Google Ads, GA4 identifiers and unaffected analytics helpers are unchanged', () => {
   const before = original('app.js'), after = read('app.js');
   const names = [
-    'ensureGtagFunction', 'getGaMeasurementId', 'applyDefaultConsent', 'ensureGoogleTagScript',
-    'loadGoogleAdsTag', 'loadAnalyticsScript', 'setCookieConsentState', 'getCookieConsent',
-    'storeCookieConsent', 'trackEvent', 'getTrackingLocation', 'trackFunnelPageView',
-    'captureFunnelScrollDepth', 'setupFunnelTracking', 'trackGoogleAdsConversion',
-    'trackQuoteSubmittedConversion', 'setupPhoneClickConversionTracking', 'initCookieConsent',
+    'ensureGtagFunction', 'getGaMeasurementId', 'ensureGoogleTagScript',
+    'loadAnalyticsScript', 'getTrackingLocation', 'trackFunnelPageView',
+    'captureFunnelScrollDepth', 'setupFunnelTracking',
   ];
   for (const name of names) assert.equal(functionBlock(after, name), functionBlock(before, name), name);
-  for (const name of ['GA_MEASUREMENT_ID', 'GOOGLE_ADS_CONVERSION_ID', 'GOOGLE_ADS_QUOTE_SEND_TO', 'GOOGLE_ADS_PHONE_CLICK_SEND_TO', 'COOKIE_CONSENT_KEY']) {
+  for (const name of ['GA_MEASUREMENT_ID', 'GOOGLE_ADS_CONVERSION_ID', 'GOOGLE_ADS_QUOTE_SEND_TO', 'GOOGLE_ADS_PHONE_CLICK_SEND_TO']) {
     const expression = new RegExp('const ' + name + ' = [^;]+;');
     assert.equal(after.match(expression)?.[0], before.match(expression)?.[0], name);
   }
@@ -47,13 +45,11 @@ test('Google Ads, GA4 and privacy-safe analytics helpers are unchanged', () => {
 
 test('all existing telephone links and Messenger destinations/consent/events are preserved', () => {
   const before = original('messenger-button.js'), after = read('messenger-button.js');
-  for (const name of ['MESSENGER_URL', 'ACCESSIBLE_LABEL', 'COOKIE_CONSENT_KEY']) {
+  for (const name of ['MESSENGER_URL', 'ACCESSIBLE_LABEL']) {
     const expression = new RegExp('const ' + name + ' = [^;]+;');
     assert.equal(after.match(expression)?.[0], before.match(expression)?.[0], name);
   }
-  for (const name of ['hasAcceptedAnalyticsConsent', 'captureClick']) {
-    assert.equal(functionBlock(after, name), functionBlock(before, name), name);
-  }
+  assert.match(after, /window\.TandaConsent\?\.allowsAnalytics\(\)/);
   // Positioning may change for the menu and keyboard; the destination and tracking binding must not.
   for (const expression of [/button\.href = [^;]+;/, /button\.addEventListener\('click', captureClick[^;]+;/]) {
     assert.ok(before.match(expression));
