@@ -1,10 +1,10 @@
 **T & A Pro Cleaning — mobile experience preview, 1 October 2026**
 
-Review handover. This work is a local preview and has **not been deployed**. Production deployment requires owner approval.
+Review handover. The owner approved production publication on **2 October 2026**, including the October banner wording and revised confetti placement.
 
 Preview: [http://127.0.0.1:4191/](http://127.0.0.1:4191/). Run `npm run preview` from this checkout if the preview server is not already running. The preview disables enquiry submissions; test requests must not create messages, bookings, payments, giveaway entries or advertising conversions.
 
-Branch: `fix/mobile-experience-20261001`. Starting commit: `28c975f0ad6ddae097fcb792df76b4e30a3e8b08`. The review commit is the head of this feature branch and is recorded in the delivery message. Stop before merge or production deployment; owner approval is required.
+Branch: `fix/mobile-experience-20261001`. Starting commit: `28c975f0ad6ddae097fcb792df76b4e30a3e8b08`. The original review commit is `628939d`; subsequent banner changes are included in PR #4. The initial stop-before-production requirement was satisfied by the owner's 2 October publication instruction.
 
 The homepage now uses compact mobile spacing, a shorter hero and promotion area, horizontal service cards, expandable supporting content and a less nested quote form. Six services remain visible initially; “View all 12 services” exposes the rest. Service actions retain the existing quote-group preselection through their quote URLs.
 
@@ -58,4 +58,6 @@ These are local QA artifacts under `output/mobile-redesign/`; they are not produ
 
 Browser automation and viewport/text emulation do not constitute real-device testing. No physical-phone testing or native on-screen keyboard testing is claimed. External analytics requests are blocked and submission checks use isolated/mocked endpoints; live payments, customer communications and production conversion delivery are not exercised. The preview server remains local to this computer. Screenshot and detailed JSON/log evidence lives in ignored `output/mobile-redesign/` and is available in this workspace; it is not included in the production deployment.
 
-The existing **September promotion wording is still present on 1 October**. It was deliberately left unchanged because this task does not authorize commercial-content changes; the owner should review its timing separately. No discount or campaign date has been silently corrected.
+On 2 October, the owner approved publication and requested **October Spring Cleaning** wording and confetti spread closer to the offer. Those banner changes retain the approved 15% normal-service and 10% subscription discounts. No giveaway dates or other campaign terms were changed.
+
+The final banner was visually checked at 320, 390, 693, 1440 and 3840px, plus 200% text at 320px. It has no horizontal overflow; quote and terms links remain unobscured. Static CSS confetti is distributed above and below the text and remains sharp at 4K. Evidence is in `output/playwright/october-banner-*.png`.

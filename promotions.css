@@ -1,4 +1,4 @@
-/* Restored September banner; deliberately scoped to the promotion. */
+/* Spring cleaning banner; deliberately scoped to the promotion. */
 .promotion-banner{box-sizing:border-box}
 .promotion-banner a{font-weight:700;text-decoration:underline}
 .promotion-panel.promotion-banner{max-width:none;margin:0;padding:1rem clamp(1rem,4vw,4rem);border:0;border-radius:0;background:#bd2026;color:#fff;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:.65rem 2rem}
@@ -16,7 +16,7 @@
 
 
 /* Resolution-independent CSS confetti stays crisp at 4K and on high-DPI phones.
-   Keep it static, inside the banner edges, and clear of the central offer. */
+   Spread small pieces above and below the offer, clear of the lettering. */
 .promotion-panel.promotion-banner {
   position: relative;
   isolation: isolate;
@@ -25,30 +25,25 @@
 .promotion-banner::after {
   content: "";
   position: absolute;
-  top: 8px;
-  bottom: 8px;
-  width: clamp(14px, calc(50% - 356px), 900px);
+  left: 50%;
+  width: min(calc(100% - 32px), 1000px);
+  height: 8px;
+  transform: translateX(-50%);
   pointer-events: none;
   z-index: -1;
-  opacity: .85;
+  opacity: .8;
   background:
-    linear-gradient(24deg, transparent 30%, #ffe098 31% 69%, transparent 70%) 12% 20% / 7px 12px,
-    linear-gradient(-35deg, transparent 30%, #fff 31% 69%, transparent 70%) 40% 78% / 11px 7px,
-    linear-gradient(32deg, transparent 30%, #ffc7d2 31% 69%, transparent 70%) 73% 28% / 7px 11px,
-    linear-gradient(-22deg, transparent 30%, #ffe098 31% 69%, transparent 70%) 90% 82% / 10px 6px,
-    radial-gradient(circle, #fff 48%, transparent 52%) 56% 10% / 5px 5px,
-    radial-gradient(circle, #ffc7d2 48%, transparent 52%) 22% 90% / 4px 4px,
-    linear-gradient(-18deg, transparent 30%, #d9c5ff 31% 69%, transparent 70%) 28% 46% / 7px 11px,
-    linear-gradient(48deg, transparent 30%, #ffe098 31% 69%, transparent 70%) 84% 54% / 6px 12px,
-    linear-gradient(-24deg, transparent 30%, #fff 31% 69%, transparent 70%) 53% 64% / 10px 6px,
-    radial-gradient(circle, #ffe098 48%, transparent 52%) 7% 70% / 5px 5px;
+    linear-gradient(24deg, transparent 30%, #ffe098 31% 69%, transparent 70%) 8% 20% / 5px 7px,
+    linear-gradient(-35deg, transparent 30%, #fff 31% 69%, transparent 70%) 24% 78% / 7px 5px,
+    linear-gradient(32deg, transparent 30%, #ffc7d2 31% 69%, transparent 70%) 41% 28% / 5px 7px,
+    linear-gradient(-22deg, transparent 30%, #ffe098 31% 69%, transparent 70%) 61% 82% / 7px 4px,
+    radial-gradient(circle, #fff 48%, transparent 52%) 76% 10% / 4px 4px,
+    radial-gradient(circle, #ffc7d2 48%, transparent 52%) 16% 90% / 4px 4px,
+    linear-gradient(-18deg, transparent 30%, #d9c5ff 31% 69%, transparent 70%) 33% 46% / 5px 7px,
+    linear-gradient(48deg, transparent 30%, #ffe098 31% 69%, transparent 70%) 89% 54% / 4px 8px,
+    linear-gradient(-24deg, transparent 30%, #fff 31% 69%, transparent 70%) 52% 64% / 7px 4px,
+    radial-gradient(circle, #ffe098 48%, transparent 52%) 96% 70% / 4px 4px;
   background-repeat: no-repeat;
 }
-.promotion-banner::before { left: 8px; }
-.promotion-banner::after { right: 8px; transform: scaleX(-1); }
-@media (max-width: 900px) {
-  .promotion-banner::before,
-  .promotion-banner::after { width: 14px; opacity: .74; }
-  .promotion-banner::before { left: 1px; }
-  .promotion-banner::after { right: 1px; }
-}
+.promotion-banner::before { top: 3px; }
+.promotion-banner::after { bottom: 3px; transform: translateX(-50%) scaleX(-1); }

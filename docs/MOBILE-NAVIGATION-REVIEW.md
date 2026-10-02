@@ -1,6 +1,6 @@
 # Shared navigation review — 1 October 2026
 
-Branch: `fix/mobile-experience-20261001`. Local preview: `http://127.0.0.1:4191/`. Production deployment awaits owner approval. The wider handover records the feature-branch delivery and final verification.
+Branch: `fix/mobile-experience-20261001`. Local preview: `http://127.0.0.1:4191/`. The owner approved publication on 2 October 2026. The wider handover records the feature-branch delivery and final verification.
 
 ## Baseline and result
 
